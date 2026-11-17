@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+:root {
+  font-family: "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif;
+  color: #0f1b3d;
+  background: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  --font-display: Poppins, "Segoe UI", Arial, sans-serif;
+  --font-body: "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif;
+  --navy: #0f1b3d;
+  --navy-700: #1b2b5c;
+  --navy-soft: #e8ecf6;
+  --pink: #ff3d8b;
+  --pink-soft: #ffe5ef;
+  --mint: #3de0b0;
+  --amber: #ffc83d;
+  --bg-soft: #f2f4f8;
+  --ink-muted: #5c6c8d;
+  --navy-muted: rgba(15, 27, 61, 0.75);
+  --white: #ffffff;
+  --white-muted: rgba(255, 255, 255, 0.75);
+  --white-subtle: rgba(255, 255, 255, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  font-family: var(--font-body);
+}
+
+button,
+a {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--pink);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(255, 61, 139, 0.6);
+  outline-offset: 3px;
+}
+
+#root {
+  min-height: 100vh;
+  overflow: clip;
+}
