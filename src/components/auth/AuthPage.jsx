@@ -102,6 +102,18 @@ function AuthPage({ mode, role }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
+
+    // Akses dashboard Mitra Pekerja saat ini masih dalam tahap pengembangan
+    if (isWorker) {
+      setMessageType("info");
+      setMessage(
+        isSignup
+          ? "Pendaftaran akun Mitra Pekerja dicatat. Namun saat ini dashboard pekerja belum dibuka (tahap pengembangan). Silakan masuk sebagai Perusahaan / UMKM."
+          : "Dashboard Mitra Pekerja saat ini belum dapat diakses karena masih dalam tahap pengembangan. Silakan masuk menggunakan akun Perusahaan / UMKM."
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -499,31 +511,47 @@ function AuthPage({ mode, role }) {
                 </h1>
                 <p className="auth-description">
                   {isSignup
-                    ? "Buat akun Perusahaan / UMKM untuk mulai memposting tugas dan merekrut pekerja lokal tanpa repot."
+                    ? isWorker
+                      ? "Daftar akun Mitra Pekerja untuk mulai mencari peluang tugas lokal sesuai keahlian."
+                      : "Buat akun Perusahaan / UMKM untuk mulai memposting tugas dan merekrut pekerja lokal tanpa repot."
+                    : isWorker
+                    ? "Masuk ke akun Mitra Pekerja Relink."
                     : "Masuk ke dashboard Perusahaan / UMKM dan kelola operasional tokomu."}
                 </p>
 
                 <nav aria-label="Pilih jenis akun" className="auth-role-switch">
                   <a
-                    aria-current="page"
-                    className="auth-role-switch__link is-active"
+                    aria-current={!isWorker ? "page" : undefined}
+                    className={
+                      !isWorker
+                        ? "auth-role-switch__link is-active"
+                        : "auth-role-switch__link"
+                    }
                     href={`/${isSignup ? "daftar" : "masuk"}?peran=umkm`}
                   >
                     Perusahaan / UMKM
                   </a>
-                  <button
-                    type="button"
-                    className="auth-role-switch__link auth-role-switch__link--disabled"
-                    onClick={() => {
-                      setMessage("Portal Mitra Pekerja sedang disiapkan untuk fase berikutnya. Pendaftaran saat ini difokuskan penuh untuk Perusahaan / UMKM.");
-                      setMessageType("info");
-                    }}
-                    title="Pendaftaran Mitra Pekerja segera hadir"
+                  <a
+                    aria-current={isWorker ? "page" : undefined}
+                    className={
+                      isWorker
+                        ? "auth-role-switch__link is-active"
+                        : "auth-role-switch__link"
+                    }
+                    href={`/${isSignup ? "daftar" : "masuk"}?peran=pekerja`}
                   >
                     Mitra Pekerja
-                    <span className="auth-role-badge-soon">Segera Hadir</span>
-                  </button>
+                  </a>
                 </nav>
+
+                {isWorker && (
+                  <div className="auth-worker-notice" role="alert">
+                    <Icon name="alert" size={16} />
+                    <span>
+                      Halaman akun Mitra Pekerja dapat dilihat, namun dashboard Mitra Pekerja saat ini masih dalam tahap pengembangan dan belum dapat diakses.
+                    </span>
+                  </div>
+                )}
 
                 <form className="auth-form" onSubmit={handleSubmit}>
                   {isSignup && (

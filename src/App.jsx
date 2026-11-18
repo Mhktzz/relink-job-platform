@@ -22,8 +22,7 @@ function App() {
     window.location.hash.includes('type=recovery')
   const authMode = pathname === '/masuk' ? 'login' : pathname === '/daftar' ? 'signup' : isResetPassword ? 'reset-password' : null
   const requestedRole = new URLSearchParams(window.location.search).get('peran')
-  // Fokus pendaftaran dan masuk ke Perusahaan/UMKM terlebih dahulu
-  const authRole = 'umkm'
+  const authRole = requestedRole === 'pekerja' ? 'pekerja' : 'umkm'
 
   useEffect(() => {
     const revealTargets = document.querySelectorAll(
