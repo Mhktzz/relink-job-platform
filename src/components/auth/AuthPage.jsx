@@ -499,33 +499,30 @@ function AuthPage({ mode, role }) {
                 </h1>
                 <p className="auth-description">
                   {isSignup
-                    ? `Buat akun ${roleName} untuk mulai memposting tugas dan merekrut pekerja lokal tanpa repot.`
-                    : `Masuk ke dashboard ${roleName} dan kelola operasional tokomu.`}
+                    ? "Buat akun Perusahaan / UMKM untuk mulai memposting tugas dan merekrut pekerja lokal tanpa repot."
+                    : "Masuk ke dashboard Perusahaan / UMKM dan kelola operasional tokomu."}
                 </p>
 
                 <nav aria-label="Pilih jenis akun" className="auth-role-switch">
                   <a
-                    aria-current={!isWorker ? "page" : undefined}
-                    className={
-                      !isWorker
-                        ? "auth-role-switch__link is-active"
-                        : "auth-role-switch__link"
-                    }
+                    aria-current="page"
+                    className="auth-role-switch__link is-active"
                     href={`/${isSignup ? "daftar" : "masuk"}?peran=umkm`}
                   >
                     Perusahaan / UMKM
                   </a>
-                  <a
-                    aria-current={isWorker ? "page" : undefined}
-                    className={
-                      isWorker
-                        ? "auth-role-switch__link is-active"
-                        : "auth-role-switch__link"
-                    }
-                    href={`/${isSignup ? "daftar" : "masuk"}?peran=pekerja`}
+                  <button
+                    type="button"
+                    className="auth-role-switch__link auth-role-switch__link--disabled"
+                    onClick={() => {
+                      setMessage("Portal Mitra Pekerja sedang disiapkan untuk fase berikutnya. Pendaftaran saat ini difokuskan penuh untuk Perusahaan / UMKM.");
+                      setMessageType("info");
+                    }}
+                    title="Pendaftaran Mitra Pekerja segera hadir"
                   >
                     Mitra Pekerja
-                  </a>
+                    <span className="auth-role-badge-soon">Segera Hadir</span>
+                  </button>
                 </nav>
 
                 <form className="auth-form" onSubmit={handleSubmit}>
