@@ -35,6 +35,13 @@ const paths = {
       <path d="M12 7v5l3 2" />
     </>
   ),
+  circle: <circle cx="12" cy="12" r="9" />,
+  'check-circle': (
+    <>
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </>
+  ),
   check: <path d="m5 12 4 4L19 6" />,
   bolt: <path d="m13 2-3 8h7l-6 12 1-9H5l8-11Z" />,
   users: (

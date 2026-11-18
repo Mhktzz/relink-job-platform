@@ -35,6 +35,69 @@ function AuthPage({ mode, role }) {
     ? "Pilih tugas sesuai keahlian dan bangun reputasi dari hasil kerja nyata."
     : "Hubungkan kebutuhan usahamu dengan pekerja lokal terverifikasi tanpa ijazah formal.";
 
+  // Kriteria Validasi Kata Sandi Real-Time
+  const passwordCriteria = {
+    minLength: password.length >= 8,
+    upperLower: /[a-z]/.test(password) && /[A-Z]/.test(password),
+    number: /\d/.test(password),
+    symbol: /[^A-Za-z0-9]/.test(password),
+  };
+
+  const isPasswordCriteriaMet =
+    passwordCriteria.minLength &&
+    passwordCriteria.upperLower &&
+    passwordCriteria.number &&
+    passwordCriteria.symbol;
+
+  // Render Indikator Kriteria Kata Sandi
+  const renderPasswordCriteria = () => (
+    <div className="auth-password-criteria" aria-label="Ketentuan kata sandi">
+      <div
+        className={`auth-criteria-item ${
+          passwordCriteria.minLength ? "is-met" : ""
+        }`}
+      >
+        <span className="auth-criteria-circle">
+          {passwordCriteria.minLength && <Icon name="check" size={9} />}
+        </span>
+        <span>Minimal 8 karakter</span>
+      </div>
+
+      <div
+        className={`auth-criteria-item ${
+          passwordCriteria.upperLower ? "is-met" : ""
+        }`}
+      >
+        <span className="auth-criteria-circle">
+          {passwordCriteria.upperLower && <Icon name="check" size={9} />}
+        </span>
+        <span>Huruf Besar &amp; Kecil</span>
+      </div>
+
+      <div
+        className={`auth-criteria-item ${
+          passwordCriteria.number ? "is-met" : ""
+        }`}
+      >
+        <span className="auth-criteria-circle">
+          {passwordCriteria.number && <Icon name="check" size={9} />}
+        </span>
+        <span>Angka</span>
+      </div>
+
+      <div
+        className={`auth-criteria-item ${
+          passwordCriteria.symbol ? "is-met" : ""
+        }`}
+      >
+        <span className="auth-criteria-circle">
+          {passwordCriteria.symbol && <Icon name="check" size={9} />}
+        </span>
+        <span>Simbol (@, #, !)</span>
+      </div>
+    </div>
+  );
+
   // Handler Submit Login / Register
   async function handleSubmit(event) {
     event.preventDefault();
@@ -44,15 +107,15 @@ function AuthPage({ mode, role }) {
     try {
       if (isSignup) {
         // 1. Validasi Password
-        if (password !== passwordConfirm) {
-          setMessage("Konfirmasi kata sandi belum cocok.");
+        if (!isPasswordCriteriaMet) {
+          setMessage("Kata sandi harus memenuhi semua kriteria: minimal 8 karakter, huruf besar & kecil, angka, dan simbol (@, #, !).");
           setMessageType("error");
           setIsLoading(false);
           return;
         }
 
-        if (password.length < 6) {
-          setMessage("Kata sandi minimal 6 karakter.");
+        if (password !== passwordConfirm) {
+          setMessage("Konfirmasi kata sandi belum cocok.");
           setMessageType("error");
           setIsLoading(false);
           return;
@@ -230,13 +293,13 @@ function AuthPage({ mode, role }) {
   // Handler Simpan Kata Sandi Baru (Reset Password)
   async function handleResetPasswordSubmit(e) {
     e.preventDefault();
-    if (password !== passwordConfirm) {
-      setMessage("Konfirmasi kata sandi belum cocok.");
+    if (!isPasswordCriteriaMet) {
+      setMessage("Kata sandi baru harus memenuhi semua kriteria: minimal 8 karakter, huruf besar & kecil, angka, dan simbol (@, #, !).");
       setMessageType("error");
       return;
     }
-    if (password.length < 6) {
-      setMessage("Kata sandi baru minimal 6 karakter.");
+    if (password !== passwordConfirm) {
+      setMessage("Konfirmasi kata sandi belum cocok.");
       setMessageType("error");
       return;
     }
@@ -292,10 +355,10 @@ function AuthPage({ mode, role }) {
                     <div className="auth-password-input-wrap">
                       <input
                         autoComplete="new-password"
-                        minLength={6}
+                        minLength={8}
                         name="new-password"
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Minimal 6 karakter"
+                        placeholder="Minimal 8 karakter"
                         required
                         type={showPassword ? "text" : "password"}
                         value={password}
@@ -310,6 +373,7 @@ function AuthPage({ mode, role }) {
                         <Icon name={showPassword ? "eye-off" : "eye"} size={18} />
                       </button>
                     </div>
+                    {renderPasswordCriteria()}
                   </label>
 
                   <label className="auth-field">
@@ -548,11 +612,11 @@ function AuthPage({ mode, role }) {
                     <div className="auth-password-input-wrap">
                       <input
                         autoComplete={isSignup ? "new-password" : "current-password"}
-                        minLength={6}
+                        minLength={isSignup ? 8 : 6}
                         name="password"
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder={
-                          isSignup ? "Minimal 6 karakter" : "Masukkan kata sandi"
+                          isSignup ? "Minimal 8 karakter" : "Masukkan kata sandi"
                         }
                         required
                         type={showPassword ? "text" : "password"}
@@ -568,6 +632,7 @@ function AuthPage({ mode, role }) {
                         <Icon name={showPassword ? "eye-off" : "eye"} size={18} />
                       </button>
                     </div>
+                    {isSignup && renderPasswordCriteria()}
                   </label>
 
                   {isSignup && (
