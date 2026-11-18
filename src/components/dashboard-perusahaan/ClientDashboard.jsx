@@ -20,6 +20,7 @@ import RadarMitraView from './views/RadarMitraView.jsx'
 import PostingTugasView from './views/PostingTugasView.jsx'
 import DanaEscrowView from './views/DanaEscrowView.jsx'
 import PusatBantuanView from './views/PusatBantuanView.jsx'
+import DataTugasView from './views/DataTugasView.jsx'
 import ProofModal from './modals/ProofModal.jsx'
 import EscrowDetailModal from './modals/EscrowDetailModal.jsx'
 import DisputeModal from './modals/DisputeModal.jsx'
@@ -360,6 +361,17 @@ function ClientDashboard() {
             </button>
 
             <button
+              className={`sidebar-nav-item${currentMenu === 'data_tugas' ? ' sidebar-nav-item--active' : ''}`}
+              onClick={() => setCurrentMenu('data_tugas')}
+              title="Manajemen & Kelola Data Tugas"
+              type="button"
+            >
+              <Icon name="sliders" size={18} />
+              {isSidebarExpanded && <span>Data Tugas</span>}
+              {isSidebarExpanded && <span className="nav-counter-pill nav-counter-pill--escrow">{tasks.length}</span>}
+            </button>
+
+            <button
               className={`sidebar-nav-item${currentMenu === 'radar' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('radar')}
               title="Radar Mitra Terdekat"
@@ -550,6 +562,17 @@ function ClientDashboard() {
             setSelectedProofTask={setSelectedProofTask}
             setSearchQuery={setSearchQuery}
             setShowProofModal={setShowProofModal}
+          />
+        )}
+
+        {currentMenu === 'data_tugas' && (
+          <DataTugasView
+            setActionSuccessMsg={setActionSuccessMsg}
+            setCurrentMenu={setCurrentMenu}
+            setSelectedProofTask={setSelectedProofTask}
+            setShowProofModal={setShowProofModal}
+            setTasks={setTasks}
+            tasks={tasks}
           />
         )}
 

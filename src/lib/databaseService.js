@@ -108,6 +108,82 @@ export async function insertTaskToDb(newTask) {
   }
 }
 
+// 2b. Memperbarui Tugas di Database (Edit)
+export async function updateTaskInDb(taskIdOrCode, updatedFields) {
+  try {
+    const payload = { updated_at: new Date().toISOString() }
+    if (updatedFields.title !== undefined) payload.title = updatedFields.title
+    if (updatedFields.category !== undefined) {
+      const categoryMapping = {
+        operasional: 'operasional',
+        display: 'display',
+        kasir: 'kasir',
+        inventaris: 'inventaris',
+        logistik: 'logistik',
+        teknis: 'kasir',
+        administrasi: 'inventaris',
+      }
+      payload.category = categoryMapping[updatedFields.category] || updatedFields.category
+    }
+    if (updatedFields.tier !== undefined) payload.tier_requirement = updatedFields.tier
+    if (updatedFields.budget !== undefined) payload.budget = Number(updatedFields.budget)
+    if (updatedFields.workersNeeded !== undefined) payload.workers_needed = Number(updatedFields.workersNeeded)
+    if (updatedFields.checklist !== undefined) payload.checklist = updatedFields.checklist
+    if (updatedFields.dueDate !== undefined) payload.due_date = updatedFields.dueDate
+    if (updatedFields.status !== undefined) {
+      const statusMapping = {
+        'In Progress': 'in_progress',
+        'Proof Review': 'review',
+        'Completed': 'completed',
+        'in_progress': 'in_progress',
+        'review': 'review',
+        'completed': 'completed',
+        'open': 'open',
+      }
+      payload.status = statusMapping[updatedFields.status] || 'in_progress'
+    }
+
+    let query = supabase.from('tasks').update(payload)
+    if (typeof taskIdOrCode === 'string' && taskIdOrCode.startsWith('TSK-')) {
+      query = query.eq('task_code', taskIdOrCode)
+    } else {
+      query = query.eq('id', taskIdOrCode)
+    }
+
+    const { data, error } = await query.select()
+    if (error) {
+      console.warn('[Relink DB] Update task gagal:', error.message)
+      return { success: false, error: error.message }
+    }
+    return { success: true, data: data?.[0] }
+  } catch (err) {
+    console.warn('[Relink DB] Error update task:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+// 2c. Menghapus Tugas dari Database (Delete)
+export async function deleteTaskFromDb(taskIdOrCode) {
+  try {
+    let query = supabase.from('tasks').delete()
+    if (typeof taskIdOrCode === 'string' && taskIdOrCode.startsWith('TSK-')) {
+      query = query.eq('task_code', taskIdOrCode)
+    } else {
+      query = query.eq('id', taskIdOrCode)
+    }
+
+    const { error } = await query
+    if (error) {
+      console.warn('[Relink DB] Delete task gagal:', error.message)
+      return { success: false, error: error.message }
+    }
+    return { success: true }
+  } catch (err) {
+    console.warn('[Relink DB] Error delete task:', err)
+    return { success: false, error: err.message }
+  }
+}
+
 // 3. Mengambil Transaksi Escrow
 export async function fetchEscrowFromDb() {
   try {

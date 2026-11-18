@@ -3211,3 +3211,435 @@
     justify-content: center;
   }
 }
+
+/* ======================================================== */
+/* MANAJEMEN DATA TUGAS (VIEW, EDIT, HAPUS, DETAIL) */
+/* ======================================================== */
+.data-tugas-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.data-task-title-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.data-task-meta-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.data-task-category-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(15, 27, 61, 0.06);
+  color: var(--navy);
+  text-transform: capitalize;
+}
+
+.data-task-tandem-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+
+.task-deadline-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+/* Action Buttons */
+.data-task-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-action-view,
+.btn-action-edit,
+.btn-action-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 140ms ease;
+  border: 1px solid transparent;
+}
+
+.btn-action-view {
+  background: rgba(15, 27, 61, 0.05);
+  color: var(--navy);
+  border-color: rgba(15, 27, 61, 0.1);
+}
+
+.btn-action-view:hover {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.btn-action-edit {
+  background: #f0f7ff;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+
+.btn-action-edit:hover {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.btn-action-delete {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.btn-action-delete:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* Modal Detail Tugas */
+.task-detail-modal-card {
+  max-width: 640px;
+}
+
+.task-detail-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.task-detail-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.task-detail-cat-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--pink);
+  letter-spacing: 0.04em;
+}
+
+.task-detail-hero h3 {
+  margin: 4px 0 6px;
+  font-size: 17px;
+  color: var(--navy);
+}
+
+.task-detail-hero p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.task-detail-hero-budget {
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.task-detail-hero-budget small {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+}
+
+.task-detail-hero-budget strong {
+  font-size: 18px;
+  color: var(--navy);
+  font-family: var(--font-display);
+}
+
+.task-detail-props-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.task-prop-item {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prop-label {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.task-prop-item strong {
+  font-size: 13px;
+  color: var(--navy);
+}
+
+.task-prop-item small {
+  font-size: 10.5px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.task-detail-checklist-block h4,
+.task-detail-proof-box h4 {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  color: var(--navy);
+}
+
+.task-detail-checklist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-checklist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+  font-size: 12.5px;
+  color: var(--navy);
+}
+
+.task-checklist-row.is-done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.checklist-bullet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(15, 27, 61, 0.08);
+  color: var(--navy);
+  font-size: 11px;
+}
+
+.task-checklist-row.is-done .checklist-bullet {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.task-detail-proof-box {
+  padding: 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.task-proof-preview-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.task-proof-preview-row img {
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #cbd5e1;
+}
+
+.task-proof-preview-row p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--navy);
+  line-height: 1.5;
+}
+
+/* Modal Edit */
+.task-edit-modal-card {
+  max-width: 620px;
+}
+
+.task-edit-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+.edit-checklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.edit-checklist-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 12.5px;
+  color: var(--navy);
+}
+
+.btn-remove-checklist-item {
+  background: transparent;
+  border: 0;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px 6px;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: background 140ms ease;
+}
+
+.btn-remove-checklist-item:hover {
+  background: #fee2e2;
+}
+
+.edit-add-checklist-input-wrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.edit-add-checklist-input-wrap input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.btn-add-checklist-item {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--navy);
+  color: #ffffff;
+  border: 0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 140ms ease;
+}
+
+.btn-add-checklist-item:hover {
+  opacity: 0.9;
+}
+
+/* Modal Delete */
+.task-delete-modal-card {
+  max-width: 480px;
+}
+
+.task-delete-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.delete-warning-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.delete-warning-box svg {
+  flex-shrink: 0;
+  color: #dc2626;
+  margin-top: 2px;
+}
+
+.delete-warning-box strong {
+  display: block;
+  font-size: 13.5px;
+  margin-bottom: 4px;
+}
+
+.delete-warning-box p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #7f1d1d;
+}
+
+.delete-sub-notice {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.btn-confirm-delete-task {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: #dc2626;
+  color: #ffffff;
+  border: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms ease, transform 140ms ease;
+}
+
+.btn-confirm-delete-task:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.btn-confirm-delete-task:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
