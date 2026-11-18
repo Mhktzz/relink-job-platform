@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import relinkIcon from '../../assets/main-relink-1.svg'
 import Icon from '../common/Icon.jsx'
 import technicianPhoto from '../../assets/technician.jpg'
@@ -7,6 +7,12 @@ import {
   initialTaskBoard,
   initialEscrowTransactions,
 } from './mockData.js'
+import {
+  fetchTasksFromDb,
+  insertTaskToDb,
+  fetchEscrowFromDb,
+  updateEscrowStatusInDb,
+} from '../../lib/databaseService.js'
 import BerandaView from './views/BerandaView.jsx'
 import KanbanView from './views/KanbanView.jsx'
 import RadarMitraView from './views/RadarMitraView.jsx'
@@ -36,6 +42,29 @@ function ClientDashboard() {
   const [showEscrowModal, setShowEscrowModal] = useState(false)
   const [showDisputeModal, setShowDisputeModal] = useState(false)
   const [disputeReason, setDisputeReason] = useState('')
+
+  // Sinkronisasi data awal dari Supabase Database (dengan fallback data lokal)
+  useEffect(() => {
+    let isMounted = true
+    async function loadDataFromSupabase() {
+      try {
+        const [dbTasks, dbEscrow] = await Promise.all([
+          fetchTasksFromDb(),
+          fetchEscrowFromDb(),
+        ])
+        if (isMounted) {
+          if (dbTasks && dbTasks.length > 0) setTasks(dbTasks)
+          if (dbEscrow && dbEscrow.length > 0) setEscrowTransactions(dbEscrow)
+        }
+      } catch (err) {
+        console.warn('[Relink Supabase] Menggunakan data lokal cadangan:', err)
+      }
+    }
+    loadDataFromSupabase()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Form State untuk Buat Tugas Baru
   const [newTaskTitle, setNewTaskTitle] = useState('')
@@ -88,6 +117,7 @@ function ClientDashboard() {
 
   // Handler: Lepas Dana Escrow Langsung
   function handleReleaseEscrow(escrowItem) {
+    updateEscrowStatusInDb(escrowItem.id, 'released')
     setEscrowTransactions((prev) =>
       prev.map((item) =>
         item.id === escrowItem.id
@@ -195,6 +225,15 @@ function ClientDashboard() {
     }
 
     setTasks([createdTask, ...tasks])
+    insertTaskToDb({
+      title: newTaskTitle,
+      category: newTaskCategory,
+      tier: selectedTierLevel === 'tier_3' ? 'Tier 3' : selectedTierLevel === 'tier_2' ? 'Tier 2' : 'Tier 1',
+      budget: estimatedBudget,
+      workersNeeded: newTaskWorkersNeeded,
+      isTandem: newTaskIsTandem,
+      checklist: newTaskChecklist,
+    })
     setNewTaskTitle('')
     setNewTaskWorkersNeeded(1)
     setNewTaskIsTandem(false)

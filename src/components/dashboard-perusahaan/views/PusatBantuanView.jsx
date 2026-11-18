@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
+import { insertSupportTicketToDb } from '../../../lib/databaseService.js'
 
 function PusatBantuanView({ tasks = [], setActionSuccessMsg, setCurrentMenu }) {
   const [activeFaqCategory, setActiveFaqCategory] = useState('all') // 'all' | 'garansi' | 'escrow' | 'mitra' | 'tandem'
@@ -145,6 +146,13 @@ function PusatBantuanView({ tasks = [], setActionSuccessMsg, setCurrentMenu }) {
       }
 
       setSubmittedTickets([newTicket, ...submittedTickets])
+      insertSupportTicketToDb({
+        task: newTicket.task,
+        category: ticketCategory,
+        priority: newTicket.priority,
+        subject: ticketSubject,
+        details: ticketDetails,
+      })
       setTicketSubject('')
       setTicketDetails('')
       setIsSubmitting(false)
