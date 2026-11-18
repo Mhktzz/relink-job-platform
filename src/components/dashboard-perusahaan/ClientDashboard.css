@@ -3751,3 +3751,199 @@
   opacity: 0.65;
   cursor: wait;
 }
+
+/* ======================================================== */
+/* PANDUAN FITUR DASHBOARD ADMIN (PUSAT BANTUAN) */
+/* ======================================================== */
+.feature-guides-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feature-guide-card {
+  padding: 24px 28px;
+  border-radius: 20px;
+  background: var(--white);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 18px rgba(15, 27, 61, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.feature-guide-card:hover {
+  box-shadow: 0 8px 24px rgba(15, 27, 61, 0.06);
+}
+
+.guide-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.guide-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-category-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.guide-category-tag--amber {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.guide-category-tag--pink {
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+
+.guide-category-tag--mint {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.guide-category-tag--blue {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.guide-card-header h3 {
+  margin: 2px 0 0;
+  font-size: 18px;
+  color: var(--navy);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.guide-card-header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+.btn-guide-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #dce2ed;
+  background: var(--white);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+  transition: all 150ms ease;
+}
+
+.btn-guide-action:hover {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+  transform: translateY(-1px);
+}
+
+/* Stepper Layout */
+.guide-steps-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 6px;
+}
+
+.guide-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.guide-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.guide-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.guide-step-content h4 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.guide-step-content p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  line-height: 1.55;
+}
+
+.guide-tip-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 12.5px;
+  color: var(--navy);
+  line-height: 1.5;
+}
+
+.guide-tip-banner svg {
+  flex-shrink: 0;
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+.section-header-compact {
+  margin-bottom: 16px;
+}
+
+.section-header-compact h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: var(--navy);
+}
+
+.section-header-compact p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
