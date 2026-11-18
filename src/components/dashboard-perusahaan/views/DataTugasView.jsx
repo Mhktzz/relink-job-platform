@@ -187,7 +187,7 @@ function DataTugasView({
         </div>
         <div className="escrow-header-actions">
           <button
-            className="btn-create-task-primary"
+            className="btn-create-task-primary btn-action-primary"
             onClick={() => setCurrentMenu('new_task')}
             type="button"
           >

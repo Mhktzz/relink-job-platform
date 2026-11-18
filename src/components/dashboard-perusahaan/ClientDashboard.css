@@ -188,7 +188,15 @@
 .sidebar-nav-item--active .nav-counter-pill--escrow {
   background: #ffffff !important;
   color: var(--navy) !important;
-  box-shadow: 0 2px 6px rgba(15, 27, 61, 0.12);
+  font-weight: 800 !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 6px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 2px 8px rgba(15, 27, 61, 0.2) !important;
 }
 
 .sidebar-group--bottom {
@@ -2369,385 +2377,388 @@
   }
 }
 
-.helpdesk-workflow-card {
+/* PUSAT BANTUAN & PANDUAN PENGGUNAAN FITUR DASHBOARD */
+/* ======================================================== */
+.helpdesk-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
   margin-bottom: 24px;
 }
 
-/* SPLIT GRID: TIKET & FAQ */
-.helpdesk-split-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: 24px;
-  align-items: start;
+.metric-box-card--interactive {
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
-/* FORMULIR TIKET BANTUAN */
-.helpdesk-ticket-card {
+.metric-box-card--interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(15, 27, 61, 0.08);
+  border-color: #cbd5e1;
+}
+
+.metric-box-card--interactive:active {
+  transform: translateY(0);
+}
+
+/* FAQ CONTAINER CARD */
+.faq-section {
   background: var(--white);
   border-radius: 20px;
   border: 1px solid #e5eaf2;
-  padding: 24px 28px;
+  padding: 28px 32px;
   box-shadow: 0 4px 20px rgba(15, 27, 61, 0.03);
+  margin-bottom: 24px;
+}
+
+/* FAQ HEADER BAR (TABS & PENCARIAN) */
+.faq-header-bar {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 20px;
-}
-
-.ticket-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
-  padding-bottom: 16px;
+  padding-bottom: 20px;
   border-bottom: 1px solid #f0f3f8;
+  margin-bottom: 24px;
 }
 
-.ticket-card-header__title {
+.faq-category-tabs {
   display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.ticket-icon-wrap {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: var(--pink-soft);
-  color: var(--pink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ticket-card-header h3 {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--navy);
-  margin-bottom: 2px;
-}
-
-.ticket-card-header small {
-  color: var(--ink-muted);
-  font-size: 12px;
-}
-
-.ticket-badge-fast {
-  display: inline-flex;
-  align-items: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #0b6148;
-  background: #e6faf2;
-  padding: 4px 10px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.helpdesk-ticket-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-row-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.ticket-field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ticket-field-group label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--navy);
-}
-
-.ticket-field-group input,
-.ticket-field-group select,
-.ticket-field-group textarea {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid #dbe2ed;
-  background: var(--bg-soft);
-  color: var(--navy);
-  font-family: var(--font-body);
-  font-size: 13px;
-  outline: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-  box-sizing: border-box;
-}
-
-.ticket-field-group input:focus,
-.ticket-field-group select:focus,
-.ticket-field-group textarea:focus {
-  background: var(--white);
-  border-color: var(--pink);
-  box-shadow: 0 0 0 3px rgba(255, 61, 139, 0.12);
-}
-
-.ticket-form-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 4px;
-  flex-wrap: wrap;
-}
-
-.ticket-guarantee-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-muted);
-}
-
-.btn-submit-ticket {
-  display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--pink);
-  color: var(--white);
-  border: 0;
-  padding: 11px 22px;
-  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.faq-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid #dce2ed;
+  background: var(--bg-soft);
+  color: var(--ink-muted);
   font-family: var(--font-display);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(255, 61, 139, 0.28);
-  transition: transform 160ms ease, filter 160ms ease;
+  transition: all 180ms cubic-bezier(0.2, 0, 0, 1);
+  white-space: nowrap;
 }
 
-.btn-submit-ticket:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.06);
-}
-
-.btn-submit-ticket:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-/* RIWAYAT TIKET */
-.submitted-tickets-box {
-  margin-top: 8px;
-  padding-top: 18px;
-  border-top: 1px dashed #e2e8f0;
-}
-
-.submitted-tickets-box h4 {
-  font-size: 13px;
-  font-weight: 800;
+.faq-tab-btn:hover {
+  background: #edf2f9;
   color: var(--navy);
-  margin-bottom: 12px;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
 }
 
-.tickets-list {
+.faq-tab-btn--active {
+  background: var(--navy) !important;
+  color: var(--white) !important;
+  border-color: var(--navy) !important;
+  box-shadow: 0 4px 14px rgba(15, 27, 61, 0.2);
+}
+
+.faq-search-box {
+  position: relative;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 10px;
-}
-
-.ticket-list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 12px;
   background: var(--bg-soft);
-  border: 1px solid #e8edf5;
+  border: 1.5px solid #dce2ed;
+  border-radius: 999px;
+  padding: 9px 18px;
+  min-width: 320px;
+  flex: 0 1 360px;
+  transition: all 180ms ease;
 }
 
-.ticket-list-item__left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
+.faq-search-box:focus-within {
+  background: var(--white);
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(15, 27, 61, 0.08);
 }
 
-.ticket-id-tag {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--navy);
-  background: #e2e8f0;
-  padding: 4px 8px;
-  border-radius: 6px;
-  letter-spacing: 0.04em;
+.faq-search-box svg {
+  color: var(--ink-muted);
   flex-shrink: 0;
 }
 
-.ticket-info {
+.faq-search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--navy);
+}
+
+.faq-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+.btn-clear-search {
+  background: transparent;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 140ms ease;
+}
+
+.btn-clear-search:hover {
+  color: var(--navy);
+}
+
+/* MODUL PANDUAN LANGKAH-DEMI-LANGKAH */
+.feature-guides-stack {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  gap: 24px;
 }
 
-.ticket-info strong {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--navy);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.feature-guide-card {
+  background: #fbfcfe;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px 28px;
+  transition: all 200ms ease;
 }
 
-.ticket-meta-row {
+.feature-guide-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 20px rgba(15, 27, 61, 0.05);
+}
+
+.guide-card-header {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.guide-card-title-group {
+  flex: 1;
+  min-width: 260px;
+}
+
+.guide-category-tag {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: var(--ink-muted);
-}
-
-.ticket-status-pill {
-  display: inline-flex;
-  align-items: center;
-  font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   padding: 4px 10px;
   border-radius: 999px;
-  white-space: nowrap;
-  flex-shrink: 0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.ticket-status-pill--process {
+.guide-category-tag--amber {
   background: #fef3c7;
   color: #92400e;
 }
 
-.ticket-status-pill--resolved {
-  background: #d1fae5;
+.guide-category-tag--pink {
+  background: #fdf2f8;
+  color: #be185d;
+}
+
+.guide-category-tag--mint {
+  background: #ecfdf5;
   color: #065f46;
 }
 
-/* FAQ CARD */
-.helpdesk-faq-card {
-  background: var(--white);
-  border-radius: 20px;
-  border: 1px solid #e5eaf2;
-  padding: 24px 28px;
-  box-shadow: 0 4px 20px rgba(15, 27, 61, 0.03);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.guide-category-tag--navy {
+  background: #eff6ff;
+  color: #1e40af;
 }
 
-.faq-card-header h3 {
+.guide-card-title-group h3 {
   font-size: 16px;
   font-weight: 800;
   color: var(--navy);
-  margin-bottom: 2px;
+  margin: 0 0 6px 0;
 }
 
-.faq-card-header small {
-  color: var(--ink-muted);
-  font-size: 12px;
-}
-
-.faq-search-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg-soft);
-  border: 1px solid #dbe2ed;
-  border-radius: 12px;
-  padding: 8px 14px;
-}
-
-.faq-search-bar input {
-  flex: 1;
-  border: 0;
-  background: transparent;
-  outline: none;
-  font-family: var(--font-body);
+.guide-card-title-group p {
   font-size: 13px;
-  color: var(--navy);
-}
-
-.faq-clear-search {
-  background: transparent;
-  border: 0;
-  padding: 2px;
-  cursor: pointer;
   color: var(--ink-muted);
-  display: flex;
-  align-items: center;
+  line-height: 1.5;
+  margin: 0;
 }
 
-.faq-clear-search:hover {
-  color: var(--navy);
-}
-
-.faq-category-pills {
-  display: flex;
+.btn-guide-action {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--white);
+  border: 1.5px solid #dce2ed;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 160ms ease;
+  white-space: nowrap;
 }
 
-.faq-pill-btn {
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid #e2e8f0;
-  background: var(--bg-soft);
+.btn-guide-action:hover {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 27, 61, 0.15);
+}
+
+.guide-steps-stepper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.guide-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid #edf2f7;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 6px rgba(15, 27, 61, 0.02);
+}
+
+.guide-step-number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.guide-step-content h4 {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 4px 0;
+}
+
+.guide-step-content p {
+  font-size: 12px;
+  color: #4a5568;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.guide-tip-banner {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #166534;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.guide-tip-banner svg {
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.guide-tip-banner strong {
+  font-weight: 800;
+}
+
+.empty-faq-state {
+  text-align: center;
+  padding: 48px 24px;
   color: var(--ink-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-reset-filter {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: var(--white);
+  color: var(--navy);
   font-family: var(--font-display);
   font-size: 12px;
   font-weight: 700;
-  white-space: nowrap;
   cursor: pointer;
   transition: all 160ms ease;
-  flex-shrink: 0;
 }
 
-.faq-pill-btn:hover {
-  border-color: var(--navy);
-  color: var(--navy);
-}
-
-.faq-pill-btn--active {
+.btn-reset-filter:hover {
   background: var(--navy);
   color: var(--white);
   border-color: var(--navy);
 }
 
-.faq-accordion-container {
+/* FAQ ACCORDION */
+.section-header-compact {
+  margin-bottom: 20px;
+}
+
+.section-header-compact h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 4px 0;
+}
+
+.section-header-compact p {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.faq-accordion {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 480px;
-  overflow-y: auto;
-  padding-right: 4px;
 }
 
-.faq-item-card {
-  border: 1px solid #e8edf5;
+.faq-item {
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
-  background: var(--white);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  background: var(--bg-soft);
+  transition: all 180ms ease;
   overflow: hidden;
 }
 
-.faq-item-card:hover {
+.faq-item--expanded {
   border-color: #cbd5e1;
-}
-
-.faq-item-card--open {
-  border-color: rgba(255, 61, 139, 0.35);
+  background: var(--white);
   box-shadow: 0 4px 14px rgba(15, 27, 61, 0.04);
 }
 
@@ -2756,134 +2767,195 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 14px 16px;
-  border: 0;
+  gap: 16px;
+  padding: 16px 20px;
   background: transparent;
-  cursor: pointer;
+  border: none;
   text-align: left;
-}
-
-.faq-question-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.faq-category-tag {
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--pink);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.faq-question-text strong {
-  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 14px;
   font-weight: 700;
   color: var(--navy);
-  line-height: 1.4;
+  transition: background 140ms ease;
 }
 
-.faq-chevron-icon {
-  color: var(--ink-muted);
-  transition: transform 200ms ease;
+.faq-question-btn:hover {
+  background: rgba(15, 27, 61, 0.02);
+}
+
+.faq-q-text {
+  flex: 1;
+}
+
+.faq-toggle-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: var(--navy);
   display: flex;
   align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
   flex-shrink: 0;
+  transition: all 180ms ease;
 }
 
-.faq-chevron-icon--rotated {
-  transform: rotate(90deg);
-  color: var(--pink);
+.faq-item--expanded .faq-toggle-icon {
+  background: var(--navy);
+  color: var(--white);
 }
 
-.faq-answer-body {
-  padding: 0 16px 16px;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 12px;
-}
-
-.faq-answer-body p {
-  font-size: 13px;
-  color: #475569;
+.faq-answer-panel {
+  padding: 0 20px 18px 20px;
+  color: #4a5568;
+  font-size: 13.5px;
   line-height: 1.6;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+}
+
+.faq-answer-panel p {
   margin: 0;
 }
 
-.faq-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 36px 16px;
-  text-align: center;
-  gap: 10px;
-  color: var(--ink-muted);
+/* FORMULIR TIKET CS DUKUNGAN RESMI UMKM */
+.ticket-section {
+  background: var(--white);
+  border-radius: 20px;
+  border: 1px solid #e5eaf2;
+  padding: 28px 32px;
+  box-shadow: 0 4px 20px rgba(15, 27, 61, 0.03);
+  margin-bottom: 24px;
 }
 
-.btn-faq-reset {
-  margin-top: 6px;
-  background: var(--navy);
-  color: var(--white);
-  border: 0;
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.faq-contact-card {
+.ticket-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #fdf2f7;
-  border: 1px solid rgba(255, 61, 139, 0.2);
-  border-radius: 14px;
-  padding: 14px 18px;
-  margin-top: 4px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f0f3f8;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
-.faq-contact-card__info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--navy);
-}
-
-.faq-contact-card__info strong {
-  font-size: 13px;
+.ticket-section-header h3 {
+  font-size: 16px;
   font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 4px 0;
 }
 
-.faq-contact-card__info p {
-  font-size: 11px;
+.ticket-section-header p {
+  font-size: 13px;
   color: var(--ink-muted);
   margin: 0;
 }
 
-.btn-call-consultant {
+.ticket-status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--navy);
-  color: var(--white);
-  border: 0;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-family: var(--font-display);
   font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
-  transition: transform 160ms ease;
+  color: #0b6148;
+  background: #e6faf2;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #a7f3d0;
   white-space: nowrap;
 }
 
-.btn-call-consultant:hover {
-  transform: translateX(2px);
+.ticket-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ticket-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ticket-form .form-group label {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.ticket-form input,
+.ticket-form select,
+.ticket-form textarea {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #dce2ed;
+  background: var(--bg-soft);
+  color: var(--navy);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  outline: none;
+  transition: all 160ms ease;
+  box-sizing: border-box;
+}
+
+.ticket-form input:focus,
+.ticket-form select:focus,
+.ticket-form textarea:focus {
+  background: var(--white);
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(15, 27, 61, 0.08);
+}
+
+.ticket-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.ticket-guarantee-note {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.btn-submit-ticket {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  border: none;
+  background: var(--pink);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 61, 139, 0.28);
+  transition: all 160ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.btn-submit-ticket:hover:not(:disabled) {
+  background: #ff6aa5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 61, 139, 0.38);
+}
+
+.btn-submit-ticket:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-submit-ticket:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ======================================================== */
@@ -3231,31 +3303,33 @@
 }
 
 .btn-create-task-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 22px;
-  border-radius: 999px;
-  border: 0;
-  background: var(--pink);
-  color: var(--navy);
-  font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(255, 61, 139, 0.28);
-  transition: all 160ms cubic-bezier(0.2, 0, 0, 1);
-  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 11px 22px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  outline: none !important;
+  background: var(--pink) !important;
+  color: var(--navy) !important;
+  font-family: var(--font-display), sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(255, 61, 139, 0.28) !important;
+  transition: all 160ms cubic-bezier(0.2, 0, 0, 1) !important;
+  white-space: nowrap !important;
 }
 
 .btn-create-task-primary:hover {
-  background: #ff6aa5;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(255, 61, 139, 0.38);
+  background: #ff6aa5 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(255, 61, 139, 0.38) !important;
 }
 
 .btn-create-task-primary:active {
-  transform: translateY(0);
+  transform: translateY(0) !important;
 }
 
 .btn-modal-cancel {
