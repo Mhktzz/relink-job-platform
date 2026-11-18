@@ -125,6 +125,31 @@
   font-weight: 700;
 }
 
+.auth-field-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.auth-forgot-link {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--pink);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.auth-forgot-link:hover {
+  color: #ff6aa5;
+  text-decoration: underline;
+}
+
 .auth-field input {
   width: 100%;
   min-height: 48px;

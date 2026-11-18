@@ -20,6 +20,8 @@ function AuthPage({ mode, role }) {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   const isSignup = mode === "signup";
   const isWorker = role === "pekerja";
@@ -187,6 +189,43 @@ function AuthPage({ mode, role }) {
     }, 600);
   }
 
+  // Handler Kirim Tautan Lupa Kata Sandi
+  async function handleForgotPasswordSubmit(e) {
+    e.preventDefault();
+    if (!resetEmail.trim()) {
+      setMessage("Silakan masukkan email Anda.");
+      setMessageType("error");
+      return;
+    }
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        resetEmail.trim(),
+        {
+          redirectTo: `${window.location.origin}/masuk?reset=true`,
+        }
+      );
+
+      if (error) {
+        setMessage(`Gagal mengirim pemulihan: ${error.message}`);
+        setMessageType("error");
+      } else {
+        setMessage(
+          `Tautan pemulihan kata sandi telah dikirim ke ${resetEmail.trim()}! Silakan periksa kotak masuk atau spam email Anda.`
+        );
+        setMessageType("success");
+      }
+    } catch (err) {
+      console.error("[Forgot Password Error]", err);
+      setMessage("Terjadi kendala koneksi ke server. Silakan coba kembali.");
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <main className="auth-page">
       <div className="auth-frame">
@@ -199,211 +238,282 @@ function AuthPage({ mode, role }) {
           </header>
 
           <div className="auth-content">
-            <h1 id="auth-title">
-              {isSignup ? `Daftar Akun ${roleName}` : `Masuk ke ${roleName}`}
-            </h1>
-            <p className="auth-description">
-              {isSignup
-                ? `Buat akun ${roleName} untuk mulai memposting tugas dan merekrut pekerja lokal tanpa repot.`
-                : `Masuk ke dashboard ${roleName} dan kelola operasional tokomu.`}
-            </p>
+            {isForgotPassword ? (
+              <>
+                <h1 id="auth-title">Atur Ulang Kata Sandi</h1>
+                <p className="auth-description">
+                  Masukkan email akun terdaftar Anda. Kami akan mengirimkan tautan pemulihan kata sandi ke kotak masuk Anda.
+                </p>
 
-            <nav aria-label="Pilih jenis akun" className="auth-role-switch">
-              <a
-                aria-current={!isWorker ? "page" : undefined}
-                className={
-                  !isWorker
-                    ? "auth-role-switch__link is-active"
-                    : "auth-role-switch__link"
-                }
-                href={`/${isSignup ? "daftar" : "masuk"}?peran=umkm`}
-              >
-                Perusahaan / UMKM
-              </a>
-              <a
-                aria-current={isWorker ? "page" : undefined}
-                className={
-                  isWorker
-                    ? "auth-role-switch__link is-active"
-                    : "auth-role-switch__link"
-                }
-                href={`/${isSignup ? "daftar" : "masuk"}?peran=pekerja`}
-              >
-                Mitra Pekerja
-              </a>
-            </nav>
-
-            <form className="auth-form" onSubmit={handleSubmit}>
-              {isSignup && (
-                <label className="auth-field">
-                  <span>
-                    {isWorker ? "Nama Lengkap" : "Nama Pemilik Usaha"}
-                  </span>
-                  <input
-                    autoComplete="name"
-                    name="name"
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={
-                      isWorker ? "Nama sesuai KTP" : "Contoh: Ibu Rina Wati"
-                    }
-                    required
-                    type="text"
-                    value={name}
-                  />
-                </label>
-              )}
-
-              {isSignup && !isWorker && (
-                <label className="auth-field">
-                  <span>Nama Toko / Perusahaan</span>
-                  <input
-                    autoComplete="organization"
-                    name="business"
-                    onChange={(e) => setBusiness(e.target.value)}
-                    placeholder="Contoh: Toko Kue Bu Rina"
-                    required
-                    type="text"
-                    value={business}
-                  />
-                </label>
-              )}
-
-              {isSignup && (
-                <label className="auth-field">
-                  <span>Nomor WhatsApp / HP Aktif</span>
-                  <input
-                    autoComplete="tel"
-                    name="phone"
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Contoh: 081234567890"
-                    required
-                    type="tel"
-                    value={phone}
-                  />
-                </label>
-              )}
-
-              <label className="auth-field">
-                <span>Email Akun</span>
-                <input
-                  autoComplete="email"
-                  name="email"
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@emailbisnis.com"
-                  required
-                  type="email"
-                  value={email}
-                />
-              </label>
-
-              <label className="auth-field">
-                <span>Kata Sandi</span>
-                <div className="auth-password-input-wrap">
-                  <input
-                    autoComplete={isSignup ? "new-password" : "current-password"}
-                    minLength={6}
-                    name="password"
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={
-                      isSignup ? "Minimal 6 karakter" : "Masukkan kata sandi"
-                    }
-                    required
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                  />
-                  <button
-                    aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
-                    className="btn-toggle-password"
-                    onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
-                    type="button"
-                  >
-                    <Icon name={showPassword ? "eye-off" : "eye"} size={18} />
-                  </button>
-                </div>
-              </label>
-
-              {isSignup && (
-                <label className="auth-field">
-                  <span>Konfirmasi Kata Sandi</span>
-                  <div className="auth-password-input-wrap">
+                <form className="auth-form" onSubmit={handleForgotPasswordSubmit}>
+                  <label className="auth-field">
+                    <span>Email Akun Terdaftar</span>
                     <input
-                      autoComplete="new-password"
-                      minLength={6}
-                      name="password-confirm"
-                      onChange={(e) => setPasswordConfirm(e.target.value)}
-                      placeholder="Ulangi kata sandi Anda"
+                      autoComplete="email"
+                      name="reset-email"
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder="nama@emailbisnis.com"
                       required
-                      type={showPasswordConfirm ? "text" : "password"}
-                      value={passwordConfirm}
+                      type="email"
+                      value={resetEmail}
                     />
-                    <button
-                      aria-label={
-                        showPasswordConfirm
-                          ? "Sembunyikan konfirmasi kata sandi"
-                          : "Tampilkan konfirmasi kata sandi"
-                      }
-                      className="btn-toggle-password"
-                      onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                      tabIndex={-1}
-                      type="button"
+                  </label>
+
+                  {message && (
+                    <div
+                      aria-live="polite"
+                      className={`auth-message auth-message--${messageType}`}
+                      role="status"
                     >
-                      <Icon
-                        name={showPasswordConfirm ? "eye-off" : "eye"}
-                        size={18}
-                      />
-                    </button>
-                  </div>
-                </label>
-              )}
+                      {message}
+                    </div>
+                  )}
 
-              {message && (
-                <div
-                  aria-live="polite"
-                  className={`auth-message auth-message--${messageType}`}
-                  role="status"
-                >
-                  {message}
-                </div>
-              )}
+                  <button
+                    className="auth-submit"
+                    disabled={isLoading}
+                    type="submit"
+                  >
+                    {isLoading ? "Mengirim Tautan..." : "Kirim Tautan Pemulihan"}
+                  </button>
 
-              <button
-                className="auth-submit"
-                disabled={isLoading}
-                type="submit"
-              >
-                {isLoading ? (
-                  "Memproses..."
-                ) : isSignup ? (
-                  "Daftar Akun UMKM"
-                ) : (
-                  "Masuk ke Dashboard"
-                )}
-              </button>
-
-              {/* Tombol Akses Cepat Demo UMKM */}
-              {!isWorker && (
-                <>
-                  <div className="auth-demo-divider">
-                    <span>ATAU COBA LANGSUNG</span>
-                  </div>
                   <button
                     className="btn-auth-demo"
-                    onClick={handleDemoLogin}
+                    onClick={() => {
+                      setIsForgotPassword(false);
+                      setMessage("");
+                    }}
                     type="button"
                   >
-                    Masuk Cepat Demo (Toko Kue Bu Rina) &rarr;
+                    &larr; Kembali ke Halaman Masuk
                   </button>
-                </>
-              )}
-            </form>
+                </form>
+              </>
+            ) : (
+              <>
+                <h1 id="auth-title">
+                  {isSignup ? `Daftar Akun ${roleName}` : `Masuk ke ${roleName}`}
+                </h1>
+                <p className="auth-description">
+                  {isSignup
+                    ? `Buat akun ${roleName} untuk mulai memposting tugas dan merekrut pekerja lokal tanpa repot.`
+                    : `Masuk ke dashboard ${roleName} dan kelola operasional tokomu.`}
+                </p>
 
-            <p className="auth-switch">
-              {isSignup ? "Sudah punya akun bisnis?" : "Belum mendaftarkan usaha Anda?"}{" "}
-              <a href={`/${isSignup ? "masuk" : "daftar"}?peran=${role}`}>
-                {isSignup ? "Masuk sekarang" : "Daftar gratis di sini"}
-              </a>
-            </p>
+                <nav aria-label="Pilih jenis akun" className="auth-role-switch">
+                  <a
+                    aria-current={!isWorker ? "page" : undefined}
+                    className={
+                      !isWorker
+                        ? "auth-role-switch__link is-active"
+                        : "auth-role-switch__link"
+                    }
+                    href={`/${isSignup ? "daftar" : "masuk"}?peran=umkm`}
+                  >
+                    Perusahaan / UMKM
+                  </a>
+                  <a
+                    aria-current={isWorker ? "page" : undefined}
+                    className={
+                      isWorker
+                        ? "auth-role-switch__link is-active"
+                        : "auth-role-switch__link"
+                    }
+                    href={`/${isSignup ? "daftar" : "masuk"}?peran=pekerja`}
+                  >
+                    Mitra Pekerja
+                  </a>
+                </nav>
+
+                <form className="auth-form" onSubmit={handleSubmit}>
+                  {isSignup && (
+                    <label className="auth-field">
+                      <span>
+                        {isWorker ? "Nama Lengkap" : "Nama Pemilik Usaha"}
+                      </span>
+                      <input
+                        autoComplete="name"
+                        name="name"
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={
+                          isWorker ? "Nama sesuai KTP" : "Contoh: Ibu Rina Wati"
+                        }
+                        required
+                        type="text"
+                        value={name}
+                      />
+                    </label>
+                  )}
+
+                  {isSignup && !isWorker && (
+                    <label className="auth-field">
+                      <span>Nama Toko / Perusahaan</span>
+                      <input
+                        autoComplete="organization"
+                        name="business"
+                        onChange={(e) => setBusiness(e.target.value)}
+                        placeholder="Contoh: Toko Kue Bu Rina"
+                        required
+                        type="text"
+                        value={business}
+                      />
+                    </label>
+                  )}
+
+                  {isSignup && (
+                    <label className="auth-field">
+                      <span>Nomor WhatsApp / HP Aktif</span>
+                      <input
+                        autoComplete="tel"
+                        name="phone"
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Contoh: 081234567890"
+                        required
+                        type="tel"
+                        value={phone}
+                      />
+                    </label>
+                  )}
+
+                  <label className="auth-field">
+                    <span>Email Akun</span>
+                    <input
+                      autoComplete="email"
+                      name="email"
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="nama@emailbisnis.com"
+                      required
+                      type="email"
+                      value={email}
+                    />
+                  </label>
+
+                  <label className="auth-field">
+                    <div className="auth-field-header-row">
+                      <span>Kata Sandi</span>
+                      {!isSignup && (
+                        <button
+                          className="auth-forgot-link"
+                          onClick={() => {
+                            setIsForgotPassword(true);
+                            setResetEmail(email);
+                            setMessage("");
+                          }}
+                          tabIndex={-1}
+                          type="button"
+                        >
+                          Lupa kata sandi?
+                        </button>
+                      )}
+                    </div>
+                    <div className="auth-password-input-wrap">
+                      <input
+                        autoComplete={isSignup ? "new-password" : "current-password"}
+                        minLength={6}
+                        name="password"
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder={
+                          isSignup ? "Minimal 6 karakter" : "Masukkan kata sandi"
+                        }
+                        required
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                      />
+                      <button
+                        aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                        className="btn-toggle-password"
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                        type="button"
+                      >
+                        <Icon name={showPassword ? "eye-off" : "eye"} size={18} />
+                      </button>
+                    </div>
+                  </label>
+
+                  {isSignup && (
+                    <label className="auth-field">
+                      <span>Konfirmasi Kata Sandi</span>
+                      <div className="auth-password-input-wrap">
+                        <input
+                          autoComplete="new-password"
+                          minLength={6}
+                          name="password-confirm"
+                          onChange={(e) => setPasswordConfirm(e.target.value)}
+                          placeholder="Ulangi kata sandi Anda"
+                          required
+                          type={showPasswordConfirm ? "text" : "password"}
+                          value={passwordConfirm}
+                        />
+                        <button
+                          aria-label={
+                            showPasswordConfirm
+                              ? "Sembunyikan konfirmasi kata sandi"
+                              : "Tampilkan konfirmasi kata sandi"
+                          }
+                          className="btn-toggle-password"
+                          onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                          tabIndex={-1}
+                          type="button"
+                        >
+                          <Icon
+                            name={showPasswordConfirm ? "eye-off" : "eye"}
+                            size={18}
+                          />
+                        </button>
+                      </div>
+                    </label>
+                  )}
+
+                  {message && (
+                    <div
+                      aria-live="polite"
+                      className={`auth-message auth-message--${messageType}`}
+                      role="status"
+                    >
+                      {message}
+                    </div>
+                  )}
+
+                  <button
+                    className="auth-submit"
+                    disabled={isLoading}
+                    type="submit"
+                  >
+                    {isLoading ? (
+                      "Memproses..."
+                    ) : isSignup ? (
+                      "Daftar Akun UMKM"
+                    ) : (
+                      "Masuk ke Dashboard"
+                    )}
+                  </button>
+
+                  {/* Tombol Akses Cepat Demo UMKM */}
+                  {!isWorker && (
+                    <>
+                      <div className="auth-demo-divider">
+                        <span>ATAU COBA LANGSUNG</span>
+                      </div>
+                      <button
+                        className="btn-auth-demo"
+                        onClick={handleDemoLogin}
+                        type="button"
+                      >
+                        Masuk Cepat Demo (Toko Kue Bu Rina) &rarr;
+                      </button>
+                    </>
+                  )}
+                </form>
+
+                <p className="auth-switch">
+                  {isSignup ? "Sudah punya akun bisnis?" : "Belum mendaftarkan usaha Anda?"}{" "}
+                  <a href={`/${isSignup ? "masuk" : "daftar"}?peran=${role}`}>
+                    {isSignup ? "Masuk sekarang" : "Daftar gratis di sini"}
+                  </a>
+                </p>
+              </>
+            )}
           </div>
 
           <p className="auth-legal">
