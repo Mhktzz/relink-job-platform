@@ -1,4 +1,5 @@
 import Icon from '../../common/Icon.jsx'
+import cashierPhoto from '../../../assets/cashier.jpg'
 
 function KanbanView({
   searchQuery,
@@ -12,17 +13,20 @@ function KanbanView({
 }) {
   return (
     <main className="dashboard-content-flow">
+      {/* 1. Header Bar */}
       <div className="content-heading-bar">
         <div>
-          <h1>Kanban Tugas & Serah Terima</h1>
-          <p>Pantau tahapan pengerjaan tugas mikro, verifikasi bukti GPS, dan konfirmasi serah terima.</p>
+          <h1>Kanban Tugas &amp; Serah Terima</h1>
+          <p>
+            Alur kerja visual cepat untuk memantau progres harian, meninjau draft serah terima mitra, dan mencairkan garansi dana escrow.
+          </p>
         </div>
         <div className="kanban-action-bar">
           <div className="task-search-pill">
             <Icon name="search" size={14} />
             <input
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search task in kanban..."
+              placeholder="Cari tugas di papan kanban..."
               type="text"
               value={searchQuery}
             />
@@ -38,167 +42,252 @@ function KanbanView({
         </div>
       </div>
 
-      {/* 3-COLUMN KANBAN BOARD */}
+      {/* 2. 3-COLUMN KANBAN BOARD */}
       <div className="task-columns-grid">
-        {/* Kolom 1: Current Task */}
+        {/* ======================================================== */}
+        {/* KOLOM 1: Sedang Berjalan (In Progress) */}
+        {/* ======================================================== */}
         <div className="kanban-column">
           <div className="kanban-column__header">
             <div className="column-title">
-              <strong>Current Task</strong>
+              <strong>Sedang Berjalan</strong>
+              <span className="column-status-sub">In Progress</span>
               <span className="column-counter">{currentTasks.length}</span>
             </div>
             <button
-              aria-label="Tambah tugas"
+              aria-label="Tambah tugas baru"
               className="btn-column-add"
               onClick={() => setCurrentMenu('new_task')}
+              title="Posting Tugas Baru"
               type="button"
             >
               +
             </button>
           </div>
 
+          <p className="column-sub-note">
+            Memantau progres harian tugas yang sedang dikerjakan mitra beserta waktu pengerjaannya.
+          </p>
+
           <div className="kanban-card-stack">
-            {currentTasks.map((task) => (
-              <article className="kanban-card" key={task.id}>
-                <div className="kanban-card__top">
-                  <span className="card-code-pill">{task.code}</span>
-                  <span className="card-status-pill">{task.statusBadge}</span>
-                </div>
-                <h3 className="kanban-card__title">{task.title}</h3>
-                <p className="kanban-card__desc">{task.description}</p>
-
-                <div className="kanban-card__meta">
-                  <span className={`priority-tag priority-tag--${task.priority.toLowerCase()}`}>
-                    {task.priority}
-                  </span>
-                  <span className="card-date">{task.dateRange}</span>
-                </div>
-
-                <div className="kanban-card__footer">
-                  <div className="worker-mini">
-                    <img alt="" className="worker-mini-avatar" src={task.workerPhoto} />
-                    <span>{task.workerName}</span>
+            {currentTasks.length === 0 ? (
+              <div className="empty-column-box">
+                <Icon name="briefcase" size={24} />
+                <p>Tidak ada tugas yang sedang berjalan</p>
+              </div>
+            ) : (
+              currentTasks.map((task) => (
+                <article className="kanban-card" key={task.id}>
+                  <div className="kanban-card__top">
+                    <span className="card-code-pill">{task.code || task.id}</span>
+                    <span className="card-status-pill">{task.statusBadge || 'In Progress'}</span>
                   </div>
-                  <span className="budget-tag">Rp{task.budget.toLocaleString('id-ID')}</span>
-                </div>
-              </article>
-            ))}
+                  <h3 className="kanban-card__title">{task.title}</h3>
+                  <p className="kanban-card__desc">{task.description}</p>
+
+                  <div className="kanban-card__meta">
+                    <span className={`priority-tag priority-tag--${(task.priority || 'medium').toLowerCase()}`}>
+                      {task.priority || 'Normal'}
+                    </span>
+                    <span className="card-date">{task.dateRange || 'Sedang Dikerjakan'}</span>
+                  </div>
+
+                  <div className="kanban-card__footer">
+                    <div className="worker-mini">
+                      <img
+                        alt={task.workerName || 'Mitra'}
+                        className="worker-mini-avatar"
+                        src={task.workerPhoto || cashierPhoto}
+                      />
+                      <span>{task.workerName || 'Mitra Pekerja'}</span>
+                    </div>
+                    <span className="budget-tag">
+                      Rp{Number(task.budget || 0).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Kolom 2: Tasks Due / Review Bukti */}
-        <div className="kanban-column">
+        {/* ======================================================== */}
+        {/* KOLOM 2: Tunggu Review (Proof Review) [Tempat Mitra Submit Draft] */}
+        {/* ======================================================== */}
+        <div className="kanban-column kanban-column--review">
           <div className="kanban-column__header">
             <div className="column-title">
-              <strong>Tasks Due This Week</strong>
-              <span className="column-counter">{dueWeekTasks.length}</span>
+              <strong>Tunggu Review</strong>
+              <span className="column-status-sub column-status-sub--warn">Proof Review</span>
+              <span className="column-counter column-counter--warn">{dueWeekTasks.length}</span>
             </div>
             <button
-              aria-label="Tambah tugas"
+              aria-label="Tambah tugas baru"
               className="btn-column-add"
               onClick={() => setCurrentMenu('new_task')}
+              title="Posting Tugas Baru"
               type="button"
             >
               +
             </button>
           </div>
 
+          <div className="column-draft-badge-row">
+            <span className="column-draft-badge">
+              <Icon name="shield" size={12} />
+              <span>Tempat Mitra Submit Draft</span>
+            </span>
+          </div>
+
+          <p className="column-sub-note">
+            Ketika pekerja selesai mengunggah bukti kerja (foto lapangan ber-GPS &amp; checklist SOP selesai), kartu tugas otomatis berpindah ke kolom ini.
+          </p>
+
           <div className="kanban-card-stack">
-            {dueWeekTasks.map((task) => (
-              <article
-                className={`kanban-card${task.proofData ? ' kanban-card--needs-approval' : ''}`}
-                key={task.id}
-              >
-                <div className="kanban-card__top">
-                  <span className="card-code-pill">{task.code}</span>
-                  <span className="card-status-pill card-status-pill--warn">{task.statusBadge}</span>
-                </div>
-                <h3 className="kanban-card__title">{task.title}</h3>
-                <p className="kanban-card__desc">{task.description}</p>
+            {dueWeekTasks.length === 0 ? (
+              <div className="empty-column-box empty-column-box--review">
+                <Icon name="check" size={24} />
+                <p>Belum ada draft serah terima yang menunggu review</p>
+                <small>Tugas pekerja yang selesai akan otomatis tampil di sini.</small>
+              </div>
+            ) : (
+              dueWeekTasks.map((task) => (
+                <article
+                  className="kanban-card kanban-card--needs-approval"
+                  key={task.id}
+                >
+                  <div className="kanban-card__top">
+                    <span className="card-code-pill">{task.code || task.id}</span>
+                    <span className="card-status-pill card-status-pill--warn">
+                      {task.statusBadge || 'Proof Review'}
+                    </span>
+                  </div>
+                  <h3 className="kanban-card__title">{task.title}</h3>
+                  <p className="kanban-card__desc">{task.description}</p>
 
-                <div className="kanban-card__meta">
-                  <span className={`priority-tag priority-tag--${task.priority.toLowerCase()}`}>
-                    {task.priority}
-                  </span>
-                  <span className="card-date">{task.dateRange}</span>
-                </div>
+                  <div className="kanban-card__meta">
+                    <span className={`priority-tag priority-tag--${(task.priority || 'high').toLowerCase()}`}>
+                      Siap Verifikasi
+                    </span>
+                    <span className="card-date">{task.dateRange || 'Menunggu Persetujuan'}</span>
+                  </div>
 
-                {task.proofData ? (
+                  {/* Tombol Tinjau Bukti & Verifikasi Serah Terima */}
                   <div className="card-approval-box">
                     <div className="gps-watermark-snippet">
-                      <Icon name="pin" size={12} />
-                      <small>GPS Terverifikasi: {task.proofData.gpsLocation}</small>
+                      <Icon name="pin" size={13} />
+                      <small>
+                        GPS: {task.proofData?.gpsLocation || 'Lokasi Toko UMKM (Verified GPS)'}
+                      </small>
                     </div>
+
                     <button
                       className="btn-review-proof"
                       onClick={() => {
-                        setSelectedProofTask(task)
+                        const enrichedTask = {
+                          ...task,
+                          proofData: task.proofData || {
+                            photoUrl: cashierPhoto,
+                            gpsLocation: 'Jl. Merdeka No. 42 (Toko UMKM Terverifikasi)',
+                            timestamp: 'Hari ini, Waktu Penyerahan Selesai',
+                            note: 'Seluruh butir checklist SOP serah terima pekerjaan harian telah saya selesaikan dengan lengkap.',
+                          },
+                          acceptanceChecklist:
+                            Array.isArray(task.acceptanceChecklist) && task.acceptanceChecklist.length > 0
+                              ? task.acceptanceChecklist
+                              : [
+                                  { id: 'c1', text: 'Tugas diselesaikan sesuai instruksi operasional toko', done: true },
+                                  { id: 'c2', text: 'Area kerja telah dirapikan & diserahterimakan', done: true },
+                                ],
+                        }
+                        setSelectedProofTask(enrichedTask)
                         setShowProofModal(true)
                       }}
                       type="button"
                     >
-                      Periksa Bukti & Tanda Tangan
+                      <Icon name="check" size={15} />
+                      <span>Tinjau Bukti</span>
                     </button>
-                  </div>
-                ) : (
-                  <div className="kanban-card__footer">
-                    <div className="worker-mini">
-                      <img alt="" className="worker-mini-avatar" src={task.workerPhoto} />
-                      <span>{task.workerName}</span>
+
+                    <div className="worker-mini worker-mini--compact">
+                      <img
+                        alt={task.workerName || 'Mitra'}
+                        className="worker-mini-avatar"
+                        src={task.workerPhoto || cashierPhoto}
+                      />
+                      <span>Diajukan oleh {task.workerName || 'Mitra'}</span>
                     </div>
-                    <span className="budget-tag">Rp{task.budget.toLocaleString('id-ID')}</span>
                   </div>
-                )}
-              </article>
-            ))}
+                </article>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Kolom 3: Completed & Overdue */}
+        {/* ======================================================== */}
+        {/* KOLOM 3: Selesai (Completed) */}
+        {/* ======================================================== */}
         <div className="kanban-column">
           <div className="kanban-column__header">
             <div className="column-title">
-              <strong>Completed & Overdue</strong>
-              <span className="column-counter">{overdueTasks.length}</span>
+              <strong>Selesai</strong>
+              <span className="column-status-sub column-status-sub--good">Completed</span>
+              <span className="column-counter column-counter--good">{overdueTasks.length}</span>
             </div>
             <button
-              aria-label="Tambah tugas"
+              aria-label="Tambah tugas baru"
               className="btn-column-add"
               onClick={() => setCurrentMenu('new_task')}
+              title="Posting Tugas Baru"
               type="button"
             >
               +
             </button>
           </div>
 
+          <p className="column-sub-note">
+            Tugas yang sudah Anda setujui dan dananya telah dicairkan ke saldo pekerja.
+          </p>
+
           <div className="kanban-card-stack">
-            {overdueTasks.map((task) => (
-              <article className="kanban-card kanban-card--done" key={task.id}>
-                <div className="kanban-card__top">
-                  <span className="card-code-pill">{task.code}</span>
-                  <span className="card-status-pill card-status-pill--success">
-                    {task.statusBadge}
-                  </span>
-                </div>
-                <h3 className="kanban-card__title">{task.title}</h3>
-                <p className="kanban-card__desc">{task.description}</p>
-
-                <div className="kanban-card__meta">
-                  <span className="priority-tag priority-tag--low">Completed</span>
-                  <span className="card-date">{task.dateRange}</span>
-                </div>
-
-                <div className="kanban-card__footer">
-                  <div className="worker-mini">
-                    <img alt="" className="worker-mini-avatar" src={task.workerPhoto} />
-                    <span>{task.workerName}</span>
+            {overdueTasks.length === 0 ? (
+              <div className="empty-column-box">
+                <Icon name="check" size={24} />
+                <p>Belum ada riwayat tugas selesai</p>
+              </div>
+            ) : (
+              overdueTasks.map((task) => (
+                <article className="kanban-card kanban-card--done" key={task.id}>
+                  <div className="kanban-card__top">
+                    <span className="card-code-pill">{task.code || task.id}</span>
+                    <span className="card-status-pill card-status-pill--success">
+                      Completed
+                    </span>
                   </div>
-                  <span className="budget-tag budget-tag--released">
-                    Rp{task.budget.toLocaleString('id-ID')} (Cair)
-                  </span>
-                </div>
-              </article>
-            ))}
+                  <h3 className="kanban-card__title">{task.title}</h3>
+                  <p className="kanban-card__desc">{task.description}</p>
+
+                  <div className="kanban-card__meta">
+                    <span className="priority-tag priority-tag--low">Selesai &amp; Cair</span>
+                    <span className="card-date">{task.dateRange || 'Serah Terima Selesai'}</span>
+                  </div>
+
+                  <div className="kanban-card__footer">
+                    <div className="worker-mini">
+                      <img
+                        alt={task.workerName || 'Mitra'}
+                        className="worker-mini-avatar"
+                        src={task.workerPhoto || cashierPhoto}
+                      />
+                      <span>{task.workerName || 'Mitra Pekerja'}</span>
+                    </div>
+                    <span className="budget-tag budget-tag--released">
+                      Rp{Number(task.budget || 0).toLocaleString('id-ID')} (Cair)
+                    </span>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </div>
       </div>

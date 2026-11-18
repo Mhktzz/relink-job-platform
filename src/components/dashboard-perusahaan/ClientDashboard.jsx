@@ -131,9 +131,20 @@ function ClientDashboard() {
     t.code.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const currentTasks = filteredTasks.filter((t) => t.column === 'current')
-  const dueWeekTasks = filteredTasks.filter((t) => t.column === 'due_week')
-  const overdueTasks = filteredTasks.filter((t) => t.column === 'overdue')
+  const currentTasks = filteredTasks.filter(
+    (t) =>
+      (t.column === 'current' || t.statusBadge === 'In Progress') &&
+      t.statusBadge !== 'Proof Review' &&
+      t.statusBadge !== 'Completed' &&
+      t.status !== 'review' &&
+      t.status !== 'completed'
+  )
+  const dueWeekTasks = filteredTasks.filter(
+    (t) => t.column === 'due_week' || t.statusBadge === 'Proof Review' || t.status === 'review'
+  )
+  const overdueTasks = filteredTasks.filter(
+    (t) => t.column === 'overdue' || t.statusBadge === 'Completed' || t.status === 'completed'
+  )
 
   // Handler: Approve Bukti Kerja & TTD
   function handleApproveProof(taskToApprove) {
@@ -145,7 +156,7 @@ function ClientDashboard() {
     setTasks((prev) =>
       prev.map((t) =>
         t.id === taskToApprove.id
-          ? { ...t, column: 'overdue', statusBadge: 'Completed' }
+          ? { ...t, column: 'overdue', statusBadge: 'Completed', status: 'completed' }
           : t,
       ),
     )
