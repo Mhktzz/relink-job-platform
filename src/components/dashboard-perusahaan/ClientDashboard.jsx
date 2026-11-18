@@ -282,6 +282,7 @@ function ClientDashboard() {
       workersNeeded: newTaskWorkersNeeded,
       isTandem: newTaskIsTandem,
       checklist: newTaskChecklist,
+      clientId: currentUser?.id,
     })
     setNewTaskTitle('')
     setNewTaskWorkersNeeded(1)

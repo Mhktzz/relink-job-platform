@@ -64,32 +64,47 @@ export async function fetchTasksFromDb() {
 export async function insertTaskToDb(newTask) {
   try {
     const taskCode = `TSK-${Math.floor(100 + Math.random() * 900)}`
+
+    // Normalisasi kategori agar selalu sesuai dengan constraint tabel tasks di Supabase
+    const categoryMapping = {
+      operasional: 'operasional',
+      display: 'display',
+      kasir: 'kasir',
+      inventaris: 'inventaris',
+      logistik: 'logistik',
+      teknis: 'kasir', // Pemeliharaan Mesin Kasir & POS
+      administrasi: 'inventaris', // Input Stok & Pembukuan
+    }
+    const safeCategory = categoryMapping[newTask.category] || 'operasional'
+
     const { data, error } = await supabase
       .from('tasks')
       .insert([
         {
           task_code: taskCode,
           title: newTask.title,
-          category: newTask.category || 'operasional',
+          category: safeCategory,
           tier_requirement: newTask.tier || 'Tier 1',
           budget: newTask.budget || 85000,
           workers_needed: newTask.workersNeeded || 1,
           is_tandem: Boolean(newTask.isTandem),
           checklist: newTask.checklist || [],
-          status: 'open',
+          status: 'in_progress',
           location_address: 'Toko Kue Bu Rina, Tebet',
           due_date: 'Hari ini, 18:00 WIB',
+          client_id: newTask.clientId || null,
         },
       ])
       .select()
 
     if (error) {
       console.warn('[Relink DB] Insert task gagal, disimpan di memory:', error.message)
+      return { success: false, error: error.message }
     }
-    return { success: !error, data: data?.[0] }
+    return { success: true, data: data?.[0] }
   } catch (err) {
     console.warn('[Relink DB] Error insert task:', err)
-    return { success: false }
+    return { success: false, error: err.message }
   }
 }
 
