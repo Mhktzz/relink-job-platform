@@ -5,21 +5,22 @@ import math
 def create_relink_image(size=64):
     # Create RGBA buffer
     pixels = bytearray(size * size * 4)
-    cx, cy = size / 2, size / 2
     scale = size / 64.0
 
     # Draw transparent background
     for y in range(size):
         for x in range(size):
-            # Check distance for Relink icon shapes
-            # Main navy C-loop (around center (26, 32))
+            # Main loop (around center (28*scale, 32*scale))
             dx = (x - 28 * scale)
             dy = (y - 32 * scale)
             dist = math.sqrt(dx * dx + dy * dy)
-            angle = math.atan2(dy, dx) # -pi to pi
+            angle = math.atan2(dy, dx)
+
+            # Outer border for contrast on light mode
+            in_outer_border = (11 * scale <= dist <= 25 * scale) and not (-0.4 < angle < 0.8)
 
             # Loop body: radius ~ 18*scale, thickness ~ 6*scale
-            in_loop = (12 * scale <= dist <= 24 * scale) and not (-0.4 < angle < 0.8)
+            in_loop = (13 * scale <= dist <= 23 * scale) and not (-0.4 < angle < 0.8)
 
             # Hot pink dot/accent at (40*scale, 38*scale), radius 8*scale
             pdx = x - 40 * scale
@@ -35,13 +36,19 @@ def create_relink_image(size=64):
                 pixels[idx + 2] = 139
                 pixels[idx + 3] = 255
             elif in_loop:
-                # Deep Navy #0F1B3D -> (15, 27, 61)
+                # Crisp White for clear visibility on dark tabs -> (255, 255, 255)
+                pixels[idx] = 255
+                pixels[idx + 1] = 255
+                pixels[idx + 2] = 255
+                pixels[idx + 3] = 255
+            elif in_outer_border:
+                # Subtle dark navy border for separation -> (15, 27, 61)
                 pixels[idx] = 15
                 pixels[idx + 1] = 27
                 pixels[idx + 2] = 61
-                pixels[idx + 3] = 255
+                pixels[idx + 3] = 180
             else:
-                # Transparent
+                # Fully Transparent
                 pixels[idx] = 0
                 pixels[idx + 1] = 0
                 pixels[idx + 2] = 0
@@ -67,10 +74,7 @@ def encode_png(width, height, rgba):
     return png
 
 def make_ico(png_bytes, width, height):
-    # ICO header (6 bytes): reserved (0), type (1 = icon), count (1)
     header = struct.pack('<HHH', 0, 1, 1)
-    # Directory entry (16 bytes)
-    # bWidth, bHeight, bColorCount, bReserved, wPlanes, wBitCount, dwBytesInRes, dwImageOffset
     w = width if width < 256 else 0
     h = height if height < 256 else 0
     entry = struct.pack('<BBBBHHII', w, h, 0, 0, 1, 32, len(png_bytes), 6 + 16)
@@ -81,17 +85,10 @@ def main():
     png32 = encode_png(32, 32, rgba32)
     ico32 = make_ico(png32, 32, 32)
 
-    rgba64 = create_relink_image(64)
-    png64 = encode_png(64, 64, rgba64)
-
-    with open('public/favicon-32x32.png', 'wb') as f:
-        f.write(png32)
     with open('public/favicon.ico', 'wb') as f:
         f.write(ico32)
-    with open('public/apple-touch-icon.png', 'wb') as f:
-        f.write(png64)
 
-    print('Favicon files generated successfully in public/')
+    print('Updated favicon.ico with high-contrast white loop & pink accent')
 
 if __name__ == '__main__':
     main()
