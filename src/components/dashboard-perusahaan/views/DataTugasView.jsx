@@ -534,7 +534,7 @@ function DataTugasView({
 
             <footer className="escrow-modal-footer">
               <button
-                className="button button--secondary"
+                className="btn-modal-cancel"
                 onClick={() => setSelectedTaskDetail(null)}
                 type="button"
               >
@@ -542,7 +542,7 @@ function DataTugasView({
               </button>
               <div className="escrow-action-btn-group">
                 <button
-                  className="button button--secondary"
+                  className="btn-modal-edit-action"
                   onClick={() => {
                     const task = selectedTaskDetail
                     setSelectedTaskDetail(null)
@@ -555,7 +555,7 @@ function DataTugasView({
                 </button>
                 {selectedTaskDetail.statusBadge === 'Proof Review' && (
                   <button
-                    className="button button--primary"
+                    className="btn-modal-submit-pink"
                     onClick={() => {
                       const task = selectedTaskDetail
                       setSelectedTaskDetail(null)
@@ -704,7 +704,7 @@ function DataTugasView({
 
               <footer className="escrow-modal-footer">
                 <button
-                  className="button button--secondary"
+                  className="btn-modal-cancel"
                   disabled={isProcessing}
                   onClick={() => setTaskToEdit(null)}
                   type="button"
@@ -712,7 +712,7 @@ function DataTugasView({
                   Batal
                 </button>
                 <button
-                  className="button button--primary"
+                  className="btn-modal-submit-pink"
                   disabled={isProcessing}
                   type="submit"
                 >
@@ -763,7 +763,7 @@ function DataTugasView({
 
             <footer className="escrow-modal-footer">
               <button
-                className="button button--secondary"
+                className="btn-modal-cancel"
                 disabled={isProcessing}
                 onClick={() => setTaskToDelete(null)}
                 type="button"

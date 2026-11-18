@@ -3221,6 +3221,105 @@
   gap: 24px;
 }
 
+.btn-create-task-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--pink);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 61, 139, 0.28);
+  transition: all 160ms cubic-bezier(0.2, 0, 0, 1);
+  white-space: nowrap;
+}
+
+.btn-create-task-primary:hover {
+  background: #ff6aa5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 61, 139, 0.38);
+}
+
+.btn-create-task-primary:active {
+  transform: translateY(0);
+}
+
+.btn-modal-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid #dce2ed;
+  background: var(--white);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.btn-modal-cancel:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.btn-modal-submit-pink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--pink);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(255, 61, 139, 0.25);
+  transition: all 150ms ease;
+}
+
+.btn-modal-submit-pink:hover:not(:disabled) {
+  background: #ff6aa5;
+  transform: translateY(-1px);
+}
+
+.btn-modal-submit-pink:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.btn-modal-edit-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid #dce2ed;
+  background: var(--white);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.btn-modal-edit-action:hover {
+  background: #f0f7ff;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+
 .data-task-title-cell {
   display: flex;
   flex-direction: column;
