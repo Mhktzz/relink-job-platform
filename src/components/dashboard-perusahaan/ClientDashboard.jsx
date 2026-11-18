@@ -13,6 +13,7 @@ import {
   fetchEscrowFromDb,
   updateEscrowStatusInDb,
 } from '../../lib/databaseService.js'
+import { supabase } from '../../lib/supabaseClient.js'
 import BerandaView from './views/BerandaView.jsx'
 import KanbanView from './views/KanbanView.jsx'
 import RadarMitraView from './views/RadarMitraView.jsx'
@@ -43,9 +44,48 @@ function ClientDashboard() {
   const [showDisputeModal, setShowDisputeModal] = useState(false)
   const [disputeReason, setDisputeReason] = useState('')
 
+  // State Pengguna Aktif (dari Supabase / localStorage)
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('relink_user')
+      return saved
+        ? JSON.parse(saved)
+        : { business_name: 'Toko Kue Bu Rina', full_name: 'Bu Rina', role: 'klien' }
+    } catch {
+      return { business_name: 'Toko Kue Bu Rina', full_name: 'Bu Rina', role: 'klien' }
+    }
+  })
+  const [showUserMenu, setShowUserMenu] = useState(false)
+
+  // Handler Keluar Akun (Logout)
+  async function handleLogout() {
+    try {
+      await supabase.auth.signOut()
+    } catch (e) {
+      console.warn('Logout error', e)
+    }
+    localStorage.removeItem('relink_user')
+    window.location.href = '/masuk?peran=umkm'
+  }
+
   // Sinkronisasi data awal dari Supabase Database (dengan fallback data lokal)
   useEffect(() => {
     let isMounted = true
+
+    // Cek session Supabase secara dinamis
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user && isMounted) {
+        const meta = session.user.user_metadata || {}
+        setCurrentUser((prev) => ({
+          ...prev,
+          id: session.user.id,
+          email: session.user.email,
+          business_name: meta.business_name || prev.business_name,
+          full_name: meta.full_name || prev.full_name,
+        }))
+      }
+    })
+
     async function loadDataFromSupabase() {
       try {
         const [dbTasks, dbEscrow] = await Promise.all([
@@ -419,13 +459,52 @@ function ClientDashboard() {
               <Icon name="shield" size={18} />
             </button>
 
-            <div className="topbar-user-capsule">
-              <div className="topbar-avatar-circle">BR</div>
-              <div className="topbar-user-info">
-                <strong>Toko Kue Bu Rina</strong>
-                <small>Admin UMKM</small>
-              </div>
-              <Icon name="arrow" size={12} />
+            <div className="topbar-user-wrapper">
+              <button
+                aria-expanded={showUserMenu}
+                aria-label="Profil dan Pengaturan Akun"
+                className="topbar-user-capsule"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                type="button"
+              >
+                <div className="topbar-avatar-circle">
+                  {(currentUser.business_name || 'UMKM').slice(0, 2).toUpperCase()}
+                </div>
+                <div className="topbar-user-info">
+                  <strong>{currentUser.business_name || 'Toko Kue Bu Rina'}</strong>
+                  <small>{currentUser.full_name || 'Admin UMKM'}</small>
+                </div>
+                <Icon name="arrow" size={12} />
+              </button>
+
+              {showUserMenu && (
+                <div className="topbar-user-dropdown">
+                  <div className="dropdown-user-header">
+                    <strong>{currentUser.business_name}</strong>
+                    <small>{currentUser.email || 'Akun UMKM Terverifikasi'}</small>
+                  </div>
+                  <div className="dropdown-divider" />
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      setShowUserMenu(false)
+                      setCurrentMenu('bantuan')
+                    }}
+                    type="button"
+                  >
+                    <Icon name="users" size={16} />
+                    <span>Pusat Bantuan & SOP</span>
+                  </button>
+                  <button
+                    className="dropdown-item dropdown-item--logout"
+                    onClick={handleLogout}
+                    type="button"
+                  >
+                    <Icon name="close" size={16} />
+                    <span>Keluar Akun (Logout)</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

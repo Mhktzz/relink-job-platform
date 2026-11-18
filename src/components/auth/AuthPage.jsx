@@ -2,10 +2,22 @@ import { useState } from "react";
 import cashierPhoto from "../../assets/cashier.jpg";
 import technicianPhoto from "../../assets/technician.jpg";
 import Logo from "../common/Logo.jsx";
+import { supabase } from "../../lib/supabaseClient.js";
 import "./AuthPage.css";
 
 function AuthPage({ mode, role }) {
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("info"); // 'info' | 'error' | 'success'
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Form Fields State
+  const [name, setName] = useState("");
+  const [business, setBusiness] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+
   const isSignup = mode === "signup";
   const isWorker = role === "pekerja";
   const roleName = isWorker ? "Pencari Kerja" : "UMKM";
@@ -15,21 +27,161 @@ function AuthPage({ mode, role }) {
     : "Temukan bantuan lokal untuk bisnismu.";
   const artDescription = isWorker
     ? "Pilih tugas sesuai keahlian dan bangun reputasi dari hasil kerja nyata."
-    : "Hubungkan kebutuhan usahamu dengan pekerja lokal yang tepat.";
+    : "Hubungkan kebutuhan usahamu dengan pekerja lokal terverifikasi tanpa ijazah formal.";
 
-  function handleSubmit(event) {
+  // Handler Submit Login / Register
+  async function handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    setMessage("");
+    setIsLoading(true);
 
-    if (
-      isSignup &&
-      formData.get("password") !== formData.get("password-confirm")
-    ) {
-      setMessage("Konfirmasi kata sandi belum cocok.");
-      return;
+    try {
+      if (isSignup) {
+        // 1. Validasi Password
+        if (password !== passwordConfirm) {
+          setMessage("Konfirmasi kata sandi belum cocok.");
+          setMessageType("error");
+          setIsLoading(false);
+          return;
+        }
+
+        if (password.length < 6) {
+          setMessage("Kata sandi minimal 6 karakter.");
+          setMessageType("error");
+          setIsLoading(false);
+          return;
+        }
+
+        // 2. Pendaftaran via Supabase Auth
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: password,
+          options: {
+            data: {
+              full_name: name.trim(),
+              business_name: !isWorker ? business.trim() : null,
+              phone: phone.trim(),
+              role: isWorker ? "mitra" : "klien",
+            },
+          },
+        });
+
+        if (error) {
+          setMessage(`Gagal mendaftar: ${error.message}`);
+          setMessageType("error");
+          setIsLoading(false);
+          return;
+        }
+
+        // 3. Simpan Profil ke Tabel Profiles
+        const userId = data.user?.id;
+        if (userId) {
+          await supabase.from("profiles").upsert([
+            {
+              id: userId,
+              full_name: name.trim(),
+              business_name: !isWorker ? business.trim() : null,
+              phone: phone.trim(),
+              role: isWorker ? "mitra" : "klien",
+              tier: "Tier 1",
+              trust_score: 98,
+              is_verified: true,
+            },
+          ]);
+
+          // Simpan session info lokal untuk kemudahan akses
+          localStorage.setItem(
+            "relink_user",
+            JSON.stringify({
+              id: userId,
+              email: email.trim(),
+              full_name: name.trim(),
+              business_name: !isWorker ? business.trim() : "Mitra Mandiri",
+              role: isWorker ? "mitra" : "klien",
+            })
+          );
+        }
+
+        setMessageType("success");
+        setMessage("Akun UMKM berhasil dibuat! Mengalihkan ke dashboard...");
+        setTimeout(() => {
+          window.location.href = isWorker ? "/pekerja" : "/dashboard";
+        }, 1200);
+      } else {
+        // PROSES LOGIN
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password: password,
+        });
+
+        if (error) {
+          setMessage("Email atau kata sandi yang Anda masukkan tidak sesuai.");
+          setMessageType("error");
+          setIsLoading(false);
+          return;
+        }
+
+        // Ambil data profil dari database
+        const userId = data.user?.id;
+        let businessName = "Toko Kue Bu Rina";
+        let fullName = data.user?.user_metadata?.full_name || "Pemilik UMKM";
+
+        if (userId) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, business_name, role")
+            .eq("id", userId)
+            .single();
+
+          if (profile) {
+            if (profile.business_name) businessName = profile.business_name;
+            if (profile.full_name) fullName = profile.full_name;
+          }
+
+          localStorage.setItem(
+            "relink_user",
+            JSON.stringify({
+              id: userId,
+              email: data.user.email,
+              full_name: fullName,
+              business_name: businessName,
+              role: isWorker ? "mitra" : "klien",
+            })
+          );
+        }
+
+        setMessageType("success");
+        setMessage("Login berhasil! Membuka dashboard UMKM...");
+        setTimeout(() => {
+          window.location.href = isWorker ? "/pekerja" : "/dashboard";
+        }, 800);
+      }
+    } catch (err) {
+      console.error("[Relink Auth Error]", err);
+      setMessage("Terjadi kendala koneksi ke server. Silakan coba kembali.");
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
     }
+  }
 
-    setMessage("Formulir ini belum terhubung ke sistem autentikasi.");
+  // Handler Masuk Cepat Akun Demo UMKM (Toko Kue Bu Rina)
+  function handleDemoLogin() {
+    localStorage.setItem(
+      "relink_user",
+      JSON.stringify({
+        id: "a1111111-1111-1111-1111-111111111111",
+        email: "burina@tokokue.id",
+        full_name: "Bu Rina",
+        business_name: "Toko Kue Bu Rina",
+        role: "klien",
+      })
+    );
+    setMessage("Masuk sebagai Toko Kue Bu Rina (Demo)...");
+    setMessageType("success");
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 600);
   }
 
   return (
@@ -39,18 +191,18 @@ function AuthPage({ mode, role }) {
           <header className="auth-header">
             <Logo dark href={homeHref} />
             <a className="auth-back-link" href={homeHref}>
-              Kembali
+              &larr; Kembali ke Beranda
             </a>
           </header>
 
           <div className="auth-content">
             <h1 id="auth-title">
-              {isSignup ? "Mulai bersama Relink" : "Selamat datang kembali"}
+              {isSignup ? `Daftar Akun ${roleName}` : `Masuk ke ${roleName}`}
             </h1>
             <p className="auth-description">
               {isSignup
-                ? `Buat akun ${roleName} untuk mulai menggunakan Relink.`
-                : `Masuk ke akun ${roleName} dan lanjutkan aktivitasmu.`}
+                ? `Buat akun ${roleName} untuk mulai memposting tugas dan merekrut pekerja lokal tanpa repot.`
+                : `Masuk ke dashboard ${roleName} dan kelola operasional tokomu.`}
             </p>
 
             <nav aria-label="Pilih jenis akun" className="auth-role-switch">
@@ -63,7 +215,7 @@ function AuthPage({ mode, role }) {
                 }
                 href={`/${isSignup ? "daftar" : "masuk"}?peran=umkm`}
               >
-                UMKM
+                Perusahaan / UMKM
               </a>
               <a
                 aria-current={isWorker ? "page" : undefined}
@@ -74,7 +226,7 @@ function AuthPage({ mode, role }) {
                 }
                 href={`/${isSignup ? "daftar" : "masuk"}?peran=pekerja`}
               >
-                Pencari Kerja
+                Mitra Pekerja
               </a>
             </nav>
 
@@ -82,85 +234,149 @@ function AuthPage({ mode, role }) {
               {isSignup && (
                 <label className="auth-field">
                   <span>
-                    {isWorker ? "Nama lengkap" : "Nama pemilik usaha"}
+                    {isWorker ? "Nama Lengkap" : "Nama Pemilik Usaha"}
                   </span>
                   <input
                     autoComplete="name"
                     name="name"
+                    onChange={(e) => setName(e.target.value)}
                     placeholder={
-                      isWorker ? "Nama sesuai identitas" : "cth: Budi Santoso"
+                      isWorker ? "Nama sesuai KTP" : "Contoh: Ibu Rina Wati"
                     }
                     required
-                  />
-                </label>
-              )}
-              {isSignup && !isWorker && (
-                <label className="auth-field">
-                  <span>Nama usaha</span>
-                  <input
-                    autoComplete="organization"
-                    name="business"
-                    placeholder="cth: Warung Berkah"
-                    required
-                  />
-                </label>
-              )}
-              <label className="auth-field">
-                <span>Email</span>
-                <input
-                  autoComplete="email"
-                  name="email"
-                  placeholder="john@example.com"
-                  required
-                  type="email"
-                />
-              </label>
-              <label className="auth-field">
-                <span>Kata sandi</span>
-                <input
-                  autoComplete={isSignup ? "new-password" : "current-password"}
-                  minLength={isSignup ? 8 : undefined}
-                  name="password"
-                  placeholder={
-                    isSignup ? "Minimal 8 karakter" : "Masukkan kata sandi"
-                  }
-                  required
-                  type="password"
-                />
-              </label>
-              {isSignup && (
-                <label className="auth-field">
-                  <span>Konfirmasi kata sandi</span>
-                  <input
-                    autoComplete="new-password"
-                    minLength={8}
-                    name="password-confirm"
-                    placeholder="Ulangi kata sandi"
-                    required
-                    type="password"
+                    type="text"
+                    value={name}
                   />
                 </label>
               )}
 
-              <button className="auth-submit" type="submit">
-                {isSignup ? "Buat Akun" : "Masuk"}
-              </button>
+              {isSignup && !isWorker && (
+                <label className="auth-field">
+                  <span>Nama Toko / Perusahaan</span>
+                  <input
+                    autoComplete="organization"
+                    name="business"
+                    onChange={(e) => setBusiness(e.target.value)}
+                    placeholder="Contoh: Toko Kue Bu Rina"
+                    required
+                    type="text"
+                    value={business}
+                  />
+                </label>
+              )}
+
+              {isSignup && (
+                <label className="auth-field">
+                  <span>Nomor WhatsApp / HP Aktif</span>
+                  <input
+                    autoComplete="tel"
+                    name="phone"
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Contoh: 081234567890"
+                    required
+                    type="tel"
+                    value={phone}
+                  />
+                </label>
+              )}
+
+              <label className="auth-field">
+                <span>Email Akun</span>
+                <input
+                  autoComplete="email"
+                  name="email"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nama@emailbisnis.com"
+                  required
+                  type="email"
+                  value={email}
+                />
+              </label>
+
+              <label className="auth-field">
+                <span>Kata Sandi</span>
+                <input
+                  autoComplete={isSignup ? "new-password" : "current-password"}
+                  minLength={6}
+                  name="password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={
+                    isSignup ? "Minimal 6 karakter" : "Masukkan kata sandi"
+                  }
+                  required
+                  type="password"
+                  value={password}
+                />
+              </label>
+
+              {isSignup && (
+                <label className="auth-field">
+                  <span>Konfirmasi Kata Sandi</span>
+                  <input
+                    autoComplete="new-password"
+                    minLength={6}
+                    name="password-confirm"
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    placeholder="Ulangi kata sandi Anda"
+                    required
+                    type="password"
+                    value={passwordConfirm}
+                  />
+                </label>
+              )}
+
               {message && (
-                <p aria-live="polite" className="auth-message" role="status">
+                <div
+                  aria-live="polite"
+                  className={`auth-message auth-message--${messageType}`}
+                  role="status"
+                >
                   {message}
-                </p>
+                </div>
+              )}
+
+              <button
+                className="auth-submit"
+                disabled={isLoading}
+                type="submit"
+              >
+                {isLoading ? (
+                  "Memproses..."
+                ) : isSignup ? (
+                  "Daftar Akun UMKM"
+                ) : (
+                  "Masuk ke Dashboard"
+                )}
+              </button>
+
+              {/* Tombol Akses Cepat Demo UMKM */}
+              {!isWorker && (
+                <>
+                  <div className="auth-demo-divider">
+                    <span>ATAU COBA LANGSUNG</span>
+                  </div>
+                  <button
+                    className="btn-auth-demo"
+                    onClick={handleDemoLogin}
+                    type="button"
+                  >
+                    Masuk Cepat Demo (Toko Kue Bu Rina) &rarr;
+                  </button>
+                </>
               )}
             </form>
 
             <p className="auth-switch">
-              {isSignup ? "Sudah punya akun?" : "Belum punya akun?"}{" "}
+              {isSignup ? "Sudah punya akun bisnis?" : "Belum mendaftarkan usaha Anda?"}{" "}
               <a href={`/${isSignup ? "masuk" : "daftar"}?peran=${role}`}>
-                {isSignup ? "Masuk" : "Daftar sekarang"}
+                {isSignup ? "Masuk sekarang" : "Daftar gratis di sini"}
               </a>
             </p>
           </div>
 
-          <p className="auth-legal">Aman, dekat, dan tumbuh bersama Relink.</p>
+          <p className="auth-legal">
+            Dilindungi oleh Sistem Escrow & Garansi 100% Relink.
+          </p>
         </section>
 
         <aside
@@ -176,15 +392,15 @@ function AuthPage({ mode, role }) {
           <div aria-hidden="true" className="auth-art__overlay" />
           <div className="auth-art__content">
             <span className="auth-art__badge">
-              {isWorker ? "UNTUK PEKERJA" : "UNTUK UMKM"}
+              {isWorker ? "UNTUK MITRA PEKERJA" : "PORTAL PERUSAHAAN & UMKM"}
             </span>
             <h2>{artTitle}</h2>
             <p>{artDescription}</p>
             <div className="auth-art__promise">
               <span aria-hidden="true" className="auth-art__dot" />
               {isWorker
-                ? "Peluang lokal, reputasi nyata"
-                : "Mitra lokal, kerja lebih mudah"}
+                ? "Peluang kerja lokal, reputasi nyata"
+                : "Mitra siap kerja instan dalam radius 1–5 km"}
             </div>
           </div>
           <div
