@@ -173,13 +173,22 @@
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(15, 27, 61, 0.2);
-  color: var(--navy);
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  transition: all 140ms ease;
 }
 
 .sidebar-nav-item:not(.sidebar-nav-item--active) .nav-counter-pill {
   background: rgba(255, 255, 255, 0.15);
   color: var(--white);
+}
+
+/* Indikator Jumlah Saat Menu Aktif (Putih Bersih Kontras Tinggi) */
+.sidebar-nav-item--active .nav-counter-pill,
+.sidebar-nav-item--active .nav-counter-pill--escrow {
+  background: #ffffff !important;
+  color: var(--navy) !important;
+  box-shadow: 0 2px 6px rgba(15, 27, 61, 0.12);
 }
 
 .sidebar-group--bottom {

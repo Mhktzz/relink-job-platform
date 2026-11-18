@@ -368,7 +368,7 @@ function ClientDashboard() {
             >
               <Icon name="sliders" size={18} />
               {isSidebarExpanded && <span>Data Tugas</span>}
-              {isSidebarExpanded && <span className="nav-counter-pill nav-counter-pill--escrow">{tasks.length}</span>}
+              {isSidebarExpanded && <span className="nav-counter-pill">{tasks.length}</span>}
             </button>
 
             <button
