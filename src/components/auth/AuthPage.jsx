@@ -2,6 +2,7 @@ import { useState } from "react";
 import cashierPhoto from "../../assets/cashier.jpg";
 import technicianPhoto from "../../assets/technician.jpg";
 import Logo from "../common/Logo.jsx";
+import Icon from "../common/Icon.jsx";
 import { supabase } from "../../lib/supabaseClient.js";
 import "./AuthPage.css";
 
@@ -17,6 +18,8 @@ function AuthPage({ mode, role }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   const isSignup = mode === "signup";
   const isWorker = role === "pekerja";
@@ -295,33 +298,62 @@ function AuthPage({ mode, role }) {
 
               <label className="auth-field">
                 <span>Kata Sandi</span>
-                <input
-                  autoComplete={isSignup ? "new-password" : "current-password"}
-                  minLength={6}
-                  name="password"
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={
-                    isSignup ? "Minimal 6 karakter" : "Masukkan kata sandi"
-                  }
-                  required
-                  type="password"
-                  value={password}
-                />
+                <div className="auth-password-input-wrap">
+                  <input
+                    autoComplete={isSignup ? "new-password" : "current-password"}
+                    minLength={6}
+                    name="password"
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={
+                      isSignup ? "Minimal 6 karakter" : "Masukkan kata sandi"
+                    }
+                    required
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                  />
+                  <button
+                    aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                    className="btn-toggle-password"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                    type="button"
+                  >
+                    <Icon name={showPassword ? "eye-off" : "eye"} size={18} />
+                  </button>
+                </div>
               </label>
 
               {isSignup && (
                 <label className="auth-field">
                   <span>Konfirmasi Kata Sandi</span>
-                  <input
-                    autoComplete="new-password"
-                    minLength={6}
-                    name="password-confirm"
-                    onChange={(e) => setPasswordConfirm(e.target.value)}
-                    placeholder="Ulangi kata sandi Anda"
-                    required
-                    type="password"
-                    value={passwordConfirm}
-                  />
+                  <div className="auth-password-input-wrap">
+                    <input
+                      autoComplete="new-password"
+                      minLength={6}
+                      name="password-confirm"
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      placeholder="Ulangi kata sandi Anda"
+                      required
+                      type={showPasswordConfirm ? "text" : "password"}
+                      value={passwordConfirm}
+                    />
+                    <button
+                      aria-label={
+                        showPasswordConfirm
+                          ? "Sembunyikan konfirmasi kata sandi"
+                          : "Tampilkan konfirmasi kata sandi"
+                      }
+                      className="btn-toggle-password"
+                      onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                      tabIndex={-1}
+                      type="button"
+                    >
+                      <Icon
+                        name={showPasswordConfirm ? "eye-off" : "eye"}
+                        size={18}
+                      />
+                    </button>
+                  </div>
                 </label>
               )}
 

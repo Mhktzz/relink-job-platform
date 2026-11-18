@@ -151,6 +151,42 @@
   outline: none;
 }
 
+.auth-password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.auth-password-input-wrap input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.btn-toggle-password {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: 0;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: color 140ms ease, background-color 140ms ease, transform 140ms ease;
+}
+
+.btn-toggle-password:hover {
+  color: var(--navy);
+  background: rgba(15, 27, 61, 0.08);
+}
+
+.btn-toggle-password:active {
+  transform: scale(0.92);
+}
+
 .auth-submit {
   min-height: 52px;
   margin-top: 6px;
