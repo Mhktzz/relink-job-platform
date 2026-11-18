@@ -211,26 +211,35 @@ function ClientDashboard() {
   }
 
   // Perhitungan Data Escrow
-  const totalHeldEscrow = escrowTransactions
-    .filter((t) => t.status === 'held' || t.status === 'review')
-    .reduce((sum, t) => sum + t.amount, 0)
-  const totalReviewEscrow = escrowTransactions
-    .filter((t) => t.status === 'review')
-    .reduce((sum, t) => sum + t.amount, 0)
-  const reviewCount = escrowTransactions.filter((t) => t.status === 'review').length
-  const heldCount = escrowTransactions.filter((t) => t.status === 'held').length
-  const releasedCount = escrowTransactions.filter((t) => t.status === 'released').length
-  const disputeCount = escrowTransactions.filter((t) => t.status === 'disputed').length
+  const totalHeldEscrow = (escrowTransactions || [])
+    .filter((t) => t?.status === 'held' || t?.status === 'review' || t?.status === 'under_review')
+    .reduce((sum, t) => sum + (Number(t?.amount) || 0), 0)
+  const totalReviewEscrow = (escrowTransactions || [])
+    .filter((t) => t?.status === 'review' || t?.status === 'under_review')
+    .reduce((sum, t) => sum + (Number(t?.amount) || 0), 0)
+  const reviewCount = (escrowTransactions || []).filter(
+    (t) => t?.status === 'review' || t?.status === 'under_review'
+  ).length
+  const heldCount = (escrowTransactions || []).filter((t) => t?.status === 'held').length
+  const releasedCount = (escrowTransactions || []).filter((t) => t?.status === 'released').length
+  const disputeCount = (escrowTransactions || []).filter((t) => t?.status === 'disputed').length
 
-  const filteredEscrowTransactions = escrowTransactions.filter((tx) => {
+  const filteredEscrowTransactions = (escrowTransactions || []).filter((tx) => {
+    if (!tx) return false
     const matchesTab =
-      escrowFilterTab === 'all' ? true : tx.status === escrowFilterTab
-    const q = escrowSearchQuery.toLowerCase()
+      escrowFilterTab === 'all'
+        ? true
+        : tx.status === escrowFilterTab || (escrowFilterTab === 'review' && tx.status === 'under_review')
+    const q = (escrowSearchQuery || '').toLowerCase()
+    const id = (tx.id || '').toLowerCase()
+    const taskTitle = (tx.taskTitle || '').toLowerCase()
+    const workerName = (tx.workerName || tx.mitraName || '').toLowerCase()
+    const paymentGatewayRef = (tx.paymentGatewayRef || '').toLowerCase()
     const matchesQuery =
-      tx.id.toLowerCase().includes(q) ||
-      tx.taskTitle.toLowerCase().includes(q) ||
-      tx.workerName.toLowerCase().includes(q) ||
-      tx.paymentGatewayRef.toLowerCase().includes(q)
+      id.includes(q) ||
+      taskTitle.includes(q) ||
+      workerName.includes(q) ||
+      paymentGatewayRef.includes(q)
     return matchesTab && matchesQuery
   })
 

@@ -1,4 +1,6 @@
 import { supabase } from './supabaseClient.js'
+import technicianPhoto from '../assets/technician.jpg'
+import cashierPhoto from '../assets/cashier.jpg'
 import {
   initialTaskBoard,
   initialEscrowTransactions,
@@ -103,23 +105,61 @@ export async function fetchEscrowFromDb() {
       return initialEscrowTransactions
     }
 
-    return data.map((e) => ({
-      id: e.transaction_code || e.id,
-      taskTitle: e.task_title,
-      mitraName: e.worker_name,
-      mitraTier: e.worker_tier || 'Tier 1',
-      amount: Number(e.task_amount),
-      status: e.status,
-      timestamp: new Date(e.created_at).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      autoReleaseHours: e.auto_release_at ? 28 : null,
-      platformFee: Number(e.platform_fee || 4000),
-      guaranteeFund: Number(e.guarantee_fund_fee || 1000),
-    }))
+    return data.map((e, index) => {
+      const isReview = e.status === 'review' || e.status === 'under_review'
+      const isHeld = e.status === 'held'
+      const isReleased = e.status === 'released'
+      const statusNormalized = isReview ? 'review' : e.status
+
+      return {
+        id: e.transaction_code || `ESC-90${80 + index}`,
+        taskId: e.task_id || `TSK-10${index + 1}`,
+        taskTitle: e.task_title || 'Tugas Operasional Toko',
+        workerName: e.worker_name || 'Mitra Relink',
+        mitraName: e.worker_name || 'Mitra Relink',
+        workerPhoto: index % 2 === 0 ? technicianPhoto : cashierPhoto,
+        tier: e.worker_tier || 'Tier 1 (Basic)',
+        amount: Number(e.task_amount || 0),
+        platformFee: Number(e.platform_fee || 4000),
+        guaranteeFee: Number(e.guarantee_fund_fee || 1500),
+        guaranteeFund: Number(e.guarantee_fund_fee || 1500),
+        status: statusNormalized,
+        statusLabel: isReview
+          ? 'Menunggu Review Bukti'
+          : isHeld
+          ? 'Dana Tertahan (Mitra Bekerja)'
+          : isReleased
+          ? 'Selesai & Dicairkan'
+          : 'Dalam Mediasi Tim Relink',
+        statusBadgeColor: isReview
+          ? 'mint'
+          : isHeld
+          ? 'amber'
+          : isReleased
+          ? 'blue'
+          : 'pink',
+        createdAt: e.created_at
+          ? new Date(e.created_at).toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '18 Nov 2026, 10:00',
+        timestamp: e.created_at
+          ? new Date(e.created_at).toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '18 Nov 2026, 10:00',
+        autoReleaseHoursLeft: isReview ? 24 : null,
+        autoReleaseHours: isReview ? 24 : null,
+        checklistSummary: 'Kriteria tuntas sesuai SOP',
+        paymentGatewayRef: `PGW-BCA-${778100 + index}`,
+      }
+    })
   } catch (err) {
     console.warn('[Relink DB] Escrow fallback to mock:', err)
     return initialEscrowTransactions

@@ -97,19 +97,19 @@ function EscrowDetailModal({
             <h4>Rincian Alokasi Dana Escrow</h4>
             <div className="cost-row">
               <span>Upah Tugas Mitra (100% ke pekerja)</span>
-              <strong>Rp{(selectedEscrow.amount - selectedEscrow.platformFee).toLocaleString('id-ID')}</strong>
+              <strong>Rp{((Number(selectedEscrow.amount) || 0) - (Number(selectedEscrow.platformFee) || 0)).toLocaleString('id-ID')}</strong>
             </div>
             <div className="cost-row">
               <span>Biaya Layanan & Payment Gateway (5%)</span>
-              <span>Rp{selectedEscrow.platformFee.toLocaleString('id-ID')}</span>
+              <span>Rp{(Number(selectedEscrow.platformFee) || 0).toLocaleString('id-ID')}</span>
             </div>
             <div className="cost-row">
               <span>Iuran Perlindungan & Garansi Relink</span>
-              <span>Rp{selectedEscrow.guaranteeFee.toLocaleString('id-ID')}</span>
+              <span>Rp{(Number(selectedEscrow.guaranteeFee || selectedEscrow.guaranteeFund) || 1500).toLocaleString('id-ID')}</span>
             </div>
             <div className="cost-row cost-row--total">
               <strong>Total Dana Terproteksi</strong>
-              <strong className="text-pink">Rp{selectedEscrow.amount.toLocaleString('id-ID')}</strong>
+              <strong className="text-pink">Rp{(Number(selectedEscrow.amount) || 0).toLocaleString('id-ID')}</strong>
             </div>
           </div>
         </div>

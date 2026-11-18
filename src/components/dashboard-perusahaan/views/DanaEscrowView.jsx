@@ -49,11 +49,11 @@ function DanaEscrowView({
             </div>
           </div>
           <div className="metric-box-card__body">
-            <strong>Rp{totalHeldEscrow.toLocaleString('id-ID')}</strong>
+            <strong>Rp{(totalHeldEscrow || 0).toLocaleString('id-ID')}</strong>
             <span className="metric-trend metric-trend--good">Tersimpan Aman</span>
           </div>
           <small className="metric-sub-note">
-            {heldCount + reviewCount} tugas sedang aktif dalam penampungan
+            {(heldCount || 0) + (reviewCount || 0)} tugas sedang aktif dalam penampungan
           </small>
         </div>
 
@@ -65,8 +65,8 @@ function DanaEscrowView({
             </div>
           </div>
           <div className="metric-box-card__body">
-            <strong className="text-pink">Rp{totalReviewEscrow.toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--warn">{reviewCount} Tugas</span>
+            <strong className="text-pink">Rp{(totalReviewEscrow || 0).toLocaleString('id-ID')}</strong>
+            <span className="metric-trend metric-trend--warn">{reviewCount || 0} Tugas</span>
           </div>
           <small className="metric-sub-note">Auto-release 24-48 jam jika disetujui</small>
         </div>
@@ -239,8 +239,8 @@ function DanaEscrowView({
                       </div>
                     </td>
                     <td>
-                      <strong className="tx-amount">Rp{tx.amount.toLocaleString('id-ID')}</strong>
-                      <small className="tx-fee-note">Proteksi Garansi: Rp{tx.guaranteeFee.toLocaleString('id-ID')}</small>
+                      <strong className="tx-amount">Rp{(Number(tx.amount) || 0).toLocaleString('id-ID')}</strong>
+                      <small className="tx-fee-note">Proteksi Garansi: Rp{(Number(tx.guaranteeFee || tx.guaranteeFund) || 1500).toLocaleString('id-ID')}</small>
                     </td>
                     <td>
                       <span className={`escrow-status-pill escrow-status-pill--${tx.statusBadgeColor}`}>
