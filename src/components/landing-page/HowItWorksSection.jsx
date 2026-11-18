@@ -1,7 +1,7 @@
-import iconList from '../assets/figma/step-icon-list.svg'
-import iconTarget from '../assets/figma/step-icon-target.svg'
-import iconShield from '../assets/figma/step-icon-shield.svg'
-import iconWallet from '../assets/figma/step-icon-wallet.svg'
+import iconList from '../../assets/figma/step-icon-list.svg'
+import iconTarget from '../../assets/figma/step-icon-target.svg'
+import iconShield from '../../assets/figma/step-icon-shield.svg'
+import iconWallet from '../../assets/figma/step-icon-wallet.svg'
 
 const steps = [
   {

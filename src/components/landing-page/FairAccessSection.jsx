@@ -1,7 +1,7 @@
-import shieldIcon from '../assets/figma/icon-shield-mint.svg'
-import usersIcon from '../assets/figma/benefit-icon-users.svg'
-import starIcon from '../assets/figma/benefit-icon-star.svg'
-import targetIcon from '../assets/figma/step-icon-target.svg'
+import shieldIcon from '../../assets/figma/icon-shield-mint.svg'
+import usersIcon from '../../assets/figma/benefit-icon-users.svg'
+import starIcon from '../../assets/figma/benefit-icon-star.svg'
+import targetIcon from '../../assets/figma/step-icon-target.svg'
 
 const benefits = [
   {

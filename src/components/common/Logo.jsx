@@ -1,5 +1,5 @@
-import relinkLogo from '../assets/main-relink-2.svg'
-import relinkLogoDark from '../assets/main-relink-dark.svg'
+import relinkLogo from '../../assets/main-relink-2.svg'
+import relinkLogoDark from '../../assets/main-relink-dark.svg'
 
 function Logo({ href = '/', dark = false }) {
   return (

@@ -1,19 +1,21 @@
 import { useEffect } from 'react'
-import FairAccessSection from './components/FairAccessSection.jsx'
-import FinalCta from './components/FinalCta.jsx'
-import Footer from './components/Footer.jsx'
-import HeroSection from './components/HeroSection.jsx'
-import HowItWorksSection from './components/HowItWorksSection.jsx'
-import Navbar from './components/Navbar.jsx'
-import TrustLevelsSection from './components/TrustLevelsSection.jsx'
-import VerificationSection from './components/VerificationSection.jsx'
-import WorkerLandingPage from './components/WorkerLandingPage.jsx'
-import AuthPage from './components/AuthPage.jsx'
+import FairAccessSection from './components/landing-page/FairAccessSection.jsx'
+import FinalCta from './components/landing-page/FinalCta.jsx'
+import Footer from './components/landing-page/Footer.jsx'
+import HeroSection from './components/landing-page/HeroSection.jsx'
+import HowItWorksSection from './components/landing-page/HowItWorksSection.jsx'
+import Navbar from './components/landing-page/Navbar.jsx'
+import TrustLevelsSection from './components/landing-page/TrustLevelsSection.jsx'
+import VerificationSection from './components/landing-page/VerificationSection.jsx'
+import WorkerLandingPage from './components/landing-page/WorkerLandingPage.jsx'
+import AuthPage from './components/auth/AuthPage.jsx'
+import ClientDashboard from './components/dashboard-perusahaan/ClientDashboard.jsx'
 import './App.css'
 
 function App() {
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
   const workerPage = pathname === '/pekerja'
+  const dashboardPage = pathname === '/dashboard' || pathname === '/klien'
   const authMode = pathname === '/masuk' ? 'login' : pathname === '/daftar' ? 'signup' : null
   const requestedRole = new URLSearchParams(window.location.search).get('peran')
   const authRole = requestedRole === 'pekerja' ? 'pekerja' : 'umkm'
@@ -144,6 +146,10 @@ function App() {
 
   if (authMode) {
     return <AuthPage mode={authMode} role={authRole} />
+  }
+
+  if (dashboardPage) {
+    return <ClientDashboard />
   }
 
   if (workerPage) {

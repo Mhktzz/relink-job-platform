@@ -1,5 +1,5 @@
-import checkDark from '../assets/figma/tier-check-dark.svg'
-import checkLight from '../assets/figma/tier-check-light.svg'
+import checkDark from '../../assets/figma/tier-check-dark.svg'
+import checkLight from '../../assets/figma/tier-check-light.svg'
 
 const levels = [
   {

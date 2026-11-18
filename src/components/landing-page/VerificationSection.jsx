@@ -1,7 +1,7 @@
-import iconList from "../assets/figma/verification-icon-list.svg";
-import iconPlay from "../assets/figma/verification-icon-play.svg";
-import iconCamera from "../assets/figma/verification-icon-camera.svg";
-import iconUsers from "../assets/figma/verification-icon-users.svg";
+import iconList from "../../assets/figma/verification-icon-list.svg";
+import iconPlay from "../../assets/figma/verification-icon-play.svg";
+import iconCamera from "../../assets/figma/verification-icon-camera.svg";
+import iconUsers from "../../assets/figma/verification-icon-users.svg";
 
 const methods = [
   {

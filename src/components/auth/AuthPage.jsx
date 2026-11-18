@@ -1,7 +1,7 @@
 import { useState } from "react";
-import cashierPhoto from "../assets/cashier.jpg";
-import technicianPhoto from "../assets/technician.jpg";
-import Logo from "./Logo.jsx";
+import cashierPhoto from "../../assets/cashier.jpg";
+import technicianPhoto from "../../assets/technician.jpg";
+import Logo from "../common/Logo.jsx";
 import "./AuthPage.css";
 
 function AuthPage({ mode, role }) {

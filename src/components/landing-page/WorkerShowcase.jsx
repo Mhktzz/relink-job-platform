@@ -1,9 +1,9 @@
-import wrenchIcon from "../assets/figma/icon-wrench.svg";
-import shieldIcon from "../assets/figma/icon-shield-mint.svg";
-import tierDot from "../assets/figma/tier-dot.svg";
-import zapIcon from "../assets/figma/icon-zap.svg";
-import cashierPhoto from "../assets/cashier.jpg";
-import technicianPhoto from "../assets/technician.jpg";
+import wrenchIcon from "../../assets/figma/icon-wrench.svg";
+import shieldIcon from "../../assets/figma/icon-shield-mint.svg";
+import tierDot from "../../assets/figma/tier-dot.svg";
+import zapIcon from "../../assets/figma/icon-zap.svg";
+import cashierPhoto from "../../assets/cashier.jpg";
+import technicianPhoto from "../../assets/technician.jpg";
 
 function WorkerShowcase({ workerPage = false }) {
   return (

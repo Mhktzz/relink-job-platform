@@ -1,4 +1,4 @@
-import Logo from './Logo.jsx'
+import Logo from '../common/Logo.jsx'
 
 function Footer({ workerPage = false }) {
   return (

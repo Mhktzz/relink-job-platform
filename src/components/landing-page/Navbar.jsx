@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import menuIcon from '../assets/figma/icon-menu.svg'
-import Icon from './Icon.jsx'
-import Logo from './Logo.jsx'
+import menuIcon from '../../assets/figma/icon-menu.svg'
+import Icon from '../common/Icon.jsx'
+import Logo from '../common/Logo.jsx'
 
 const homeLinks = [
   { label: 'Cara Kerja', href: '#cara-kerja' },
   { label: 'Sistem Tier', href: '#tier' },
   { label: 'Untuk UMKM', href: '#fitur-adil' },
   { label: 'Untuk Pekerja', href: '/pekerja' },
+  { label: 'Dashboard UMKM', href: '/dashboard' },
 ]
 
 const workerLinks = [
@@ -15,6 +16,7 @@ const workerLinks = [
   { label: 'Sistem Tier', href: '#tier' },
   { label: 'Untuk UMKM', href: '/#fitur-adil' },
   { label: 'Untuk Pekerja', href: '#manfaat-pekerja' },
+  { label: 'Dashboard UMKM', href: '/dashboard' },
 ]
 
 function Navbar({ workerPage = false }) {
