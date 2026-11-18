@@ -24,6 +24,7 @@ function AuthPage({ mode, role }) {
   const [resetEmail, setResetEmail] = useState("");
 
   const isSignup = mode === "signup";
+  const isResetMode = mode === "reset-password";
   const isWorker = role === "pekerja";
   const roleName = isWorker ? "Pencari Kerja" : "UMKM";
   const homeHref = isWorker ? "/pekerja" : "/";
@@ -204,7 +205,7 @@ function AuthPage({ mode, role }) {
       const { error } = await supabase.auth.resetPasswordForEmail(
         resetEmail.trim(),
         {
-          redirectTo: `${window.location.origin}/masuk?reset=true`,
+          redirectTo: `${window.location.origin}/reset-password`,
         }
       );
 
@@ -226,6 +227,46 @@ function AuthPage({ mode, role }) {
     }
   }
 
+  // Handler Simpan Kata Sandi Baru (Reset Password)
+  async function handleResetPasswordSubmit(e) {
+    e.preventDefault();
+    if (password !== passwordConfirm) {
+      setMessage("Konfirmasi kata sandi belum cocok.");
+      setMessageType("error");
+      return;
+    }
+    if (password.length < 6) {
+      setMessage("Kata sandi baru minimal 6 karakter.");
+      setMessageType("error");
+      return;
+    }
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (error) {
+        setMessage(`Gagal menyetel kata sandi: ${error.message}`);
+        setMessageType("error");
+      } else {
+        setMessage("Kata sandi baru berhasil disimpan! Mengalihkan ke halaman masuk...");
+        setMessageType("success");
+        setTimeout(() => {
+          window.location.href = isWorker ? "/masuk?peran=pekerja" : "/masuk?peran=umkm";
+        }, 1400);
+      }
+    } catch (err) {
+      console.error("[Reset Password Error]", err);
+      setMessage("Terjadi kendala saat memperbarui kata sandi.");
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <main className="auth-page">
       <div className="auth-frame">
@@ -238,7 +279,105 @@ function AuthPage({ mode, role }) {
           </header>
 
           <div className="auth-content">
-            {isForgotPassword ? (
+            {isResetMode ? (
+              <>
+                <h1 id="auth-title">Buat Kata Sandi Baru</h1>
+                <p className="auth-description">
+                  Masukkan kata sandi baru untuk mengamankan akun bisnis Relink Anda.
+                </p>
+
+                <form className="auth-form" onSubmit={handleResetPasswordSubmit}>
+                  <label className="auth-field">
+                    <span>Kata Sandi Baru</span>
+                    <div className="auth-password-input-wrap">
+                      <input
+                        autoComplete="new-password"
+                        minLength={6}
+                        name="new-password"
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Minimal 6 karakter"
+                        required
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                      />
+                      <button
+                        aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                        className="btn-toggle-password"
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                        type="button"
+                      >
+                        <Icon name={showPassword ? "eye-off" : "eye"} size={18} />
+                      </button>
+                    </div>
+                  </label>
+
+                  <label className="auth-field">
+                    <span>Konfirmasi Kata Sandi Baru</span>
+                    <div className="auth-password-input-wrap">
+                      <input
+                        autoComplete="new-password"
+                        minLength={6}
+                        name="confirm-new-password"
+                        onChange={(e) => setPasswordConfirm(e.target.value)}
+                        placeholder="Ulangi kata sandi baru"
+                        required
+                        type={showPasswordConfirm ? "text" : "password"}
+                        value={passwordConfirm}
+                      />
+                      <button
+                        aria-label={
+                          showPasswordConfirm
+                            ? "Sembunyikan konfirmasi kata sandi"
+                            : "Tampilkan konfirmasi kata sandi"
+                        }
+                        className="btn-toggle-password"
+                        onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                        tabIndex={-1}
+                        type="button"
+                      >
+                        <Icon
+                          name={showPasswordConfirm ? "eye-off" : "eye"}
+                          size={18}
+                        />
+                      </button>
+                    </div>
+                  </label>
+
+                  {message && (
+                    <div
+                      aria-live="polite"
+                      className={`auth-message auth-message--${messageType}`}
+                      role="status"
+                    >
+                      {message}
+                    </div>
+                  )}
+
+                  <button
+                    className="auth-submit"
+                    disabled={isLoading}
+                    type="submit"
+                  >
+                    {isLoading ? "Menyimpan..." : "Simpan Kata Sandi Baru"}
+                  </button>
+
+                  <a
+                    className="btn-auth-demo"
+                    href={isWorker ? "/masuk?peran=pekerja" : "/masuk?peran=umkm"}
+                    style={{
+                      textAlign: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textDecoration: "none",
+                    }}
+                  >
+                    &larr; Batalkan & Kembali ke Masuk
+                  </a>
+                </form>
+              </>
+            ) : isForgotPassword ? (
               <>
                 <h1 id="auth-title">Atur Ulang Kata Sandi</h1>
                 <p className="auth-description">

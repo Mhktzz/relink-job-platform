@@ -16,7 +16,11 @@ function App() {
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
   const workerPage = pathname === '/pekerja'
   const dashboardPage = pathname === '/dashboard' || pathname === '/klien'
-  const authMode = pathname === '/masuk' ? 'login' : pathname === '/daftar' ? 'signup' : null
+  const isResetPassword =
+    pathname === '/reset-password' ||
+    new URLSearchParams(window.location.search).get('reset') === 'true' ||
+    window.location.hash.includes('type=recovery')
+  const authMode = pathname === '/masuk' ? 'login' : pathname === '/daftar' ? 'signup' : isResetPassword ? 'reset-password' : null
   const requestedRole = new URLSearchParams(window.location.search).get('peran')
   const authRole = requestedRole === 'pekerja' ? 'pekerja' : 'umkm'
 
