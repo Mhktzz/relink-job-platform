@@ -2411,16 +2411,72 @@
   margin-bottom: 24px;
 }
 
-/* FAQ HEADER BAR (TABS & PENCARIAN) */
+/* FAQ HEADER BAR (PENCARIAN DI ATAS & TABS KATEGORI DI BAWAH) */
 .faq-header-bar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
   padding-bottom: 20px;
   border-bottom: 1px solid #f0f3f8;
   margin-bottom: 24px;
+}
+
+.faq-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-soft);
+  border: 1.5px solid #dce2ed;
+  border-radius: 999px;
+  padding: 12px 22px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 180ms ease;
+}
+
+.faq-search-box:focus-within {
+  background: var(--white);
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(15, 27, 61, 0.08);
+}
+
+.faq-search-box svg {
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+
+.faq-search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--navy);
+}
+
+.faq-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+.btn-clear-search {
+  background: transparent;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 140ms ease;
+}
+
+.btn-clear-search:hover {
+  color: var(--navy);
 }
 
 .faq-category-tabs {
@@ -2458,63 +2514,6 @@
   color: var(--white) !important;
   border-color: var(--navy) !important;
   box-shadow: 0 4px 14px rgba(15, 27, 61, 0.2);
-}
-
-.faq-search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg-soft);
-  border: 1.5px solid #dce2ed;
-  border-radius: 999px;
-  padding: 9px 18px;
-  min-width: 320px;
-  flex: 0 1 360px;
-  transition: all 180ms ease;
-}
-
-.faq-search-box:focus-within {
-  background: var(--white);
-  border-color: var(--navy);
-  box-shadow: 0 0 0 3px rgba(15, 27, 61, 0.08);
-}
-
-.faq-search-box svg {
-  color: var(--ink-muted);
-  flex-shrink: 0;
-}
-
-.faq-search-box input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--navy);
-}
-
-.faq-search-box input::placeholder {
-  color: #94a3b8;
-}
-
-.btn-clear-search {
-  background: transparent;
-  border: none;
-  color: var(--ink-muted);
-  font-size: 12px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 140ms ease;
-}
-
-.btn-clear-search:hover {
-  color: var(--navy);
 }
 
 /* MODUL PANDUAN LANGKAH-DEMI-LANGKAH */

@@ -321,6 +321,28 @@ function PusatBantuanView({ tasks = [], setActionSuccessMsg, setCurrentMenu }) {
       {/* 2. Filter Kategori & Pencarian Tutorial */}
       <section className="faq-section">
         <div className="faq-header-bar">
+          {/* Kolom Pencarian Tutorial di Atas */}
+          <div className="faq-search-box">
+            <Icon name="search" size={18} />
+            <input
+              aria-label="Cari panduan fitur"
+              onChange={(e) => setSearchGuide(e.target.value)}
+              placeholder="Cari tutorial panduan fitur (misal: reset password, edit tugas, verifikasi kanban, escrow)..."
+              type="text"
+              value={searchGuide}
+            />
+            {searchGuide && (
+              <button
+                className="btn-clear-search"
+                onClick={() => setSearchGuide('')}
+                type="button"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Tab Filter Kategori di Bawah Kolom Pencarian */}
           <div className="faq-category-tabs">
             <button
               className={`faq-tab-btn${activeGuideCategory === 'all' ? ' faq-tab-btn--active' : ''}`}
@@ -357,26 +379,6 @@ function PusatBantuanView({ tasks = [], setActionSuccessMsg, setCurrentMenu }) {
             >
               Dana Escrow &amp; Garansi
             </button>
-          </div>
-
-          <div className="faq-search-box">
-            <Icon name="search" size={16} />
-            <input
-              aria-label="Cari panduan fitur"
-              onChange={(e) => setSearchGuide(e.target.value)}
-              placeholder="Cari tutorial (misal: reset password, edit tugas, escrow)..."
-              type="text"
-              value={searchGuide}
-            />
-            {searchGuide && (
-              <button
-                className="btn-clear-search"
-                onClick={() => setSearchGuide('')}
-                type="button"
-              >
-                ✕
-              </button>
-            )}
           </div>
         </div>
 
