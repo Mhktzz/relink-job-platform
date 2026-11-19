@@ -24,6 +24,7 @@ import DataTugasView from './views/DataTugasView.jsx'
 import ProofModal from './modals/ProofModal.jsx'
 import EscrowDetailModal from './modals/EscrowDetailModal.jsx'
 import DisputeModal from './modals/DisputeModal.jsx'
+import TaskDetailModal from './modals/TaskDetailModal.jsx'
 import './ClientDashboard.css'
 
 function ClientDashboard() {
@@ -32,6 +33,7 @@ function ClientDashboard() {
   const [tasks, setTasks] = useState(initialTaskBoard)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProofTask, setSelectedProofTask] = useState(null)
+  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState(null)
   const [signatureApproved, setSignatureApproved] = useState(false)
   const [showProofModal, setShowProofModal] = useState(false)
   const [actionSuccessMsg, setActionSuccessMsg] = useState('')
@@ -567,6 +569,7 @@ function ClientDashboard() {
           <KanbanView
             currentTasks={currentTasks}
             dueWeekTasks={dueWeekTasks}
+            onOpenTaskDetail={setSelectedTaskForDetail}
             overdueTasks={overdueTasks}
             searchQuery={searchQuery}
             setCurrentMenu={setCurrentMenu}
@@ -578,6 +581,7 @@ function ClientDashboard() {
 
         {currentMenu === 'data_tugas' && (
           <DataTugasView
+            onOpenTaskDetail={setSelectedTaskForDetail}
             setActionSuccessMsg={setActionSuccessMsg}
             setCurrentMenu={setCurrentMenu}
             setSelectedProofTask={setSelectedProofTask}
@@ -752,6 +756,18 @@ function ClientDashboard() {
           selectedEscrow={selectedEscrow}
           setDisputeReason={setDisputeReason}
           setShowDisputeModal={setShowDisputeModal}
+        />
+      )}
+
+      {selectedTaskForDetail && (
+        <TaskDetailModal
+          onClose={() => setSelectedTaskForDetail(null)}
+          onOpenProofModal={(task) => {
+            setSelectedProofTask(task)
+            setShowProofModal(true)
+          }}
+          setCurrentMenu={setCurrentMenu}
+          task={selectedTaskForDetail}
         />
       )}
     </div>

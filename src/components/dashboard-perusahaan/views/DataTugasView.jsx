@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
 import { updateTaskInDb, deleteTaskFromDb } from '../../../lib/databaseService.js'
+import TaskDetailModal from '../modals/TaskDetailModal.jsx'
 
 function DataTugasView({
   tasks,
@@ -441,138 +442,21 @@ function DataTugasView({
       </section>
 
       {/* ======================================================== */}
-      {/* 4. MODAL: LIHAT DETAIL TUGAS */}
+      {/* 4. MODAL: LIHAT DETAIL TUGAS & HASIL PEKERJAAN (PDF/GAMBAR) */}
       {/* ======================================================== */}
       {selectedTaskDetail && (
-        <div aria-modal="true" className="proof-modal-overlay" role="dialog">
-          <div className="proof-modal-card task-detail-modal-card">
-            <header className="proof-modal-header">
-              <div>
-                <h2>Rincian Tugas #{selectedTaskDetail.id}</h2>
-                <small>Kode: {selectedTaskDetail.code} · Tenggat: {selectedTaskDetail.dueDate || 'Hari ini'}</small>
-              </div>
-              <button
-                aria-label="Tutup modal detail"
-                className="btn-close-modal"
-                onClick={() => setSelectedTaskDetail(null)}
-                type="button"
-              >
-                ✕
-              </button>
-            </header>
-
-            <div className="task-detail-modal-body">
-              {/* Header Info Banner */}
-              <div className="task-detail-hero">
-                <div>
-                  <span className="task-detail-cat-pill">{selectedTaskDetail.category}</span>
-                  <h3>{selectedTaskDetail.title}</h3>
-                  <p>{selectedTaskDetail.description || 'Pekerjaan operasional toko lokal dengan standar K3 dan proteksi Escrow Relink.'}</p>
-                </div>
-                <div className="task-detail-hero-budget">
-                  <small>Anggaran Tugas</small>
-                  <strong>Rp{(Number(selectedTaskDetail.budget) || 0).toLocaleString('id-ID')}</strong>
-                  <span className="tier-tag">{selectedTaskDetail.tier || 'Tier 1'}</span>
-                </div>
-              </div>
-
-              {/* Data Grid Ringkas */}
-              <div className="task-detail-props-grid">
-                <div className="task-prop-item">
-                  <span className="prop-label">Pekerja Ditugaskan</span>
-                  <strong>{selectedTaskDetail.workerName || 'Mitra Relink'}</strong>
-                  <small>Terverifikasi KTP & Reputasi</small>
-                </div>
-                <div className="task-prop-item">
-                  <span className="prop-label">Lokasi Pekerjaan</span>
-                  <strong>{selectedTaskDetail.location || 'Toko Kue Bu Rina, Tebet'}</strong>
-                  <small>Radius 1.5 km</small>
-                </div>
-                <div className="task-prop-item">
-                  <span className="prop-label">Status Tugas</span>
-                  <strong>{selectedTaskDetail.statusBadge || 'In Progress'}</strong>
-                  <small>Escrow Terkunci Aman</small>
-                </div>
-              </div>
-
-              {/* Checklist SOP Serah Terima */}
-              <div className="task-detail-checklist-block">
-                <h4>Checklist SOP Kriteria Serah Terima</h4>
-                <div className="task-detail-checklist-list">
-                  {selectedTaskDetail.acceptanceChecklist && selectedTaskDetail.acceptanceChecklist.length > 0 ? (
-                    selectedTaskDetail.acceptanceChecklist.map((item, idx) => {
-                      const isDone = typeof item === 'object' ? item.done : false
-                      const txt = typeof item === 'object' ? item.text : item
-                      return (
-                        <div key={idx} className={`task-checklist-row ${isDone ? 'is-done' : ''}`}>
-                          <span className="checklist-bullet">{isDone ? <Icon name="check" size={12} /> : '○'}</span>
-                          <span>{txt}</span>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <p className="empty-subtext">Checklist SOP standar operasional berlaku.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Bukti Kerja jika ada */}
-              {selectedTaskDetail.proofData && (
-                <div className="task-detail-proof-box">
-                  <h4>Bukti Kerja Digital Mitra</h4>
-                  <div className="task-proof-preview-row">
-                    <img alt="Bukti Foto" src={selectedTaskDetail.proofData.photoUrl} />
-                    <div>
-                      <small><strong>Lokasi GPS:</strong> {selectedTaskDetail.proofData.gpsLocation}</small>
-                      <small><strong>Waktu Foto:</strong> {selectedTaskDetail.proofData.timestamp}</small>
-                      <p>{selectedTaskDetail.proofData.note}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <footer className="escrow-modal-footer">
-              <button
-                className="btn-modal-cancel"
-                onClick={() => setSelectedTaskDetail(null)}
-                type="button"
-              >
-                Tutup
-              </button>
-              <div className="escrow-action-btn-group">
-                <button
-                  className="btn-modal-edit-action"
-                  onClick={() => {
-                    const task = selectedTaskDetail
-                    setSelectedTaskDetail(null)
-                    openEditModal(task)
-                  }}
-                  type="button"
-                >
-                  <Icon name="edit" size={14} />
-                  <span>Edit Tugas Ini</span>
-                </button>
-                {selectedTaskDetail.statusBadge === 'Proof Review' && (
-                  <button
-                    className="btn-modal-submit-pink"
-                    onClick={() => {
-                      const task = selectedTaskDetail
-                      setSelectedTaskDetail(null)
-                      if (setSelectedProofTask && setShowProofModal) {
-                        setSelectedProofTask(task)
-                        setShowProofModal(true)
-                      }
-                    }}
-                    type="button"
-                  >
-                    Verifikasi Bukti
-                  </button>
-                )}
-              </div>
-            </footer>
-          </div>
-        </div>
+        <TaskDetailModal
+          onClose={() => setSelectedTaskDetail(null)}
+          onEditTask={(task) => openEditModal(task)}
+          onOpenProofModal={(task) => {
+            if (setSelectedProofTask && setShowProofModal) {
+              setSelectedProofTask(task)
+              setShowProofModal(true)
+            }
+          }}
+          setCurrentMenu={setCurrentMenu}
+          task={selectedTaskDetail}
+        />
       )}
 
       {/* ======================================================== */}

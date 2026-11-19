@@ -56,6 +56,26 @@ export const initialNearbyWorkers = [
 // Data tugas untuk Kanban & Tabel Aktivitas Terkini
 export const initialTaskBoard = [
   {
+    id: 'TSK-105',
+    code: '#878906',
+    statusBadge: 'Open',
+    title: 'Inventarisasi & Stock Opname Gudang Tepung',
+    category: 'Administrasi',
+    description: 'Pengecekan fisik karung tepung terigu, gula, mentega dan rekonsiliasi data stok masuk.',
+    priority: 'Normal',
+    tier: 'Tier 1',
+    column: 'current',
+    workerName: null,
+    workerPhoto: null,
+    budget: 65000,
+    dateRange: '20 Nov 2026',
+    acceptanceChecklist: [
+      { id: 'c11', text: 'Jumlah karung terigu fisik terhitung akurat', done: false },
+      { id: 'c12', text: 'Tanggal kedaluwarsa bahan baku dicek & dicatat', done: false },
+    ],
+    proofData: null,
+  },
+  {
     id: 'TSK-102',
     code: '#878901',
     statusBadge: 'In Progress',
@@ -119,6 +139,24 @@ export const initialTaskBoard = [
       gpsLocation: '-7.4241, 109.2425 (Purwokerto Selatan)',
       timestamp: '18 Nov 2026, 11:15 WIB',
       note: 'Semua 200 boks sudah selesai dipacking rapi dan dimasukkan ke rak display sesuai instruksi.',
+      documents: [
+        {
+          id: 'doc-101-1',
+          name: 'Laporan_Serah_Terima_Packing_200Boks.pdf',
+          type: 'pdf',
+          size: '1.4 MB',
+          uploadedAt: '18 Nov 2026, 11:18 WIB',
+          description: 'Berita acara serah terima & rekap checklist pengerjaan',
+        },
+        {
+          id: 'doc-101-2',
+          name: 'Checklist_Kualitas_Kue_Lebaran.docx',
+          type: 'doc',
+          size: '420 KB',
+          uploadedAt: '18 Nov 2026, 11:16 WIB',
+          description: 'Catatan teknis operasional & serah terima fisik',
+        },
+      ],
     },
   },
   {

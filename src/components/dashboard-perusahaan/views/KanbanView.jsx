@@ -10,6 +10,7 @@ function KanbanView({
   overdueTasks,
   setSelectedProofTask,
   setShowProofModal,
+  onOpenTaskDetail,
 }) {
   return (
     <main className="dashboard-content-flow">
@@ -18,7 +19,7 @@ function KanbanView({
         <div>
           <h1>Kanban Tugas &amp; Serah Terima</h1>
           <p>
-            Alur kerja visual cepat untuk memantau progres harian, meninjau draft serah terima mitra, dan mencairkan garansi dana escrow.
+            Alur kerja visual cepat untuk memantau progres harian, memeriksa rincian pekerjaan, meninjau berkas serah terima mitra (PDF/Foto), dan mencairkan garansi dana escrow.
           </p>
         </div>
         <div className="kanban-action-bar">
@@ -77,12 +78,18 @@ function KanbanView({
               </div>
             ) : (
               currentTasks.map((task) => (
-                <article className="kanban-card" key={task.id}>
+                <article className="kanban-card kanban-card--interactive" key={task.id}>
                   <div className="kanban-card__top">
                     <span className="card-code-pill">{task.code || task.id}</span>
                     <span className="card-status-pill">{task.statusBadge || 'In Progress'}</span>
                   </div>
-                  <h3 className="kanban-card__title">{task.title}</h3>
+                  <h3
+                    className="kanban-card__title kanban-card__title--clickable"
+                    onClick={() => onOpenTaskDetail && onOpenTaskDetail(task)}
+                    title="Klik untuk melihat Detail Tugas & SOP"
+                  >
+                    {task.title}
+                  </h3>
                   <p className="kanban-card__desc">{task.description}</p>
 
                   <div className="kanban-card__meta">
@@ -101,9 +108,17 @@ function KanbanView({
                       />
                       <span>{task.workerName || 'Mitra Pekerja'}</span>
                     </div>
-                    <span className="budget-tag">
-                      Rp{Number(task.budget || 0).toLocaleString('id-ID')}
-                    </span>
+                    <div className="kanban-footer-right">
+                      <button
+                        className="btn-card-detail-pill"
+                        onClick={() => onOpenTaskDetail && onOpenTaskDetail(task)}
+                        title="Lihat Detail & Checklist Tugas"
+                        type="button"
+                      >
+                        <Icon name="eye" size={13} />
+                        <span>Detail</span>
+                      </button>
+                    </div>
                   </div>
                 </article>
               ))
@@ -162,7 +177,13 @@ function KanbanView({
                       {task.statusBadge || 'Proof Review'}
                     </span>
                   </div>
-                  <h3 className="kanban-card__title">{task.title}</h3>
+                  <h3
+                    className="kanban-card__title kanban-card__title--clickable"
+                    onClick={() => onOpenTaskDetail && onOpenTaskDetail(task)}
+                    title="Klik untuk melihat Detail Tugas & Hasil Serah Terima"
+                  >
+                    {task.title}
+                  </h3>
                   <p className="kanban-card__desc">{task.description}</p>
 
                   <div className="kanban-card__meta">
@@ -177,37 +198,49 @@ function KanbanView({
                     <div className="gps-watermark-snippet">
                       <Icon name="pin" size={13} />
                       <small>
-                        GPS: {task.proofData?.gpsLocation || 'Lokasi Toko UMKM (Verified GPS)'}
+                        GPS: {task.proofData?.gpsLocation || '-7.4241, 109.2425 (Verified)'}
                       </small>
                     </div>
 
-                    <button
-                      className="btn-review-proof"
-                      onClick={() => {
-                        const enrichedTask = {
-                          ...task,
-                          proofData: task.proofData || {
-                            photoUrl: cashierPhoto,
-                            gpsLocation: 'Jl. Merdeka No. 42 (Toko UMKM Terverifikasi)',
-                            timestamp: 'Hari ini, Waktu Penyerahan Selesai',
-                            note: 'Seluruh butir checklist SOP serah terima pekerjaan harian telah saya selesaikan dengan lengkap.',
-                          },
-                          acceptanceChecklist:
-                            Array.isArray(task.acceptanceChecklist) && task.acceptanceChecklist.length > 0
-                              ? task.acceptanceChecklist
-                              : [
-                                  { id: 'c1', text: 'Tugas diselesaikan sesuai instruksi operasional toko', done: true },
-                                  { id: 'c2', text: 'Area kerja telah dirapikan & diserahterimakan', done: true },
-                                ],
-                        }
-                        setSelectedProofTask(enrichedTask)
-                        setShowProofModal(true)
-                      }}
-                      type="button"
-                    >
-                      <Icon name="check" size={15} />
-                      <span>Tinjau Bukti</span>
-                    </button>
+                    <div className="card-action-dual-row">
+                      <button
+                        className="btn-review-proof"
+                        onClick={() => {
+                          const enrichedTask = {
+                            ...task,
+                            proofData: task.proofData || {
+                              photoUrl: cashierPhoto,
+                              gpsLocation: '-7.4241, 109.2425 (Toko UMKM Terverifikasi)',
+                              timestamp: 'Hari ini, Waktu Penyerahan Selesai',
+                              note: 'Seluruh butir checklist SOP serah terima pekerjaan harian telah saya selesaikan dengan lengkap.',
+                            },
+                            acceptanceChecklist:
+                              Array.isArray(task.acceptanceChecklist) && task.acceptanceChecklist.length > 0
+                                ? task.acceptanceChecklist
+                                : [
+                                    { id: 'c1', text: 'Tugas diselesaikan sesuai instruksi operasional toko', done: true },
+                                    { id: 'c2', text: 'Area kerja telah dirapikan & diserahterimakan', done: true },
+                                  ],
+                          }
+                          setSelectedProofTask(enrichedTask)
+                          setShowProofModal(true)
+                        }}
+                        type="button"
+                      >
+                        <Icon name="check" size={15} />
+                        <span>Tinjau Bukti</span>
+                      </button>
+
+                      <button
+                        className="btn-view-deliverables"
+                        onClick={() => onOpenTaskDetail && onOpenTaskDetail(task)}
+                        title="Lihat Berkas Foto & PDF Dokumen Hasil Kerja"
+                        type="button"
+                      >
+                        <Icon name="file-text" size={13} />
+                        <span>Lihat Berkas / Detail</span>
+                      </button>
+                    </div>
 
                     <div className="worker-mini worker-mini--compact">
                       <img
@@ -264,7 +297,13 @@ function KanbanView({
                       Completed
                     </span>
                   </div>
-                  <h3 className="kanban-card__title">{task.title}</h3>
+                  <h3
+                    className="kanban-card__title kanban-card__title--clickable"
+                    onClick={() => onOpenTaskDetail && onOpenTaskDetail(task)}
+                    title="Klik untuk melihat Detail & Dokumen Selesai"
+                  >
+                    {task.title}
+                  </h3>
                   <p className="kanban-card__desc">{task.description}</p>
 
                   <div className="kanban-card__meta">
@@ -281,9 +320,17 @@ function KanbanView({
                       />
                       <span>{task.workerName || 'Mitra Pekerja'}</span>
                     </div>
-                    <span className="budget-tag budget-tag--released">
-                      Rp{Number(task.budget || 0).toLocaleString('id-ID')} (Cair)
-                    </span>
+                    <div className="kanban-footer-right">
+                      <button
+                        className="btn-card-detail-pill"
+                        onClick={() => onOpenTaskDetail && onOpenTaskDetail(task)}
+                        title="Lihat Rekap & Berkas Selesai"
+                        type="button"
+                      >
+                        <Icon name="file-text" size={13} />
+                        <span>Rekap</span>
+                      </button>
+                    </div>
                   </div>
                 </article>
               ))
