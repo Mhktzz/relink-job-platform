@@ -24,11 +24,12 @@ import DataTugasView from './views/DataTugasView.jsx'
 import ProofModal from './modals/ProofModal.jsx'
 import EscrowDetailModal from './modals/EscrowDetailModal.jsx'
 import DisputeModal from './modals/DisputeModal.jsx'
-import TaskDetailModal from './modals/TaskDetailModal.jsx'
+import TaskDetailView from './views/TaskDetailView.jsx'
 import './ClientDashboard.css'
 
 function ClientDashboard() {
-  const [currentMenu, setCurrentMenu] = useState('beranda') // 'beranda' | 'kanban' | 'radar' | 'new_task' | 'escrow'
+  const [currentMenu, setCurrentMenu] = useState('beranda') // 'beranda' | 'kanban' | 'data_tugas' | 'radar' | 'new_task' | 'escrow' | 'bantuan' | 'task_detail'
+  const [previousMenu, setPreviousMenu] = useState('kanban')
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true)
   const [tasks, setTasks] = useState(initialTaskBoard)
   const [searchQuery, setSearchQuery] = useState('')
@@ -37,6 +38,14 @@ function ClientDashboard() {
   const [signatureApproved, setSignatureApproved] = useState(false)
   const [showProofModal, setShowProofModal] = useState(false)
   const [actionSuccessMsg, setActionSuccessMsg] = useState('')
+
+  // Navigasi ke Detail Task di Main Section (bukan modal overlay)
+  const handleOpenTaskDetail = (task, fromMenu = 'kanban') => {
+    setSelectedTaskForDetail(task)
+    setPreviousMenu(fromMenu)
+    setCurrentMenu('task_detail')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   // State Rekening Escrow & Proteksi Transaksi (FR-401, FR-404, FR-501)
   const [escrowTransactions, setEscrowTransactions] = useState(initialEscrowTransactions)
@@ -353,7 +362,7 @@ function ClientDashboard() {
           <div className="sidebar-group">
             {isSidebarExpanded && <span className="group-label">Menu Utama</span>}
             <button
-              className={`sidebar-nav-item${currentMenu === 'beranda' ? ' sidebar-nav-item--active' : ''}`}
+              className={`sidebar-nav-item${currentMenu === 'beranda' || (currentMenu === 'task_detail' && previousMenu === 'beranda') ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('beranda')}
               title="Dashboard Beranda"
               type="button"
@@ -363,7 +372,7 @@ function ClientDashboard() {
             </button>
 
             <button
-              className={`sidebar-nav-item${currentMenu === 'kanban' ? ' sidebar-nav-item--active' : ''}`}
+              className={`sidebar-nav-item${currentMenu === 'kanban' || (currentMenu === 'task_detail' && previousMenu === 'kanban') ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('kanban')}
               title="Kanban Tugas"
               type="button"
@@ -374,7 +383,7 @@ function ClientDashboard() {
             </button>
 
             <button
-              className={`sidebar-nav-item${currentMenu === 'data_tugas' ? ' sidebar-nav-item--active' : ''}`}
+              className={`sidebar-nav-item${currentMenu === 'data_tugas' || (currentMenu === 'task_detail' && previousMenu === 'data_tugas') ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('data_tugas')}
               title="Manajemen & Kelola Data Tugas"
               type="button"
@@ -557,6 +566,7 @@ function ClientDashboard() {
         {/* ======================================================== */}
         {currentMenu === 'beranda' && (
           <BerandaView
+            onOpenTaskDetail={(task) => handleOpenTaskDetail(task, 'beranda')}
             setCurrentMenu={setCurrentMenu}
             setSelectedProofTask={setSelectedProofTask}
             setShowProofModal={setShowProofModal}
@@ -569,7 +579,7 @@ function ClientDashboard() {
           <KanbanView
             currentTasks={currentTasks}
             dueWeekTasks={dueWeekTasks}
-            onOpenTaskDetail={setSelectedTaskForDetail}
+            onOpenTaskDetail={(task) => handleOpenTaskDetail(task, 'kanban')}
             overdueTasks={overdueTasks}
             searchQuery={searchQuery}
             setCurrentMenu={setCurrentMenu}
@@ -581,13 +591,33 @@ function ClientDashboard() {
 
         {currentMenu === 'data_tugas' && (
           <DataTugasView
-            onOpenTaskDetail={setSelectedTaskForDetail}
+            onOpenTaskDetail={(task) => handleOpenTaskDetail(task, 'data_tugas')}
             setActionSuccessMsg={setActionSuccessMsg}
             setCurrentMenu={setCurrentMenu}
             setSelectedProofTask={setSelectedProofTask}
             setShowProofModal={setShowProofModal}
             setTasks={setTasks}
             tasks={tasks}
+          />
+        )}
+
+        {currentMenu === 'task_detail' && selectedTaskForDetail && (
+          <TaskDetailView
+            onBack={() => {
+              setCurrentMenu(previousMenu || 'kanban')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            onEditTask={() => {
+              setCurrentMenu('data_tugas')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            onOpenProofModal={(task) => {
+              setSelectedProofTask(task)
+              setShowProofModal(true)
+            }}
+            previousMenu={previousMenu}
+            setCurrentMenu={setCurrentMenu}
+            task={selectedTaskForDetail}
           />
         )}
 
@@ -759,17 +789,7 @@ function ClientDashboard() {
         />
       )}
 
-      {selectedTaskForDetail && (
-        <TaskDetailModal
-          onClose={() => setSelectedTaskForDetail(null)}
-          onOpenProofModal={(task) => {
-            setSelectedProofTask(task)
-            setShowProofModal(true)
-          }}
-          setCurrentMenu={setCurrentMenu}
-          task={selectedTaskForDetail}
-        />
-      )}
+      {/* (Task Detail is now displayed in the main section via TaskDetailView, not as an overlay modal) */}
     </div>
   )
 }

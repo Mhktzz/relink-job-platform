@@ -10,6 +10,7 @@ function DataTugasView({
   setActionSuccessMsg,
   setSelectedProofTask,
   setShowProofModal,
+  onOpenTaskDetail,
 }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'In Progress' | 'Proof Review' | 'Completed'
@@ -401,8 +402,14 @@ function DataTugasView({
                           {/* Tombol Detail */}
                           <button
                             className="btn-action-view"
-                            onClick={() => setSelectedTaskDetail(task)}
-                            title="Lihat Detail Tugas"
+                            onClick={() => {
+                              if (onOpenTaskDetail) {
+                                onOpenTaskDetail(task)
+                              } else {
+                                setSelectedTaskDetail(task)
+                              }
+                            }}
+                            title="Lihat Detail Tugas di Halaman Utama"
                             type="button"
                           >
                             <Icon name="eye" size={14} />

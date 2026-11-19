@@ -6,6 +6,7 @@ function BerandaView({
   setCurrentMenu,
   setSelectedProofTask,
   setShowProofModal,
+  onOpenTaskDetail,
 }) {
   return (
     <main className="dashboard-content-flow">
@@ -255,7 +256,13 @@ function BerandaView({
                     ) : (
                       <button
                         className="btn-table-action"
-                        onClick={() => setCurrentMenu('kanban')}
+                        onClick={() => {
+                          if (onOpenTaskDetail) {
+                            onOpenTaskDetail(task)
+                          } else {
+                            setCurrentMenu('kanban')
+                          }
+                        }}
                         type="button"
                       >
                         Detail
