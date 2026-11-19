@@ -18,9 +18,7 @@ function KanbanView({
       <div className="content-heading-bar">
         <div>
           <h1>Kanban Tugas &amp; Serah Terima</h1>
-          <p>
-            Alur kerja visual cepat untuk memantau progres harian, memeriksa rincian pekerjaan, meninjau berkas serah terima mitra (PDF/Foto), dan mencairkan garansi dana escrow.
-          </p>
+          <p>Pantau Progres Harian Seluruh Task</p>
         </div>
         <div className="kanban-action-bar">
           <div className="task-search-pill">
