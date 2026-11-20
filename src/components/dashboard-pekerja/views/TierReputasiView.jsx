@@ -137,7 +137,7 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
             </ul>
           </div>
 
-          <div className="tier-level-card">
+          <div className="tier-level-card tier-level-card--verified">
             <div className="tier-card-badge tier-card-badge--next">TARGET BERIKUTNYA</div>
             <h4>Tier 2: Verified (Terverifikasi)</h4>
             <p>Mitra dengan riwayat pengerjaan terbukti dan ulasan tinggi konsisten.</p>
