@@ -305,15 +305,14 @@ function PusatBantuanView({ tasks = [], setActionSuccessMsg, setCurrentMenu }) {
         </div>
         <div className="helpdesk-header-actions">
           <a
-            aria-label="Hubungi WhatsApp Bantuan Relink"
+            aria-label="Hubungi WhatsApp CS Relink"
             className="btn-whatsapp-support"
-            href="https://wa.me/6281234567890?text=Halo%20Tim%20Bantuan%20Relink,%20saya%20butuh%20panduan%20penggunaan%20dashboard%20UMKM"
+            href="https://wa.me/6281234567890?text=Halo%20Tim%20CS%20Relink,%20saya%20butuh%20panduan%20penggunaan%20dashboard%20UMKM"
             rel="noopener noreferrer"
             target="_blank"
           >
-            <div className="wa-pulse-dot" />
-            <Icon name="mail" size={16} />
-            <span>Chat CS Bantuan (WhatsApp)</span>
+            <Icon name="whatsapp" size={17} />
+            <span>Chat CS</span>
           </a>
         </div>
       </div>
