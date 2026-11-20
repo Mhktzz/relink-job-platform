@@ -299,9 +299,7 @@ function PusatBantuanView({ tasks = [], setActionSuccessMsg, setCurrentMenu }) {
       <div className="content-heading-bar">
         <div>
           <h1>Pusat Bantuan &amp; Panduan Penggunaan</h1>
-          <p>
-            Pelajari cara memaksimalkan seluruh fitur dashboard UMKM Relink: mulai dari atur ulang kata sandi, posting tugas baru, kelola database tugas, hingga proteksi dana escrow.
-          </p>
+          <p>Cari Panduan mengenai Fitur Relink</p>
         </div>
         <div className="helpdesk-header-actions">
           <a
