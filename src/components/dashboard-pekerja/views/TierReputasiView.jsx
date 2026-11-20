@@ -6,28 +6,44 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
   const progressPercent = Math.min(100, Math.round((currentCompleted / targetCompleted) * 100))
 
   return (
-    <main className="dashboard-content-flow worker-dashboard-flow">
+    <main className="dashboard-content-flow">
       {/* 1. Header Section */}
       <div className="content-heading-bar">
         <div>
           <h1>Jenjang Reputasi &amp; Pusat Verifikasi Keahlian</h1>
           <p>
-            Bangun reputasi profesional berbasis bukti kerja nyata, bukan kredensial ijazah. Naik tier untuk tarif lebih tinggi dan akses tugas eksklusif.
+            Bangun reputasi profesional berbasis bukti kerja nyata, bukan ijazah formal. Naik tier untuk tarif lebih tinggi dan akses tugas eksklusif.
           </p>
+        </div>
+        <div className="escrow-header-actions">
+          <button
+            className="btn-download-recap"
+            onClick={onOpenQuizModal}
+            type="button"
+          >
+            <Icon name="star" size={15} />
+            <span>Mulai Uji Kompetensi</span>
+          </button>
         </div>
       </div>
 
       {/* 2. Gamified Tier Progress Tracker (FR-301) */}
-      <section className="gamified-tier-tracker-card">
+      <section className="escrow-lifecycle-card" style={{ marginBottom: '32px' }}>
         <div className="tier-tracker-header">
           <div>
-            <span className="tier-tag-pill">
-              <Icon name="star" size={14} className="text-amber" />
-              <span>Status Aktif: {workerProfile.tierLabel}</span>
-            </span>
-            <h3>Jalur Kenaikan ke Tier 2 (Terverifikasi)</h3>
-            <p className="text-muted">
-              Selesaikan <strong>{targetCompleted - currentCompleted} tugas lagi</strong> dengan rating di atas 4.7 untuk otomatis naik ke Tier 2!
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span className="task-tag-chip task-tag-chip--mint">
+                Status: {workerProfile.tierLabel}
+              </span>
+              <span className="task-tag-chip task-tag-chip--pink">
+                Trust Score {workerProfile.trustScore}%
+              </span>
+            </div>
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '22px', fontWeight: '800' }}>
+              Jalur Kenaikan ke Tier 2 (Terverifikasi)
+            </h3>
+            <p className="text-muted" style={{ margin: 0, fontSize: '14px' }}>
+              Selesaikan <strong>{targetCompleted - currentCompleted} tugas lagi</strong> dengan rating di atas 4.70 untuk otomatis naik ke Tier 2!
             </p>
           </div>
 
@@ -60,7 +76,7 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
             </div>
             <div>
               <strong>Tugas Sukses: {currentCompleted} / {targetCompleted}</strong>
-              <small>Butuh {targetCompleted - currentCompleted} penyelesaian tugas lagi</small>
+              <small>Butuh {targetCompleted - currentCompleted} tugas lagi</small>
             </div>
           </div>
 
@@ -99,9 +115,15 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
         </div>
       </section>
 
-      {/* 3. Perbandingan 3 Tingkatan Tier di Relink */}
-      <section className="tier-comparison-section">
-        <h3>Tingkatan Jenjang Mitra Relink</h3>
+      {/* 3. Perbandingan 3 Tingkatan Tier di Relink (DESIGN.md Section 6) */}
+      <section style={{ marginBottom: '36px' }}>
+        <div className="recent-orders-card__header" style={{ marginBottom: '18px' }}>
+          <div>
+            <h3>Tingkatan Jenjang Mitra Relink</h3>
+            <small>Hak akses pekerjaan, standar upah, dan komisi platform bertingkat</small>
+          </div>
+        </div>
+
         <div className="tier-cards-row">
           <div className="tier-level-card tier-level-card--current">
             <div className="tier-card-badge">JENJANG ANDA SAAT INI</div>
@@ -110,7 +132,7 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
             <ul className="tier-perks-list">
               <li><Icon name="check" size={14} /> Tugas risiko rendah &amp; operasional toko</li>
               <li><Icon name="check" size={14} /> Dilindungi program Cold-Start Anti-Bias</li>
-              <li><Icon name="check" size={14} /> Lencana Rising Star (uji kompetensi sempurna)</li>
+              <li><Icon name="check" size={14} /> Lencana Rising Star (uji kompetensi 100%)</li>
               <li><Icon name="check" size={14} /> Komisi platform standar: 8%</li>
             </ul>
           </div>
@@ -142,25 +164,24 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
       </section>
 
       {/* 4. Skill Verification Hub (FR-302) */}
-      <section className="skill-verification-hub-card">
-        <div className="hub-header">
+      <section className="recent-orders-card" style={{ padding: '32px' }}>
+        <div className="recent-orders-card__header" style={{ marginBottom: '22px' }}>
           <div>
             <h3>Skill Verification Hub (Bukti Keterampilan Non-Formal)</h3>
-            <p className="text-muted">Portofolio visual dan uji pemahaman SOP langsung di aplikasi.</p>
+            <small>Portofolio visual dan uji pemahaman SOP langsung di aplikasi</small>
           </div>
           <button
-            className="btn-take-quiz-hub"
+            className="btn-table-action btn-table-action--pink"
             onClick={onOpenQuizModal}
             type="button"
           >
-            <Icon name="star" size={15} />
-            <span>Ikuti Kuis Skenario / Micro-Assessment</span>
+            Ikuti Micro-Assessment &rarr;
           </button>
         </div>
 
         <div className="verification-badges-grid">
           <div className="verification-badge-item">
-            <div className="badge-status-icon badge-status-icon--valid">
+            <div className="badge-status-icon--valid">
               <Icon name="shield" size={18} />
             </div>
             <div>
@@ -170,7 +191,7 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
           </div>
 
           <div className="verification-badge-item">
-            <div className="badge-status-icon badge-status-icon--valid">
+            <div className="badge-status-icon--valid">
               <Icon name="bolt" size={18} />
             </div>
             <div>
@@ -180,7 +201,7 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
           </div>
 
           <div className="verification-badge-item">
-            <div className="badge-status-icon badge-status-icon--valid">
+            <div className="badge-status-icon--valid">
               <Icon name="image" size={18} />
             </div>
             <div>
@@ -190,7 +211,7 @@ function TierReputasiView({ workerProfile, onOpenQuizModal }) {
           </div>
 
           <div className="verification-badge-item">
-            <div className="badge-status-icon badge-status-icon--valid">
+            <div className="badge-status-icon--valid">
               <Icon name="users" size={18} />
             </div>
             <div>

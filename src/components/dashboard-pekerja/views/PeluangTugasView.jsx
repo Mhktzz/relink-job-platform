@@ -1,24 +1,23 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
 
-function PeluangTugasView({ availableJobs, onOpenAcceptModal }) {
+function PeluangTugasView({ availableJobs = [], onOpenAcceptModal, searchQueryGlobal = '' }) {
   const [activeTab, setActiveTab] = useState('all') // 'all' | 'tier1' | 'tandem' | 'teknis'
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(searchQueryGlobal)
   const [maxDistance, setMaxDistance] = useState('all') // 'all' | '1km' | '3km'
 
+  const effectiveQuery = searchQuery || searchQueryGlobal
+
   const filteredJobs = availableJobs.filter((job) => {
-    // Filter tab
     if (activeTab === 'tier1' && !job.tag.includes('Tier 1')) return false
     if (activeTab === 'tandem' && !job.tag.includes('Tandem')) return false
     if (activeTab === 'teknis' && job.category !== 'Teknis & Perangkat') return false
 
-    // Filter distance
     const distNum = parseFloat(job.distance) || 0
     if (maxDistance === '1km' && distNum > 1.0) return false
     if (maxDistance === '3km' && distNum > 3.0) return false
 
-    // Filter search query
-    const q = searchQuery.toLowerCase()
+    const q = effectiveQuery.toLowerCase()
     return (
       job.title.toLowerCase().includes(q) ||
       job.clientName.toLowerCase().includes(q) ||
@@ -28,45 +27,48 @@ function PeluangTugasView({ availableJobs, onOpenAcceptModal }) {
   })
 
   return (
-    <main className="dashboard-content-flow worker-dashboard-flow">
+    <main className="dashboard-content-flow">
       {/* 1. Header Section */}
       <div className="content-heading-bar">
         <div>
           <h1>Radar Peluang Tugas Mikro Terdekat</h1>
           <p>
-            Ambil pekerjaan langsung di sekitarmu. Honor bersih transparan tanpa potongan tersembunyi dan dijamin aman di rekening Escrow Relink.
+            Ambil pekerjaan langsung di radius 1–5 km. Honor bersih transparan tanpa potongan tersembunyi dan dijamin aman di rekening Escrow Relink.
           </p>
+        </div>
+        <div className="escrow-header-actions">
+          <span className="escrow-verified-pill">
+            <Icon name="shield" size={14} /> 100% Terlindungi Escrow
+          </span>
         </div>
       </div>
 
-      {/* 2. Filter Tab Bar & Pencarian */}
-      <div className="worker-job-filter-toolbar">
-        <div className="worker-job-tabs">
+      {/* 2. Filter Toolbar (Menggunakan style escrow-filter-tabs & topbar-search dari Dashboard Perusahaan) */}
+      <div className="escrow-ledger-header" style={{ marginBottom: '24px' }}>
+        <div className="escrow-filter-tabs">
           <button
-            className={`job-tab-btn ${activeTab === 'all' ? 'job-tab-btn--active' : ''}`}
+            className={`escrow-tab-btn${activeTab === 'all' ? ' escrow-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('all')}
             type="button"
           >
-            Semua Tugas Sekitar ({availableJobs.length})
+            Semua Tugas ({availableJobs.length})
           </button>
           <button
-            className={`job-tab-btn ${activeTab === 'tier1' ? 'job-tab-btn--active' : ''}`}
+            className={`escrow-tab-btn${activeTab === 'tier1' ? ' escrow-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('tier1')}
             type="button"
           >
-            <Icon name="bolt" size={14} className="text-pink" />
             Khusus Pemula (Tier 1)
           </button>
           <button
-            className={`job-tab-btn ${activeTab === 'tandem' ? 'job-tab-btn--active' : ''}`}
+            className={`escrow-tab-btn${activeTab === 'tandem' ? ' escrow-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('tandem')}
             type="button"
           >
-            <Icon name="users" size={14} className="text-mint" />
             Undangan Tim Tandem
           </button>
           <button
-            className={`job-tab-btn ${activeTab === 'teknis' ? 'job-tab-btn--active' : ''}`}
+            className={`escrow-tab-btn${activeTab === 'teknis' ? ' escrow-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('teknis')}
             type="button"
           >
@@ -74,10 +76,11 @@ function PeluangTugasView({ availableJobs, onOpenAcceptModal }) {
           </button>
         </div>
 
-        <div className="worker-job-search-box">
-          <div className="job-search-input-wrap">
-            <Icon name="search" size={16} />
+        <div className="escrow-search-wrapper">
+          <div className="escrow-search-input-wrap">
+            <Icon name="search" size={15} />
             <input
+              className="escrow-search-input"
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari tugas, nama toko UMKM..."
               type="text"
@@ -90,27 +93,31 @@ function PeluangTugasView({ availableJobs, onOpenAcceptModal }) {
             onChange={(e) => setMaxDistance(e.target.value)}
             value={maxDistance}
           >
-            <option value="all">Semua Jarak (Maks. 5 km)</option>
+            <option value="all">Semua Jarak (Radius 1–5 km)</option>
             <option value="1km">&lt; 1 km (Sangat Dekat)</option>
-            <option value="3km">&lt; 3 km (Radius Motor/Jalan)</option>
+            <option value="3km">&lt; 3 km (Jalan / Motor Cepat)</option>
           </select>
         </div>
       </div>
 
-      {/* 3. Banner Edukasi Sistem Anti-Bias Cold-Start (FR-501 & FR-503) */}
-      <div className="cold-start-info-banner">
-        <div className="metric-icon-bubble metric-icon-bubble--mint">
-          <Icon name="shield" size={18} />
-        </div>
-        <div className="cold-start-info-text">
-          <strong>Proteksi Peluang Kerja Adil untuk Mitra Pemula (Tier 1)</strong>
-          <p>
-            Di Relink, tugas bertanda <em>&quot;Khusus Pemula (Tier 1)&quot;</em> diproteksi dari persaingan mitra senior agar Anda cepat mendapat order pertama dan membangun reputasi nyata tanpa syarat ijazah formal.
-          </p>
+      {/* 3. Banner Edukasi Anti-Bias Cold-Start (Design System: Card Soft Blue / Mint Glow) */}
+      <div className="escrow-lifecycle-card" style={{ marginBottom: '28px', padding: '22px 28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="metric-icon-bubble metric-icon-bubble--mint" style={{ width: '44px', height: '44px' }}>
+            <Icon name="shield" size={20} />
+          </div>
+          <div>
+            <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: 'var(--navy)' }}>
+              Proteksi Peluang Kerja Adil untuk Mitra Pemula (Tier 1)
+            </h4>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-muted)', lineHeight: '1.45' }}>
+              Di Relink, tugas bertanda <em>&quot;Khusus Pemula (Tier 1)&quot;</em> diproteksi dari persaingan mitra senior agar Anda cepat mendapat order pertama dan membangun reputasi nyata tanpa syarat ijazah formal.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* 4. Grid Kartu Tugas Peluang */}
+      {/* 4. Grid Kartu Peluang Tugas */}
       {filteredJobs.length === 0 ? (
         <div className="worker-empty-jobs-card">
           <Icon name="search" size={36} className="text-muted" />
@@ -155,7 +162,7 @@ function PeluangTugasView({ availableJobs, onOpenAcceptModal }) {
               </div>
 
               <div className="job-card-checklist-box">
-                <small className="checklist-heading">Kriteria Hasil yang Diharapkan:</small>
+                <small className="checklist-heading">Kriteria Hasil yang Diharapkan (SOP):</small>
                 <div className="checklist-summary-text">{job.checklistSummary}</div>
               </div>
 

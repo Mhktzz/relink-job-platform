@@ -2,7 +2,7 @@ import Icon from '../../common/Icon.jsx'
 
 function KeamananSopView({ onTriggerSos }) {
   return (
-    <main className="dashboard-content-flow worker-dashboard-flow">
+    <main className="dashboard-content-flow">
       {/* 1. Header Section */}
       <div className="content-heading-bar">
         <div>
@@ -17,7 +17,7 @@ function KeamananSopView({ onTriggerSos }) {
       <section className="worker-sos-hero-card">
         <div className="sos-hero-content">
           <div className="sos-icon-pulse-wrap">
-            <Icon name="alert" size={32} />
+            <Icon name="alert" size={30} />
           </div>
           <div>
             <h3>Tombol Siaga SOS &amp; Berbagi Lokasi Realtime</h3>
@@ -31,13 +31,13 @@ function KeamananSopView({ onTriggerSos }) {
           onClick={onTriggerSos}
           type="button"
         >
-          <Icon name="alert" size={20} />
+          <Icon name="alert" size={18} />
           <span>AKTIFKAN SINYAL SOS DARURAT</span>
         </button>
       </section>
 
-      {/* 3. 3 Pilar Perlindungan Mitra di Relink */}
-      <div className="summary-metrics-grid worker-safety-grid">
+      {/* 3. 3 Pilar Perlindungan Mitra di Relink (Summary Metrics Grid) */}
+      <div className="summary-metrics-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '32px' }}>
         <div className="metric-box-card">
           <div className="metric-box-card__header">
             <span>Proteksi Dana Escrow 100%</span>
@@ -85,8 +85,14 @@ function KeamananSopView({ onTriggerSos }) {
       </div>
 
       {/* 4. Standar Operasional Prosedur (SOP) Kerja Lapangan */}
-      <section className="worker-sop-guide-card">
-        <h3>Panduan SOP Kerja Lapangan (K3 &amp; Etika)</h3>
+      <section className="recent-orders-card" style={{ padding: '32px', marginBottom: '32px' }}>
+        <div className="recent-orders-card__header" style={{ marginBottom: '22px' }}>
+          <div>
+            <h3>Panduan SOP Kerja Lapangan (K3 &amp; Etika)</h3>
+            <small>Prosedur standar sebelum, saat, dan sesudah pengerjaan tugas di lokasi usaha</small>
+          </div>
+        </div>
+
         <div className="sop-steps-list">
           <div className="sop-step-item">
             <span className="sop-step-number">01</span>

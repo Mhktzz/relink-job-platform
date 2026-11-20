@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
+import relinkIcon from '../../assets/main-relink-1.svg'
 import Icon from '../common/Icon.jsx'
-import Logo from '../common/Logo.jsx'
 import { supabase } from '../../lib/supabaseClient.js'
 import {
   initialWorkerProfile,
@@ -20,12 +20,14 @@ import ProofHandoverModal from './modals/ProofHandoverModal.jsx'
 import TarikDanaModal from './modals/TarikDanaModal.jsx'
 import KuisAssessmentModal from './modals/KuisAssessmentModal.jsx'
 
+import '../dashboard-perusahaan/ClientDashboard.css'
 import './WorkerDashboard.css'
 
 function WorkerDashboard() {
-  const [currentMenu, setCurrentMenu] = useState('beranda')
+  const [currentMenu, setCurrentMenu] = useState('beranda') // 'beranda' | 'peluang' | 'jenjang' | 'dompet' | 'keamanan'
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [actionSuccessMsg, setActionSuccessMsg] = useState('')
 
   // State Profil Pekerja (dari Supabase / localStorage)
@@ -86,10 +88,8 @@ function WorkerDashboard() {
   function handleConfirmAcceptTask(task) {
     setIsProcessing(true)
     setTimeout(() => {
-      // Hapus dari daftar tugas tersedia
       setAvailableJobs((prev) => prev.filter((j) => j.id !== task.id))
 
-      // Set sebagai tugas aktif yang sedang berjalan
       const newTask = {
         id: task.id,
         code: task.code,
@@ -141,14 +141,13 @@ function WorkerDashboard() {
   }
 
   // Handler: Serah Terima Digital & Pengajuan Pencairan Bukti
-  function handleSubmitProof(completedChecklist, notes) {
+  function handleSubmitProof(completedChecklist) {
     setIsProcessing(true)
     setTimeout(() => {
       const earnedNet = activeTask.netHonor
       const gross = activeTask.grossHonor
       const fee = gross - earnedNet
 
-      // Tambahkan saldo ke dompet mitra
       setWalletData((prev) => ({
         ...prev,
         availableBalance: prev.availableBalance + earnedNet,
@@ -170,7 +169,6 @@ function WorkerDashboard() {
         ],
       }))
 
-      // Update profil: bertambah 1 tugas selesai
       setWorkerProfile((prev) => ({
         ...prev,
         completedTasksCount: prev.completedTasksCount + 1,
@@ -250,8 +248,8 @@ function WorkerDashboard() {
   }
 
   return (
-    <div className="worker-dashboard-app">
-      {/* 1. SIDEBAR NAVY MODAL PEKERJA */}
+    <div className="admin-clean-app">
+      {/* 1. SIDEBAR NAVY DENGAN PENGELOMPOKAN MENU (KONSISTEN DENGAN DASHBOARD PERUSAHAAN) */}
       <aside
         className={`admin-navy-sidebar${isSidebarExpanded ? ' admin-navy-sidebar--expanded' : ' admin-navy-sidebar--collapsed'}`}
       >
@@ -259,6 +257,7 @@ function WorkerDashboard() {
           aria-label={isSidebarExpanded ? 'Perkecil sidebar' : 'Perbesar sidebar'}
           className="sidebar-collapse-edge-btn"
           onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+          title={isSidebarExpanded ? 'Perkecil Sidebar' : 'Perbesar Sidebar'}
           type="button"
         >
           <Icon name={isSidebarExpanded ? 'chevron-left' : 'chevron-right'} size={14} />
@@ -267,134 +266,189 @@ function WorkerDashboard() {
         {/* Brand Logo Header */}
         <div className="sidebar-brand-wrapper">
           <button
+            aria-label="Relink Mitra, kembali ke beranda dashboard"
             className="sidebar-brand-link"
             onClick={() => setCurrentMenu('beranda')}
             type="button"
           >
-            <Logo />
+            <img alt="Relink Logo" className="sidebar-brand-icon" src={relinkIcon} />
+            {isSidebarExpanded && <span className="sidebar-brand-name">Relink Mitra</span>}
           </button>
         </div>
 
-        {/* Profile Card di Sidebar */}
-        {isSidebarExpanded && (
-          <div className="worker-sidebar-profile-card">
-            <img alt={workerProfile.name} className="worker-sidebar-avatar" src={workerProfile.photo} />
-            <div className="worker-sidebar-info">
-              <strong>{workerProfile.name}</strong>
-              <span className="worker-sidebar-tier-badge">{workerProfile.tier}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Menu Navigasi Utama */}
+        {/* Menu Navigasi Sidebar */}
         <nav aria-label="Navigasi Menu Pekerja" className="sidebar-nav-scroll">
-          <div className="sidebar-nav-group">
-            {isSidebarExpanded && <span className="sidebar-group-label">OPERASIONAL MITRA</span>}
+          <div className="sidebar-group">
+            {isSidebarExpanded && <span className="group-label">Menu Utama</span>}
 
             <button
               className={`sidebar-nav-item${currentMenu === 'beranda' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('beranda')}
+              title="Dashboard Beranda Mitra"
               type="button"
             >
               <Icon name="home" size={18} />
-              {isSidebarExpanded && <span>Beranda Mitra</span>}
+              {isSidebarExpanded && <span>Beranda</span>}
             </button>
 
             <button
               className={`sidebar-nav-item${currentMenu === 'peluang' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('peluang')}
+              title="Radar & Bursa Peluang Tugas"
               type="button"
             >
               <Icon name="briefcase" size={18} />
-              {isSidebarExpanded && (
-                <div className="sidebar-nav-text-wrap">
-                  <span>Peluang Tugas</span>
-                  <span className="sidebar-nav-badge">{availableJobs.length}</span>
-                </div>
-              )}
+              {isSidebarExpanded && <span>Peluang Tugas</span>}
+              {isSidebarExpanded && <span className="nav-counter-pill">{availableJobs.length}</span>}
             </button>
 
             <button
               className={`sidebar-nav-item${currentMenu === 'jenjang' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('jenjang')}
+              title="Jenjang Reputasi & Verifikasi"
               type="button"
             >
               <Icon name="star" size={18} />
               {isSidebarExpanded && <span>Jenjang &amp; Reputasi</span>}
+              {isSidebarExpanded && (
+                <span className="nav-counter-pill nav-counter-pill--escrow">Tier 1</span>
+              )}
             </button>
+          </div>
+
+          <div className="sidebar-group">
+            {isSidebarExpanded && <span className="group-label">Layanan</span>}
 
             <button
               className={`sidebar-nav-item${currentMenu === 'dompet' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('dompet')}
+              title="Dompet & Penarikan Saldo"
               type="button"
             >
               <Icon name="wallet" size={18} />
               {isSidebarExpanded && <span>Dompet Mitra</span>}
             </button>
-          </div>
-
-          <div className="sidebar-nav-group">
-            {isSidebarExpanded && <span className="sidebar-group-label">KEAMANAN &amp; SOP</span>}
 
             <button
               className={`sidebar-nav-item${currentMenu === 'keamanan' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('keamanan')}
+              title="Pusat Keamanan, SOP & Siaga SOS"
               type="button"
             >
               <Icon name="shield" size={18} />
-              {isSidebarExpanded && <span>Pusat Keamanan &amp; SOS</span>}
+              {isSidebarExpanded && <span>Keamanan &amp; SOP</span>}
+            </button>
+          </div>
+
+          <div className="sidebar-group sidebar-group--bottom">
+            {isSidebarExpanded && <span className="group-label">Pengaturan</span>}
+
+            <button
+              className="sidebar-nav-item"
+              onClick={() => { window.location.href = '/dashboard?portal=umkm' }}
+              title="Beralih ke Portal Perusahaan / UMKM"
+              type="button"
+            >
+              <Icon name="users" size={18} />
+              {isSidebarExpanded && <span>Portal UMKM</span>}
+            </button>
+
+            <button
+              className="sidebar-nav-item sidebar-nav-item--logout"
+              onClick={handleLogout}
+              title="Keluar dari Akun"
+              type="button"
+            >
+              <Icon name="close" size={18} />
+              {isSidebarExpanded && <span>Keluar Akun</span>}
             </button>
           </div>
         </nav>
-
-        {/* Sidebar Footer: Tombol Beralih ke Portal UMKM */}
-        <div className="sidebar-footer-actions">
-          <button
-            className="sidebar-switch-btn"
-            onClick={() => { window.location.href = '/dashboard' }}
-            title="Beralih ke Dashboard UMKM"
-            type="button"
-          >
-            <Icon name="users" size={16} />
-            {isSidebarExpanded && <span>Portal UMKM</span>}
-          </button>
-        </div>
       </aside>
 
-      {/* 2. MAIN CONTENT AREA */}
-      <div className="worker-main-panel">
-        {/* Floating Topbar */}
-        <header className="worker-topbar">
-          <div className="worker-topbar-left">
-            <span className="worker-topbar-tag">DASHBOARD MITRA KERJA</span>
-          </div>
-
-          <div className="worker-topbar-right">
+      {/* 2. KANVAS UTAMA DENGAN TOPBAR NAVY MENYATU */}
+      <div className="admin-body-canvas">
+        {/* Sticky Topbar */}
+        <header className="admin-navy-topbar">
+          <div className="topbar-brand-mobile">
             <button
-              className="btn-switch-portal"
-              onClick={() => { window.location.href = '/dashboard' }}
+              aria-label="Relink Mitra, kembali ke beranda dashboard"
+              className="topbar-brand-link"
+              onClick={() => setCurrentMenu('beranda')}
               type="button"
             >
-              <Icon name="users" size={15} />
-              <span>Beralih ke Dashboard UMKM</span>
+              <img alt="Relink Logo" className="topbar-brand-icon" src={relinkIcon} />
+              <span className="topbar-brand-name">Relink Mitra</span>
+            </button>
+          </div>
+
+          {/* Kotak Pencarian Global */}
+          <div className="topbar-search">
+            <Icon name="search" size={16} />
+            <input
+              aria-label="Cari tugas atau kategori"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari tugas, kategori keahlian, atau toko sekitar..."
+              type="text"
+              value={searchQuery}
+            />
+            <span className="search-shortcut-badge">⌘ K</span>
+          </div>
+
+          <div className="topbar-actions">
+            {/* Toggle Status Siap Kerja Instan di Topbar */}
+            <button
+              className={`topbar-radar-toggle-pill ${isAvailableNow ? 'topbar-radar-toggle-pill--active' : ''}`}
+              onClick={() => setIsAvailableNow(!isAvailableNow)}
+              title={isAvailableNow ? 'Radar Aktif: Menerima Order Instan' : 'Radar Nonaktif: Istirahat'}
+              type="button"
+            >
+              <span className={`radar-indicator-dot ${isAvailableNow ? 'radar-indicator-dot--active' : ''}`} />
+              <span>{isAvailableNow ? 'Siap Kerja Instan' : 'Offline'}</span>
             </button>
 
-            {/* Profile Dropdown */}
-            <div className="user-profile-relative">
+            <button
+              aria-label="Notifikasi"
+              className="topbar-action-icon"
+              type="button"
+            >
+              <Icon name="bell" size={18} />
+              <span className="topbar-notif-dot" />
+            </button>
+
+            <button
+              aria-label="Pusat Keamanan & SOP"
+              className={`topbar-action-icon topbar-action-icon--help${currentMenu === 'keamanan' ? ' topbar-action-icon--active' : ''}`}
+              onClick={() => setCurrentMenu('keamanan')}
+              title="Pusat Keamanan & SOP"
+              type="button"
+            >
+              <Icon name="shield" size={18} />
+            </button>
+
+            {/* Profil User Capsule Identik dengan Dashboard Perusahaan */}
+            <div className="topbar-user-wrapper">
               <button
-                className="worker-profile-pill"
+                aria-expanded={showUserDropdown}
+                aria-label="Profil dan Pengaturan Akun Mitra"
+                className="topbar-user-capsule"
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
                 type="button"
               >
-                <img alt={workerProfile.name} className="worker-avatar-small" src={workerProfile.photo} />
-                <div className="worker-name-role">
+                <img
+                  alt={workerProfile.name}
+                  className="topbar-avatar-photo"
+                  src={workerProfile.photo}
+                />
+                <div className="topbar-user-info">
                   <strong>{workerProfile.name}</strong>
                   <small>{workerProfile.tierLabel}</small>
                 </div>
+                <Icon name="arrow" size={12} />
               </button>
 
               {showUserDropdown && (
-                <div className="dropdown-menu-box">
+                <div className="topbar-user-dropdown">
                   <div className="dropdown-user-header">
                     <strong>{workerProfile.name}</strong>
                     <small>{workerProfile.email}</small>
@@ -404,12 +458,23 @@ function WorkerDashboard() {
                     className="dropdown-item"
                     onClick={() => {
                       setShowUserDropdown(false)
+                      window.location.href = '/dashboard?portal=umkm'
+                    }}
+                    type="button"
+                  >
+                    <Icon name="users" size={16} />
+                    <span>Beralih ke Portal UMKM</span>
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      setShowUserDropdown(false)
                       setCurrentMenu('jenjang')
                     }}
                     type="button"
                   >
                     <Icon name="star" size={16} />
-                    <span>Verifikasi Keahlian</span>
+                    <span>Jenjang &amp; Verifikasi</span>
                   </button>
                   <button
                     className="dropdown-item"
@@ -444,14 +509,13 @@ function WorkerDashboard() {
           </div>
         )}
 
-        {/* VIEWS ROUTING */}
+        {/* MODULAR VIEWS ROUTING */}
         {currentMenu === 'beranda' && (
           <WorkerBerandaView
             activeTask={activeTask}
             availableJobs={availableJobs}
             isAvailableNow={isAvailableNow}
             onCheckInArrived={handleCheckInArrived}
-            onCheckInEnRoute={() => {}}
             onOpenAcceptModal={(job) => setTaskToAccept(job)}
             onOpenProofModal={() => setShowProofModal(true)}
             onOpenWithdrawModal={() => setShowWithdrawModal(true)}
@@ -467,6 +531,7 @@ function WorkerDashboard() {
           <PeluangTugasView
             availableJobs={availableJobs}
             onOpenAcceptModal={(job) => setTaskToAccept(job)}
+            searchQueryGlobal={searchQuery}
           />
         )}
 
