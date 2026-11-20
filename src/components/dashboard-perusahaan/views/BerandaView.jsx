@@ -8,6 +8,8 @@ function BerandaView({
   setSelectedProofTask,
   setShowProofModal,
   onOpenTaskDetail,
+  onEditTask,
+  onDeleteTask,
 }) {
   // State Filter Waktu & Interaktivitas Grafik
   const [timeframe, setTimeframe] = useState('Minggu Ini')
@@ -508,32 +510,54 @@ function BerandaView({
                   </td>
                   <td><strong>Rp{(Number(task.budget) || 0).toLocaleString('id-ID')}</strong></td>
                   <td>
-                    {task.proofData ? (
-                      <button
-                        className="btn-table-action btn-table-action--pink"
-                        onClick={() => {
-                          setSelectedProofTask(task)
-                          setShowProofModal(true)
-                        }}
-                        type="button"
-                      >
-                        Periksa Bukti
-                      </button>
-                    ) : (
-                      <button
-                        className="btn-table-action"
-                        onClick={() => {
-                          if (onOpenTaskDetail) {
-                            onOpenTaskDetail(task)
-                          } else {
-                            setCurrentMenu('kanban')
-                          }
-                        }}
-                        type="button"
-                      >
-                        Detail
-                      </button>
-                    )}
+                    <div className="table-actions-group">
+                      {task.proofData ? (
+                        <button
+                          className="btn-table-action btn-table-action--pink"
+                          onClick={() => {
+                            setSelectedProofTask(task)
+                            setShowProofModal(true)
+                          }}
+                          type="button"
+                        >
+                          Periksa Bukti
+                        </button>
+                      ) : (
+                        <button
+                          className="btn-table-action"
+                          onClick={() => {
+                            if (onOpenTaskDetail) {
+                              onOpenTaskDetail(task)
+                            } else {
+                              setCurrentMenu('kanban')
+                            }
+                          }}
+                          type="button"
+                        >
+                          Detail
+                        </button>
+                      )}
+                      {onEditTask && (
+                        <button
+                          className="btn-card-action-icon"
+                          onClick={() => onEditTask(task)}
+                          title="Edit Rincian Tugas"
+                          type="button"
+                        >
+                          <Icon name="edit" size={13} />
+                        </button>
+                      )}
+                      {onDeleteTask && (
+                        <button
+                          className="btn-card-action-icon btn-card-action-icon--delete"
+                          onClick={() => onDeleteTask(task)}
+                          title="Hapus Tugas"
+                          type="button"
+                        >
+                          <Icon name="trash" size={13} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

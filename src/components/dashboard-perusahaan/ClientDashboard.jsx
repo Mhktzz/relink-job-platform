@@ -12,6 +12,8 @@ import {
   insertTaskToDb,
   fetchEscrowFromDb,
   updateEscrowStatusInDb,
+  updateTaskInDb,
+  deleteTaskFromDb,
 } from '../../lib/databaseService.js'
 import { supabase } from '../../lib/supabaseClient.js'
 import BerandaView from './views/BerandaView.jsx'
@@ -25,6 +27,8 @@ import ProofModal from './modals/ProofModal.jsx'
 import EscrowDetailModal from './modals/EscrowDetailModal.jsx'
 import DisputeModal from './modals/DisputeModal.jsx'
 import TaskDetailView from './views/TaskDetailView.jsx'
+import EditTaskModal from './modals/EditTaskModal.jsx'
+import DeleteTaskModal from './modals/DeleteTaskModal.jsx'
 import './ClientDashboard.css'
 
 function ClientDashboard() {
@@ -39,12 +43,130 @@ function ClientDashboard() {
   const [showProofModal, setShowProofModal] = useState(false)
   const [actionSuccessMsg, setActionSuccessMsg] = useState('')
 
+  // State Modal Edit & Hapus Tugas Global (Dinamis untuk semua tampilan)
+  const [taskToEdit, setTaskToEdit] = useState(null)
+  const [taskToDelete, setTaskToDelete] = useState(null)
+  const [isProcessingTask, setIsProcessingTask] = useState(false)
+
   // Navigasi ke Detail Task di Main Section (bukan modal overlay)
   const handleOpenTaskDetail = (task, fromMenu = 'kanban') => {
     setSelectedTaskForDetail(task)
     setPreviousMenu(fromMenu)
     setCurrentMenu('task_detail')
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Handler: Simpan Edit Tugas secara Global & Dinamis
+  async function handleSaveEditTask(taskId, updatedFields) {
+    setIsProcessingTask(true)
+    await updateTaskInDb(taskId, updatedFields)
+    setTasks((prev) =>
+      prev.map((item) => {
+        if (item.id === taskId || item.task_code === taskId) {
+          const updated = {
+            ...item,
+            title: updatedFields.title,
+            category:
+              updatedFields.category === 'teknis'
+                ? 'Teknis & Perangkat'
+                : updatedFields.category === 'administrasi'
+                ? 'Administrasi'
+                : 'Operasional Toko',
+            tier: updatedFields.tier,
+            budget: Number(updatedFields.budget),
+            statusBadge: updatedFields.status,
+            column:
+              updatedFields.status === 'Completed'
+                ? 'overdue'
+                : updatedFields.status === 'Proof Review'
+                ? 'due_week'
+                : 'current',
+            checklist: updatedFields.checklist,
+            acceptanceChecklist: updatedFields.checklist.map((txt, idx) => ({
+              id: `c-edit-${idx}`,
+              text: txt,
+              done: item.acceptanceChecklist?.[idx]?.done || false,
+            })),
+          }
+          if (selectedTaskForDetail?.id === taskId) {
+            setSelectedTaskForDetail(updated)
+          }
+          return updated
+        }
+        return item
+      })
+    )
+    setIsProcessingTask(false)
+    setTaskToEdit(null)
+    setActionSuccessMsg(`Perubahan data tugas #${taskId} berhasil disimpan!`)
+    setTimeout(() => setActionSuccessMsg(''), 5000)
+  }
+
+  // Handler: Hapus Tugas secara Global & Dinamis
+  async function handleConfirmDeleteTask(taskId) {
+    setIsProcessingTask(true)
+    await deleteTaskFromDb(taskId)
+    setTasks((prev) => prev.filter((item) => item.id !== taskId && item.task_code !== taskId))
+    if (selectedTaskForDetail?.id === taskId) {
+      setSelectedTaskForDetail(null)
+      setCurrentMenu(previousMenu || 'kanban')
+    }
+    setIsProcessingTask(false)
+    setTaskToDelete(null)
+    setActionSuccessMsg(`Tugas #${taskId} berhasil dihapus dari sistem!`)
+    setTimeout(() => setActionSuccessMsg(''), 5000)
+  }
+
+  // Handler: Toggle Checklist SOP secara Dinamis
+  async function handleToggleChecklistItem(taskId, checklistIdx) {
+    setTasks((prev) =>
+      prev.map((item) => {
+        if (item.id === taskId || item.task_code === taskId) {
+          const currentList = item.acceptanceChecklist || []
+          const updatedList = currentList.map((c, i) =>
+            i === checklistIdx ? { ...c, done: !c.done } : c
+          )
+          const updated = { ...item, acceptanceChecklist: updatedList }
+          if (selectedTaskForDetail?.id === taskId) {
+            setSelectedTaskForDetail(updated)
+          }
+          updateTaskInDb(taskId, {
+            checklist: updatedList.map((c) => (typeof c === 'string' ? c : c.text)),
+          })
+          return updated
+        }
+        return item
+      })
+    )
+  }
+
+  // Handler: Geser Status Papan Tugas Dinamis (misal di Kanban)
+  async function handleMoveTaskStatus(taskId, newStatus) {
+    const columnMapping = {
+      Open: 'current',
+      'In Progress': 'current',
+      'Proof Review': 'due_week',
+      Completed: 'overdue',
+    }
+    setTasks((prev) =>
+      prev.map((item) => {
+        if (item.id === taskId || item.task_code === taskId) {
+          const updated = {
+            ...item,
+            statusBadge: newStatus,
+            column: columnMapping[newStatus] || 'current',
+          }
+          if (selectedTaskForDetail?.id === taskId) {
+            setSelectedTaskForDetail(updated)
+          }
+          updateTaskInDb(taskId, { status: newStatus })
+          return updated
+        }
+        return item
+      })
+    )
+    setActionSuccessMsg(`Status tugas #${taskId} dialihkan ke ${newStatus}!`)
+    setTimeout(() => setActionSuccessMsg(''), 4000)
   }
 
   // State Rekening Escrow & Proteksi Transaksi (FR-401, FR-404, FR-501)
@@ -509,8 +631,10 @@ function ClientDashboard() {
             <Icon name="search" size={16} />
             <input
               aria-label="Cari tugas atau mitra"
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search product, task, or mitra..."
               type="text"
+              value={searchQuery}
             />
             <span className="search-shortcut-badge">⌘ K</span>
           </div>
@@ -595,6 +719,8 @@ function ClientDashboard() {
         {currentMenu === 'beranda' && (
           <BerandaView
             escrowTransactions={escrowTransactions}
+            onDeleteTask={setTaskToDelete}
+            onEditTask={setTaskToEdit}
             onOpenTaskDetail={(task) => handleOpenTaskDetail(task, 'beranda')}
             setCurrentMenu={setCurrentMenu}
             setSelectedProofTask={setSelectedProofTask}
@@ -608,6 +734,9 @@ function ClientDashboard() {
           <KanbanView
             currentTasks={currentTasks}
             dueWeekTasks={dueWeekTasks}
+            onDeleteTask={setTaskToDelete}
+            onEditTask={setTaskToEdit}
+            onMoveStatus={handleMoveTaskStatus}
             onOpenTaskDetail={(task) => handleOpenTaskDetail(task, 'kanban')}
             overdueTasks={overdueTasks}
             searchQuery={searchQuery}
@@ -620,6 +749,8 @@ function ClientDashboard() {
 
         {currentMenu === 'data_tugas' && (
           <DataTugasView
+            onDeleteTask={setTaskToDelete}
+            onEditTask={setTaskToEdit}
             onOpenTaskDetail={(task) => handleOpenTaskDetail(task, 'data_tugas')}
             setActionSuccessMsg={setActionSuccessMsg}
             setCurrentMenu={setCurrentMenu}
@@ -636,14 +767,13 @@ function ClientDashboard() {
               setCurrentMenu(previousMenu || 'kanban')
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
-            onEditTask={() => {
-              setCurrentMenu('data_tugas')
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
+            onDeleteTask={setTaskToDelete}
+            onEditTask={setTaskToEdit}
             onOpenProofModal={(task) => {
               setSelectedProofTask(task)
               setShowProofModal(true)
             }}
+            onToggleChecklist={handleToggleChecklistItem}
             previousMenu={previousMenu}
             setCurrentMenu={setCurrentMenu}
             task={selectedTaskForDetail}
@@ -818,7 +948,25 @@ function ClientDashboard() {
         />
       )}
 
-      {/* (Task Detail is now displayed in the main section via TaskDetailView, not as an overlay modal) */}
+      {/* MODAL GLOBAL: EDIT TUGAS DINAMIS */}
+      {taskToEdit && (
+        <EditTaskModal
+          isProcessing={isProcessingTask}
+          onClose={() => setTaskToEdit(null)}
+          onSave={handleSaveEditTask}
+          task={taskToEdit}
+        />
+      )}
+
+      {/* MODAL GLOBAL: HAPUS TUGAS DINAMIS */}
+      {taskToDelete && (
+        <DeleteTaskModal
+          isProcessing={isProcessingTask}
+          onClose={() => setTaskToDelete(null)}
+          onConfirm={handleConfirmDeleteTask}
+          task={taskToDelete}
+        />
+      )}
     </div>
   )
 }

@@ -9,6 +9,8 @@ function TaskDetailView({
   previousMenu = 'kanban',
   onOpenProofModal,
   onEditTask,
+  onDeleteTask,
+  onToggleChecklist,
   setCurrentMenu,
 }) {
   if (!task) return null
@@ -190,6 +192,31 @@ function TaskDetailView({
         </button>
 
         <div className="task-detail-nav-actions">
+          {onEditTask && normalizedStatus !== 'Completed' && (
+            <button
+              className="btn-nav-action-navy"
+              onClick={() => onEditTask(task)}
+              title="Edit Rincian Tugas"
+              type="button"
+            >
+              <Icon name="edit" size={13} />
+              <span>Edit Tugas</span>
+            </button>
+          )}
+
+          {onDeleteTask && (
+            <button
+              className="btn-modal-delete-action"
+              onClick={() => onDeleteTask(task)}
+              style={{ padding: '6px 14px', fontSize: '11.5px' }}
+              title="Hapus Tugas dari Sistem"
+              type="button"
+            >
+              <Icon name="trash" size={13} />
+              <span>Hapus</span>
+            </button>
+          )}
+
           {normalizedStatus === 'Proof Review' && onOpenProofModal && (
             <button
               className="btn-nav-action-pink"
@@ -415,6 +442,9 @@ function TaskDetailView({
                     className={`checklist-item-card ${
                       item.done ? 'checklist-item-card--done' : ''
                     }`}
+                    onClick={() => onToggleChecklist && onToggleChecklist(task.id, idx)}
+                    style={{ cursor: 'pointer' }}
+                    title="Klik untuk mengubah status checklist secara dinamis"
                   >
                     <div className="checklist-item-check-bubble">
                       {item.done ? (
@@ -427,8 +457,8 @@ function TaskDetailView({
                       <strong>{item.text}</strong>
                       <small>
                         {item.done
-                          ? 'Terverifikasi selesai oleh pekerja'
-                          : 'Wajib diselesaikan di lokasi kerja'}
+                          ? 'Terverifikasi selesai (Klik untuk membatalkan)'
+                          : 'Wajib diselesaikan di lokasi kerja (Klik untuk mencentang)'}
                       </small>
                     </div>
                   </div>
@@ -688,6 +718,17 @@ function TaskDetailView({
             >
               <Icon name="edit" size={14} />
               <span>Edit Data Tugas</span>
+            </button>
+          )}
+
+          {onDeleteTask && (
+            <button
+              className="btn-modal-delete-action"
+              onClick={() => onDeleteTask(task)}
+              type="button"
+            >
+              <Icon name="trash" size={14} />
+              <span>Hapus Tugas</span>
             </button>
           )}
         </div>

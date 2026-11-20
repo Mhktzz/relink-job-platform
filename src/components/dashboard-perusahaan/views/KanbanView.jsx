@@ -11,6 +11,9 @@ function KanbanView({
   setSelectedProofTask,
   setShowProofModal,
   onOpenTaskDetail,
+  onEditTask,
+  onDeleteTask,
+  onMoveStatus,
 }) {
   return (
     <main className="dashboard-content-flow">
@@ -116,8 +119,40 @@ function KanbanView({
                         <Icon name="eye" size={13} />
                         <span>Detail</span>
                       </button>
+                      {onEditTask && (
+                        <button
+                          className="btn-card-action-icon"
+                          onClick={() => onEditTask(task)}
+                          title="Edit Rincian Tugas"
+                          type="button"
+                        >
+                          <Icon name="edit" size={13} />
+                        </button>
+                      )}
+                      {onDeleteTask && (
+                        <button
+                          className="btn-card-action-icon btn-card-action-icon--delete"
+                          onClick={() => onDeleteTask(task)}
+                          title="Hapus Tugas"
+                          type="button"
+                        >
+                          <Icon name="trash" size={13} />
+                        </button>
+                      )}
                     </div>
                   </div>
+
+                  {onMoveStatus && (
+                    <button
+                      className="btn-kanban-stage-move"
+                      onClick={() => onMoveStatus(task.id, 'Proof Review')}
+                      title="Geser status ke Tunggu Review"
+                      type="button"
+                    >
+                      <span>Ajukan ke Review</span>
+                      <Icon name="arrow" size={10} />
+                    </button>
+                  )}
                 </article>
               ))
             )}
@@ -247,7 +282,40 @@ function KanbanView({
                         src={task.workerPhoto || cashierPhoto}
                       />
                       <span>Diajukan oleh {task.workerName || 'Mitra'}</span>
+                      <div className="kanban-footer-right" style={{ marginLeft: 'auto' }}>
+                        {onEditTask && (
+                          <button
+                            className="btn-card-action-icon"
+                            onClick={() => onEditTask(task)}
+                            title="Edit Tugas"
+                            type="button"
+                          >
+                            <Icon name="edit" size={13} />
+                          </button>
+                        )}
+                        {onDeleteTask && (
+                          <button
+                            className="btn-card-action-icon btn-card-action-icon--delete"
+                            onClick={() => onDeleteTask(task)}
+                            title="Hapus Tugas"
+                            type="button"
+                          >
+                            <Icon name="trash" size={13} />
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {onMoveStatus && (
+                      <button
+                        className="btn-kanban-stage-move"
+                        onClick={() => onMoveStatus(task.id, 'In Progress')}
+                        title="Kembalikan status tugas ke Sedang Berjalan"
+                        type="button"
+                      >
+                        <span>← Minta Revisi Mitra</span>
+                      </button>
+                    )}
                   </div>
                 </article>
               ))
@@ -328,6 +396,26 @@ function KanbanView({
                         <Icon name="file-text" size={13} />
                         <span>Rekap</span>
                       </button>
+                      {onEditTask && (
+                        <button
+                          className="btn-card-action-icon"
+                          onClick={() => onEditTask(task)}
+                          title="Edit Tugas"
+                          type="button"
+                        >
+                          <Icon name="edit" size={13} />
+                        </button>
+                      )}
+                      {onDeleteTask && (
+                        <button
+                          className="btn-card-action-icon btn-card-action-icon--delete"
+                          onClick={() => onDeleteTask(task)}
+                          title="Hapus Tugas"
+                          type="button"
+                        >
+                          <Icon name="trash" size={13} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </article>

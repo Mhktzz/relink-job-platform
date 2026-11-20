@@ -11,6 +11,8 @@ function DataTugasView({
   setSelectedProofTask,
   setShowProofModal,
   onOpenTaskDetail,
+  onEditTask,
+  onDeleteTask,
 }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'In Progress' | 'Proof Review' | 'Completed'
@@ -419,7 +421,7 @@ function DataTugasView({
                           {/* Tombol Edit */}
                           <button
                             className="btn-action-edit"
-                            onClick={() => openEditModal(task)}
+                            onClick={() => (onEditTask ? onEditTask(task) : openEditModal(task))}
                             title="Edit Data Tugas"
                             type="button"
                           >
@@ -430,7 +432,7 @@ function DataTugasView({
                           {/* Tombol Hapus */}
                           <button
                             className="btn-action-delete"
-                            onClick={() => setTaskToDelete(task)}
+                            onClick={() => (onDeleteTask ? onDeleteTask(task) : setTaskToDelete(task))}
                             title="Hapus Tugas"
                             type="button"
                           >
