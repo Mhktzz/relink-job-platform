@@ -12,8 +12,90 @@ import {
  * Dilengkapi graceful fallback ke data mock lokal jika tabel di Supabase belum dibuat.
  */
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Helper: Ambil daftar ID tugas yang telah dihapus permanen oleh pengguna (tombstone)
+export function getDeletedTaskIds() {
+  try {
+    const saved = localStorage.getItem('relink_deleted_task_ids')
+    return saved ? JSON.parse(saved) : []
+  } catch {
+    return []
+  }
+}
+
+// Helper: Tandai ID tugas sebagai terhapus permanen
+export function markTaskAsDeleted(identifiers) {
+  try {
+    const current = new Set(getDeletedTaskIds().map((v) => String(v).toLowerCase()))
+    const list = Array.isArray(identifiers) ? identifiers : [identifiers]
+    list.forEach((item) => {
+      if (!item) return
+      if (typeof item === 'object') {
+        if (item.id) {
+          current.add(String(item.id).toLowerCase())
+          current.add(String(item.id).replace(/^#/, '').toLowerCase())
+        }
+        if (item.db_id) current.add(String(item.db_id).toLowerCase())
+        if (item.task_code) {
+          current.add(String(item.task_code).toLowerCase())
+          current.add(String(item.task_code).replace(/^#/, '').toLowerCase())
+        }
+        if (item.code) {
+          current.add(String(item.code).toLowerCase())
+          current.add(String(item.code).replace(/^#/, '').toLowerCase())
+        }
+      } else {
+        const str = String(item).toLowerCase()
+        current.add(str)
+        current.add(str.replace(/^#/, ''))
+      }
+    })
+    localStorage.setItem('relink_deleted_task_ids', JSON.stringify(Array.from(current)))
+  } catch (e) {
+    console.warn('[Relink] Gagal markTaskAsDeleted:', e)
+  }
+}
+
+// Helper: Hapus penandaan tugas terhapus jika pengguna membuat tugas baru
+export function unmarkDeletedTask(identifiers) {
+  try {
+    const list = (Array.isArray(identifiers) ? identifiers : [identifiers]).map((v) =>
+      String(v).toLowerCase()
+    )
+    const current = getDeletedTaskIds().filter(
+      (id) => !list.includes(String(id).toLowerCase()) && !list.includes(String(id).replace(/^#/, '').toLowerCase())
+    )
+    localStorage.setItem('relink_deleted_task_ids', JSON.stringify(current))
+  } catch (e) {
+    console.warn('[Relink] Gagal unmarkDeletedTask:', e)
+  }
+}
+
+// Helper: Periksa apakah tugas aktif (belum dihapus oleh pengguna)
+export function isTaskActive(task, deletedIds = null) {
+  if (!task) return false
+  const blacklist = deletedIds || getDeletedTaskIds()
+  if (!Array.isArray(blacklist) || blacklist.length === 0) return true
+
+  const candidates = [
+    task.id,
+    task.db_id,
+    task.task_code,
+    task.code,
+    typeof task.code === 'string' ? task.code.replace(/^#/, '') : null,
+    typeof task.id === 'string' ? task.id.replace(/^#/, '') : null,
+  ]
+    .filter(Boolean)
+    .map((v) => String(v).toLowerCase())
+
+  return !candidates.some((c) => blacklist.includes(c))
+}
+
 // 1. Mengambil Daftar Tugas
 export async function fetchTasksFromDb() {
+  const deletedIds = getDeletedTaskIds()
+
   try {
     const { data, error } = await supabase
       .from('tasks')
@@ -24,9 +106,12 @@ export async function fetchTasksFromDb() {
       console.warn('[Relink DB] Gagal mengambil tugas dari Supabase:', error.message)
       try {
         const saved = localStorage.getItem('relink_tasks')
-        if (saved !== null) return JSON.parse(saved)
+        if (saved !== null) {
+          const parsed = JSON.parse(saved)
+          return Array.isArray(parsed) ? parsed.filter((t) => isTaskActive(t, deletedIds)) : []
+        }
       } catch {}
-      return initialTaskBoard
+      return initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
     }
 
     if (!data) return []
@@ -35,14 +120,19 @@ export async function fetchTasksFromDb() {
     if (data.length === 0) {
       try {
         const saved = localStorage.getItem('relink_tasks')
-        if (saved !== null) return JSON.parse(saved)
+        if (saved !== null) {
+          const parsed = JSON.parse(saved)
+          return Array.isArray(parsed) ? parsed.filter((t) => isTaskActive(t, deletedIds)) : []
+        }
       } catch {}
       return []
     }
 
     // Mapping kolom Supabase ke state TaskBoard
-    return data.map((t) => ({
+    const mapped = data.map((t) => ({
       id: t.task_code || t.id,
+      db_id: t.id,
+      task_code: t.task_code,
       code: t.task_code ? `#${t.task_code}` : `#${t.id.slice(0, 6)}`,
       statusBadge:
         t.status === 'review'
@@ -77,20 +167,27 @@ export async function fetchTasksFromDb() {
           }))
         : [],
     }))
+
+    // Filter seluruh tugas yang pernah dihapus pengguna
+    return mapped.filter((t) => isTaskActive(t, deletedIds))
   } catch (err) {
     console.warn('[Relink DB] Gagal mengambil tugas dari Supabase, beralih ke mock data:', err)
     try {
       const saved = localStorage.getItem('relink_tasks')
-      if (saved !== null) return JSON.parse(saved)
+      if (saved !== null) {
+        const parsed = JSON.parse(saved)
+        return Array.isArray(parsed) ? parsed.filter((t) => isTaskActive(t, deletedIds)) : []
+      }
     } catch {}
-    return initialTaskBoard
+    return initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
   }
 }
 
 // 2. Menambah Tugas Baru ke Database
 export async function insertTaskToDb(newTask) {
   try {
-    const taskCode = `TSK-${Math.floor(100 + Math.random() * 900)}`
+    const taskCode = newTask.taskCode || newTask.task_code || `TSK-${Math.floor(100 + Math.random() * 900)}`
+    unmarkDeletedTask(taskCode)
 
     // Normalisasi kategori agar selalu sesuai dengan constraint tabel tasks di Supabase
     const categoryMapping = {
@@ -171,10 +268,11 @@ export async function updateTaskInDb(taskIdOrCode, updatedFields) {
     }
 
     let query = supabase.from('tasks').update(payload)
-    if (typeof taskIdOrCode === 'string' && taskIdOrCode.startsWith('TSK-')) {
-      query = query.eq('task_code', taskIdOrCode)
-    } else {
+    if (typeof taskIdOrCode === 'string' && UUID_REGEX.test(taskIdOrCode)) {
       query = query.eq('id', taskIdOrCode)
+    } else {
+      const codeClean = String(taskIdOrCode).replace(/^#/, '')
+      query = query.eq('task_code', codeClean)
     }
 
     const { data, error } = await query.select()
@@ -190,38 +288,59 @@ export async function updateTaskInDb(taskIdOrCode, updatedFields) {
 }
 
 // 2c. Menghapus Tugas dari Database (Delete)
-export async function deleteTaskFromDb(taskIdOrCode) {
+export async function deleteTaskFromDb(taskOrId) {
   try {
-    // 1. Simpan perubahan ke localStorage secara instan
+    const isObj = typeof taskOrId === 'object' && taskOrId !== null
+    const idVal = isObj ? (taskOrId.id || taskOrId.task_code || taskOrId.db_id) : taskOrId
+    const dbId = isObj ? taskOrId.db_id : null
+    const codeVal = isObj ? (taskOrId.task_code || taskOrId.code) : null
+
+    // 1. Catat ke daftar ID yang terhapus permanen (tombstone)
+    const identifiersToBlock = [idVal, dbId, codeVal, taskOrId].filter(Boolean)
+    markTaskAsDeleted(identifiersToBlock)
+
+    // 2. Simpan perubahan ke localStorage secara instan
     try {
       const saved = localStorage.getItem('relink_tasks')
       if (saved) {
         const parsed = JSON.parse(saved)
-        const filtered = parsed.filter(
-          (t) =>
-            t.id !== taskIdOrCode &&
-            t.code !== taskIdOrCode &&
-            t.code !== `#${taskIdOrCode}` &&
-            t.task_code !== taskIdOrCode
-        )
+        const deletedIds = getDeletedTaskIds()
+        const filtered = parsed.filter((t) => isTaskActive(t, deletedIds))
         localStorage.setItem('relink_tasks', JSON.stringify(filtered))
       }
     } catch (e) {
       console.warn('[Relink] Gagal update localStorage saat delete:', e)
     }
 
-    // 2. Eksekusi delete di Supabase
-    let query = supabase.from('tasks').delete()
-    if (typeof taskIdOrCode === 'string' && taskIdOrCode.startsWith('TSK-')) {
-      query = query.or(`task_code.eq.${taskIdOrCode},id.eq.${taskIdOrCode}`)
-    } else {
-      query = query.eq('id', taskIdOrCode)
+    // 3. Eksekusi delete di Supabase Database
+    const targetUuid =
+      dbId && UUID_REGEX.test(dbId)
+        ? dbId
+        : typeof idVal === 'string' && UUID_REGEX.test(idVal)
+          ? idVal
+          : null
+
+    if (targetUuid) {
+      const { error: errUuid } = await supabase.from('tasks').delete().eq('id', targetUuid)
+      if (errUuid) {
+        console.warn('[Relink DB] Delete task by id warning:', errUuid.message)
+      }
     }
 
-    const { error } = await query
-    if (error) {
-      console.warn('[Relink DB] Delete task di Supabase warning:', error.message)
+    const targetCode =
+      typeof idVal === 'string' && !UUID_REGEX.test(idVal)
+        ? idVal.replace(/^#/, '')
+        : typeof codeVal === 'string'
+          ? codeVal.replace(/^#/, '')
+          : null
+
+    if (targetCode) {
+      const { error: errCode } = await supabase.from('tasks').delete().eq('task_code', targetCode)
+      if (errCode) {
+        console.warn('[Relink DB] Delete task by task_code warning:', errCode.message)
+      }
     }
+
     return { success: true }
   } catch (err) {
     console.warn('[Relink DB] Error delete task:', err)

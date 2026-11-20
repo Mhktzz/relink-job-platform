@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
-import { updateTaskInDb, deleteTaskFromDb } from '../../../lib/databaseService.js'
+import {
+  updateTaskInDb,
+  deleteTaskFromDb,
+  markTaskAsDeleted,
+  isTaskActive,
+  getDeletedTaskIds,
+} from '../../../lib/databaseService.js'
 import TaskDetailModal from '../modals/TaskDetailModal.jsx'
 
 function DataTugasView({
@@ -146,13 +152,18 @@ function DataTugasView({
     if (!taskToDelete) return
 
     setIsProcessing(true)
+    const target = taskToDelete
 
-    // 1. Hapus dari Supabase Database
-    await deleteTaskFromDb(taskToDelete.id)
+    // 1. Tandai ID tugas ke daftar blacklist terhapus (tombstone)
+    markTaskAsDeleted([target.id, target.db_id, target.code, target.task_code, target])
 
-    // 2. Hapus dari state lokal dan sinkronkan ke localStorage
+    // 2. Hapus dari Supabase Database
+    await deleteTaskFromDb(target)
+
+    // 3. Hapus dari state lokal dan sinkronkan ke localStorage
+    const deletedIds = getDeletedTaskIds()
     setTasks((prev) => {
-      const updated = prev.filter((item) => item.id !== taskToDelete.id && item.code !== taskToDelete.id)
+      const updated = prev.filter((item) => isTaskActive(item, deletedIds))
       try {
         localStorage.setItem('relink_tasks', JSON.stringify(updated))
       } catch {}
@@ -160,14 +171,14 @@ function DataTugasView({
     })
 
     setIsProcessing(false)
-    const deletedId = taskToDelete.id
+    const deletedId = target.code || target.id
     setTaskToDelete(null)
-    if (selectedTaskDetail?.id === deletedId) {
+    if (selectedTaskDetail?.id === target.id || selectedTaskDetail?.code === target.code) {
       setSelectedTaskDetail(null)
     }
 
     if (setActionSuccessMsg) {
-      setActionSuccessMsg(`Tugas ${deletedId} telah berhasil dihapus dari sistem dan database.`)
+      setActionSuccessMsg(`Tugas ${deletedId} telah berhasil dihapus permanen dari sistem dan database.`)
       setTimeout(() => setActionSuccessMsg(''), 5000)
     }
   }

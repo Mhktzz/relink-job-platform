@@ -8,7 +8,7 @@ function DeleteTaskModal({ task, onClose, onConfirm, isProcessing = false }) {
       <div className="proof-modal-card task-delete-modal-card">
         <header className="proof-modal-header">
           <div>
-            <h2>Hapus Tugas #{task.code || task.id}?</h2>
+            <h2>Hapus Tugas {task.code ? (task.code.startsWith('#') ? task.code : `#${task.code}`) : `#${task.id}`}?</h2>
             <small>Konfirmasi tindakan penghapusan tugas</small>
           </div>
           <button
@@ -49,7 +49,7 @@ function DeleteTaskModal({ task, onClose, onConfirm, isProcessing = false }) {
           <button
             className="btn-confirm-delete-task"
             disabled={isProcessing}
-            onClick={() => onConfirm(task.id)}
+            onClick={() => onConfirm(task)}
             type="button"
           >
             {isProcessing ? 'Menghapus...' : 'Ya, Hapus Tugas'}

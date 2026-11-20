@@ -143,18 +143,22 @@ CREATE POLICY "Akses update profiles" ON public.profiles FOR UPDATE USING (true)
 CREATE POLICY "Akses baca publik tasks" ON public.tasks FOR SELECT USING (true);
 CREATE POLICY "Akses insert tasks" ON public.tasks FOR INSERT WITH CHECK (true);
 CREATE POLICY "Akses update tasks" ON public.tasks FOR UPDATE USING (true);
+CREATE POLICY "Akses delete publik tasks" ON public.tasks FOR DELETE USING (true);
 
 CREATE POLICY "Akses baca publik escrow_transactions" ON public.escrow_transactions FOR SELECT USING (true);
 CREATE POLICY "Akses insert escrow_transactions" ON public.escrow_transactions FOR INSERT WITH CHECK (true);
 CREATE POLICY "Akses update escrow_transactions" ON public.escrow_transactions FOR UPDATE USING (true);
+CREATE POLICY "Akses delete publik escrow_transactions" ON public.escrow_transactions FOR DELETE USING (true);
 
 CREATE POLICY "Akses baca publik proofs_of_work" ON public.proofs_of_work FOR SELECT USING (true);
 CREATE POLICY "Akses insert proofs_of_work" ON public.proofs_of_work FOR INSERT WITH CHECK (true);
 CREATE POLICY "Akses update proofs_of_work" ON public.proofs_of_work FOR UPDATE USING (true);
+CREATE POLICY "Akses delete publik proofs_of_work" ON public.proofs_of_work FOR DELETE USING (true);
 
 CREATE POLICY "Akses baca publik support_tickets" ON public.support_tickets FOR SELECT USING (true);
 CREATE POLICY "Akses insert support_tickets" ON public.support_tickets FOR INSERT WITH CHECK (true);
 CREATE POLICY "Akses update support_tickets" ON public.support_tickets FOR UPDATE USING (true);
+CREATE POLICY "Akses delete publik support_tickets" ON public.support_tickets FOR DELETE USING (true);
 
 CREATE POLICY "Akses baca publik nearby_workers" ON public.nearby_workers FOR SELECT USING (true);
 

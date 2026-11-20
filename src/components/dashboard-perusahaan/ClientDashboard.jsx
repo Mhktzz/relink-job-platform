@@ -14,6 +14,10 @@ import {
   updateEscrowStatusInDb,
   updateTaskInDb,
   deleteTaskFromDb,
+  getDeletedTaskIds,
+  markTaskAsDeleted,
+  unmarkDeletedTask,
+  isTaskActive,
 } from '../../lib/databaseService.js'
 import { supabase } from '../../lib/supabaseClient.js'
 import BerandaView from './views/BerandaView.jsx'
@@ -39,13 +43,17 @@ function ClientDashboard() {
   // Inisialisasi tasks dari localStorage agar aksi hapus/edit bertahan saat refresh
   const [tasks, setTasks] = useState(() => {
     try {
+      const deletedIds = getDeletedTaskIds()
       const saved = localStorage.getItem('relink_tasks')
       if (saved !== null) {
-        return JSON.parse(saved)
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed)) {
+          return parsed.filter((t) => isTaskActive(t, deletedIds))
+        }
       }
-      return initialTaskBoard
+      return initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
     } catch {
-      return initialTaskBoard
+      return []
     }
   })
 
@@ -123,26 +131,43 @@ function ClientDashboard() {
     setTimeout(() => setActionSuccessMsg(''), 5000)
   }
 
-  // Handler: Hapus Tugas secara Global & Dinamis
-  async function handleConfirmDeleteTask(taskId) {
+  // Handler: Hapus Tugas secara Global & Dinamis (Permanen di Supabase & Local)
+  async function handleConfirmDeleteTask(taskOrId) {
     setIsProcessingTask(true)
-    await deleteTaskFromDb(taskId)
-    const updated = tasks.filter(
-      (item) => item.id !== taskId && item.code !== taskId && item.task_code !== taskId
-    )
+    const isObj = typeof taskOrId === 'object' && taskOrId !== null
+    const targetId = isObj ? taskOrId.id : taskOrId
+    const targetDbId = isObj ? taskOrId.db_id : null
+    const targetCode = isObj ? (taskOrId.task_code || taskOrId.code) : null
+    const displayLabel = targetCode || targetId
+
+    // 1. Catat ke daftar ID yang terhapus permanen (tombstone)
+    markTaskAsDeleted([targetId, targetDbId, targetCode, taskOrId])
+
+    // 2. Filter state lokal dan perbarui relink_tasks di localStorage
+    const deletedIds = getDeletedTaskIds()
+    const updated = tasks.filter((item) => isTaskActive(item, deletedIds))
     setTasks(updated)
     try {
       localStorage.setItem('relink_tasks', JSON.stringify(updated))
     } catch (e) {
       console.warn('Gagal simpan ke localStorage:', e)
     }
-    if (selectedTaskForDetail?.id === taskId) {
+
+    // 3. Eksekusi penghapusan di Supabase
+    await deleteTaskFromDb(taskOrId)
+
+    if (
+      selectedTaskForDetail?.id === targetId ||
+      (targetDbId && selectedTaskForDetail?.db_id === targetDbId) ||
+      (targetCode && selectedTaskForDetail?.code === targetCode)
+    ) {
       setSelectedTaskForDetail(null)
       setCurrentMenu(previousMenu || 'kanban')
     }
+
     setIsProcessingTask(false)
     setTaskToDelete(null)
-    setActionSuccessMsg(`Tugas #${taskId} berhasil dihapus dari sistem!`)
+    setActionSuccessMsg(`Tugas #${String(displayLabel).replace(/^#/, '')} berhasil dihapus permanen dari sistem!`)
     setTimeout(() => setActionSuccessMsg(''), 5000)
   }
 
@@ -257,15 +282,22 @@ function ClientDashboard() {
         ])
         if (isMounted) {
           if (Array.isArray(dbTasks)) {
+            const deletedIds = getDeletedTaskIds()
+            const activeDbTasks = dbTasks.filter((t) => isTaskActive(t, deletedIds))
             const savedLocal = localStorage.getItem('relink_tasks')
-            if (dbTasks.length > 0) {
-              setTasks(dbTasks)
-              localStorage.setItem('relink_tasks', JSON.stringify(dbTasks))
-            } else if (savedLocal !== null) {
-              // Jika di DB kosong dan di localStorage ada status (misal user sudah hapus semua jadi [])
-              setTasks(JSON.parse(savedLocal))
+
+            if (savedLocal !== null) {
+              try {
+                const parsed = JSON.parse(savedLocal).filter((t) => isTaskActive(t, deletedIds))
+                setTasks(parsed)
+                localStorage.setItem('relink_tasks', JSON.stringify(parsed))
+              } catch {
+                setTasks(activeDbTasks)
+                localStorage.setItem('relink_tasks', JSON.stringify(activeDbTasks))
+              }
             } else {
-              setTasks([])
+              setTasks(activeDbTasks)
+              localStorage.setItem('relink_tasks', JSON.stringify(activeDbTasks))
             }
           }
           if (Array.isArray(dbEscrow) && dbEscrow.length > 0) {
@@ -289,8 +321,10 @@ function ClientDashboard() {
           async () => {
             const freshTasks = await fetchTasksFromDb()
             if (isMounted && Array.isArray(freshTasks)) {
-              setTasks(freshTasks)
-              localStorage.setItem('relink_tasks', JSON.stringify(freshTasks))
+              const deletedIds = getDeletedTaskIds()
+              const active = freshTasks.filter((t) => isTaskActive(t, deletedIds))
+              setTasks(active)
+              localStorage.setItem('relink_tasks', JSON.stringify(active))
             }
           }
         )
@@ -469,9 +503,13 @@ function ClientDashboard() {
       return
     }
 
+    const generatedCode = `TSK-${Math.floor(100 + Math.random() * 900)}`
+    unmarkDeletedTask(generatedCode)
+
     const createdTask = {
-      id: `TSK-${Math.floor(100 + Math.random() * 900)}`,
-      code: `#8789${Math.floor(10 + Math.random() * 90)}`,
+      id: generatedCode,
+      task_code: generatedCode,
+      code: `#${generatedCode}`,
       statusBadge: 'In Progress',
       title: newTaskTitle,
       category: newTaskCategory === 'teknis' ? 'Teknis & Perangkat' : 'Operasional Toko',
@@ -493,6 +531,7 @@ function ClientDashboard() {
 
     setTasks([createdTask, ...tasks])
     insertTaskToDb({
+      taskCode: generatedCode,
       title: newTaskTitle,
       category: newTaskCategory,
       tier: selectedTierLevel === 'tier_3' ? 'Tier 3' : selectedTierLevel === 'tier_2' ? 'Tier 2' : 'Tier 1',
@@ -506,7 +545,7 @@ function ClientDashboard() {
     setNewTaskWorkersNeeded(1)
     setNewTaskIsTandem(false)
     setCurrentMenu('kanban')
-    setActionSuccessMsg(`Tugas baru berhasil diposting! Dana Rp${estimatedBudget.toLocaleString('id-ID')} diamankan di Escrow Relink.`)
+    setActionSuccessMsg(`Tugas baru #${generatedCode} berhasil diposting! Dana Rp${estimatedBudget.toLocaleString('id-ID')} diamankan di Escrow Relink.`)
     setTimeout(() => setActionSuccessMsg(''), 5000)
   }
 
