@@ -435,11 +435,9 @@ function WorkerDashboard() {
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
                 type="button"
               >
-                <img
-                  alt={workerProfile.name}
-                  className="topbar-avatar-photo"
-                  src={workerProfile.photo}
-                />
+                <div className="topbar-avatar-circle">
+                  {(workerProfile.name || 'Mitra').slice(0, 2).toUpperCase()}
+                </div>
                 <div className="topbar-user-info">
                   <strong>{workerProfile.name}</strong>
                   <small>{workerProfile.tierLabel}</small>
