@@ -15,7 +15,8 @@ import './App.css'
 function App() {
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
   const workerPage = pathname === '/pekerja'
-  const dashboardPage = pathname === '/dashboard' || pathname === '/klien'
+  const dashboardPage =
+    pathname === '/dashboard' || pathname === '/klien' || pathname === '/admin'
   const isResetPassword =
     pathname === '/reset-password' ||
     new URLSearchParams(window.location.search).get('reset') === 'true' ||
