@@ -26,7 +26,7 @@ function AuthPage({ mode, role }) {
   const isSignup = mode === "signup";
   const isResetMode = mode === "reset-password";
   const isWorker = role === "pekerja";
-  const roleName = isWorker ? "Pencari Kerja" : "UMKM";
+  const roleName = isWorker ? "Mitra Pekerja" : "Perusahaan / UMKM";
   const homeHref = isWorker ? "/pekerja" : "/";
   const artTitle = isWorker
     ? "Kerja dekat. Reputasi bertumbuh."
@@ -102,17 +102,6 @@ function AuthPage({ mode, role }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
-
-    // Akses dashboard Mitra Pekerja saat ini masih dalam tahap pengembangan
-    if (isWorker) {
-      setMessageType("info");
-      setMessage(
-        isSignup
-          ? "Pendaftaran akun Mitra Pekerja dicatat. Namun saat ini dashboard pekerja belum dibuka (tahap pengembangan). Silakan masuk sebagai Perusahaan / UMKM."
-          : "Dashboard Mitra Pekerja saat ini belum dapat diakses karena masih dalam tahap pengembangan. Silakan masuk menggunakan akun Perusahaan / UMKM."
-      );
-      return;
-    }
 
     setIsLoading(true);
 
@@ -209,7 +198,8 @@ function AuthPage({ mode, role }) {
         // Ambil data profil dari database
         const userId = data.user?.id;
         let businessName = "Toko Kue Bu Rina";
-        let fullName = data.user?.user_metadata?.full_name || "Pemilik UMKM";
+        let fullName = data.user?.user_metadata?.full_name || (isWorker ? "Dimas Prasetyo" : "Pemilik UMKM");
+        let userRole = isWorker ? "mitra" : "klien";
 
         if (userId) {
           const { data: profile } = await supabase
@@ -221,6 +211,7 @@ function AuthPage({ mode, role }) {
           if (profile) {
             if (profile.business_name) businessName = profile.business_name;
             if (profile.full_name) fullName = profile.full_name;
+            if (profile.role) userRole = profile.role;
           }
 
           localStorage.setItem(
@@ -229,20 +220,21 @@ function AuthPage({ mode, role }) {
               id: userId,
               email: data.user.email,
               full_name: fullName,
-              business_name: businessName,
-              role: isWorker ? "mitra" : "klien",
+              business_name: userRole === "mitra" ? "Mitra Mandiri" : businessName,
+              role: userRole,
             })
           );
         }
 
+        const isUserWorker = userRole === "mitra" || userRole === "pekerja" || isWorker;
         setMessageType("success");
         setMessage(
-          isWorker
+          isUserWorker
             ? "Login berhasil! Membuka dashboard Pekerja..."
             : "Login berhasil! Membuka dashboard UMKM..."
         );
         setTimeout(() => {
-          window.location.href = isWorker ? "/pekerja" : "/dashboard";
+          window.location.href = isUserWorker ? "/pekerja" : "/dashboard";
         }, 800);
       }
     } catch (err) {
@@ -572,15 +564,6 @@ function AuthPage({ mode, role }) {
                     Mitra Pekerja
                   </a>
                 </nav>
-
-                {isWorker && (
-                  <div className="auth-worker-notice" role="alert">
-                    <Icon name="alert" size={16} />
-                    <span>
-                      Halaman akun Mitra Pekerja dapat dilihat, namun dashboard Mitra Pekerja saat ini masih dalam tahap pengembangan dan belum dapat diakses.
-                    </span>
-                  </div>
-                )}
 
                 <form className="auth-form" onSubmit={handleSubmit}>
                   {isSignup && (
