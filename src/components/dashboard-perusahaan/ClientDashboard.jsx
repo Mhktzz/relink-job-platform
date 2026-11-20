@@ -153,6 +153,18 @@ function ClientDashboard() {
       console.warn('Gagal simpan ke localStorage:', e)
     }
 
+    // Bersihkan juga transaksi escrow yang terikat dengan tugas yang dihapus
+    const targetTitle = isObj ? taskOrId.title : null
+    setEscrowTransactions((prev) =>
+      prev.filter(
+        (e) =>
+          e.taskId !== targetId &&
+          e.taskId !== targetDbId &&
+          e.taskId !== targetCode &&
+          (!targetTitle || e.taskTitle !== targetTitle)
+      )
+    )
+
     // 3. Eksekusi penghapusan di Supabase
     await deleteTaskFromDb(taskOrId)
 
@@ -400,10 +412,32 @@ function ClientDashboard() {
           : t,
       ),
     )
+
+    // Perbarui juga status transaksi escrow yang terikat menjadi released
+    setEscrowTransactions((prev) =>
+      prev.map((item) =>
+        item.taskId === taskToApprove.id ||
+        item.taskId === taskToApprove.task_code ||
+        item.taskTitle === taskToApprove.title
+          ? {
+              ...item,
+              status: 'released',
+              statusLabel: 'Selesai & Dicairkan',
+              statusBadgeColor: 'blue',
+              autoReleaseHoursLeft: null,
+            }
+          : item
+      )
+    )
+
     setShowProofModal(false)
     setSelectedProofTask(null)
     setSignatureApproved(false)
-    setActionSuccessMsg(`Dana tugas ${taskToApprove.id} sebesar Rp${taskToApprove.budget.toLocaleString('id-ID')} telah berhasil dicairkan ke saldo Mitra!`)
+    setActionSuccessMsg(
+      `Dana tugas ${taskToApprove.code || taskToApprove.id} sebesar Rp${(
+        Number(taskToApprove.budget) || 0
+      ).toLocaleString('id-ID')} telah berhasil dicairkan ke saldo Mitra!`
+    )
     setTimeout(() => setActionSuccessMsg(''), 5000)
   }
 
@@ -462,7 +496,7 @@ function ClientDashboard() {
     setTimeout(() => setActionSuccessMsg(''), 6000)
   }
 
-  // Perhitungan Data Escrow
+  // Perhitungan Data Escrow Dinamis
   const totalHeldEscrow = (escrowTransactions || [])
     .filter((t) => t?.status === 'held' || t?.status === 'review' || t?.status === 'under_review')
     .reduce((sum, t) => sum + (Number(t?.amount) || 0), 0)
@@ -475,6 +509,25 @@ function ClientDashboard() {
   const heldCount = (escrowTransactions || []).filter((t) => t?.status === 'held').length
   const releasedCount = (escrowTransactions || []).filter((t) => t?.status === 'released').length
   const disputeCount = (escrowTransactions || []).filter((t) => t?.status === 'disputed').length
+
+  const releasedEscrowAmount = (escrowTransactions || [])
+    .filter((t) => t?.status === 'released')
+    .reduce((sum, t) => sum + (Number(t?.amount) || 0), 0)
+  const additionalCompletedTasksAmount = (tasks || [])
+    .filter((task) => task.column === 'overdue' || task.statusBadge === 'Completed' || task.status === 'completed')
+    .filter((task) => !(escrowTransactions || []).some((tx) => tx.id === task.id || tx.taskId === task.id || tx.taskTitle === task.title))
+    .reduce((sum, task) => sum + (Number(task.budget) || 0), 0)
+  const totalReleasedAmount = releasedEscrowAmount + additionalCompletedTasksAmount
+
+  const disputedAmount = (escrowTransactions || [])
+    .filter((t) => t?.status === 'disputed')
+    .reduce((sum, t) => sum + (Number(t?.amount) || 0), 0)
+
+  // Saldo Dana Garansi (pool garansi awal Rp500.000 + kontribusi proteksi garansi 5% per tugas aktif/selesai - klaim sengketa)
+  const accumulatedGuaranteeFee = Math.round(
+    (tasks || []).reduce((sum, task) => sum + (Number(task.budget) || 0) * 0.05, 0)
+  )
+  const totalGuaranteeBalance = Math.max(0, 500000 + accumulatedGuaranteeFee - disputedAmount)
 
   const filteredEscrowTransactions = (escrowTransactions || []).filter((tx) => {
     if (!tx) return false
@@ -530,6 +583,22 @@ function ClientDashboard() {
     }
 
     setTasks([createdTask, ...tasks])
+    // Tambahkan pencatatan dana ke rekening escrow secara dinamis
+    const newEscrow = {
+      id: generatedCode,
+      taskId: generatedCode,
+      taskTitle: newTaskTitle,
+      workerName: 'Mitra Terdekat (Pencarian)',
+      amount: estimatedBudget,
+      date: 'Hari ini',
+      status: 'held',
+      statusLabel: 'Tertahan di Escrow Relink',
+      statusBadgeColor: 'mint',
+      paymentGatewayRef: `PGW-${Math.floor(100000 + Math.random() * 900000)}`,
+      releaseCondition: 'Otomatis cair setelah checklist diterima & bukti disetujui UMKM',
+      checklistSummary: `${newTaskChecklist.length} butir acceptance criteria aktif`,
+    }
+    setEscrowTransactions((prev) => [newEscrow, ...prev])
     insertTaskToDb({
       taskCode: generatedCode,
       title: newTaskTitle,
@@ -897,6 +966,7 @@ function ClientDashboard() {
         {currentMenu === 'escrow' && (
           <DanaEscrowView
             disputeCount={disputeCount}
+            disputedAmount={disputedAmount}
             escrowFilterTab={escrowFilterTab}
             escrowSearchQuery={escrowSearchQuery}
             escrowTransactions={escrowTransactions}
@@ -909,7 +979,9 @@ function ClientDashboard() {
             setEscrowSearchQuery={setEscrowSearchQuery}
             setSelectedEscrow={setSelectedEscrow}
             setShowEscrowModal={setShowEscrowModal}
+            totalGuaranteeBalance={totalGuaranteeBalance}
             totalHeldEscrow={totalHeldEscrow}
+            totalReleasedAmount={totalReleasedAmount}
             totalReviewEscrow={totalReviewEscrow}
           />
         )}

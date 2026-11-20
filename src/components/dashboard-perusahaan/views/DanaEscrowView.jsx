@@ -7,6 +7,9 @@ function DanaEscrowView({
   heldCount,
   releasedCount,
   disputeCount,
+  disputedAmount = 0,
+  totalReleasedAmount = 0,
+  totalGuaranteeBalance = 500000,
   escrowTransactions,
   escrowFilterTab,
   setEscrowFilterTab,
@@ -22,7 +25,7 @@ function DanaEscrowView({
       {/* 1. Header Section */}
       <div className="content-heading-bar">
         <div>
-          <h1>Rekening Escrow & Proteksi Transaksi</h1>
+          <h1>Rekening Escrow &amp; Proteksi Transaksi</h1>
           <p>
             Dana pembayaran tugas Anda ditampung secara aman di payment gateway berlisensi dan hanya dicairkan setelah bukti kerja diverifikasi.
           </p>
@@ -39,7 +42,7 @@ function DanaEscrowView({
         </div>
       </div>
 
-      {/* 2. 4 Kartu Metrik Escrow Utama */}
+      {/* 2. 4 Kartu Metrik Escrow Utama (Dinamis Sesuai Data Realtime) */}
       <div className="summary-metrics-grid escrow-metrics-grid">
         <div className="metric-box-card">
           <div className="metric-box-card__header">
@@ -50,10 +53,14 @@ function DanaEscrowView({
           </div>
           <div className="metric-box-card__body">
             <strong>Rp{(totalHeldEscrow || 0).toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--good">Tersimpan Aman</span>
+            <span className="metric-trend metric-trend--good">
+              {(totalHeldEscrow || 0) > 0 ? 'Tersimpan Aman' : 'Rekening Bersih'}
+            </span>
           </div>
           <small className="metric-sub-note">
-            {(heldCount || 0) + (reviewCount || 0)} tugas sedang aktif dalam penampungan
+            {(heldCount || 0) + (reviewCount || 0) > 0
+              ? `${(heldCount || 0) + (reviewCount || 0)} tugas sedang aktif dalam penampungan`
+              : 'Tidak ada dana tugas yang tertahan'}
           </small>
         </div>
 
@@ -68,7 +75,11 @@ function DanaEscrowView({
             <strong className="text-pink">Rp{(totalReviewEscrow || 0).toLocaleString('id-ID')}</strong>
             <span className="metric-trend metric-trend--warn">{reviewCount || 0} Tugas</span>
           </div>
-          <small className="metric-sub-note">Auto-release 24-48 jam jika disetujui</small>
+          <small className="metric-sub-note">
+            {(reviewCount || 0) > 0
+              ? 'Auto-release 24–48 jam jika disetujui'
+              : 'Tidak ada berkas menunggu persetujuan'}
+          </small>
         </div>
 
         <div className="metric-box-card">
@@ -79,10 +90,18 @@ function DanaEscrowView({
             </div>
           </div>
           <div className="metric-box-card__body">
-            <strong>Rp8.420.000</strong>
-            <span className="metric-trend metric-trend--good">28 Tugas Tuntas</span>
+            <strong>Rp{(totalReleasedAmount || 0).toLocaleString('id-ID')}</strong>
+            <span className="metric-trend metric-trend--good">
+              {releasedCount || 0} Tugas Tuntas
+            </span>
           </div>
-          <small className="metric-sub-note">100% tanpa sengketa pending</small>
+          <small className="metric-sub-note">
+            {(disputeCount || 0) > 0
+              ? `${disputeCount} sengketa sedang dalam mediasi`
+              : (releasedCount || 0) > 0
+              ? '100% tanpa sengketa pending'
+              : 'Belum ada pencairan dana bulan ini'}
+          </small>
         </div>
 
         <div className="metric-box-card">
@@ -93,10 +112,16 @@ function DanaEscrowView({
             </div>
           </div>
           <div className="metric-box-card__body">
-            <strong>Rp500.000</strong>
-            <span className="metric-trend metric-trend--good">Siap Klaim</span>
+            <strong>Rp{(totalGuaranteeBalance || 0).toLocaleString('id-ID')}</strong>
+            <span className="metric-trend metric-trend--good">
+              {(disputeCount || 0) > 0 ? `${disputeCount} Klaim Mediasi` : 'Siap Klaim'}
+            </span>
           </div>
-          <small className="metric-sub-note">Perlindungan ganti rugi mitra batal</small>
+          <small className="metric-sub-note">
+            {(disputeCount || 0) > 0
+              ? `Klaim garansi Rp${(disputedAmount || 0).toLocaleString('id-ID')} diproses tim`
+              : 'Perlindungan ganti rugi mitra batal'}
+          </small>
         </div>
       </div>
 
