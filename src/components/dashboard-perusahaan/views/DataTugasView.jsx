@@ -150,8 +150,14 @@ function DataTugasView({
     // 1. Hapus dari Supabase Database
     await deleteTaskFromDb(taskToDelete.id)
 
-    // 2. Hapus dari state lokal
-    setTasks((prev) => prev.filter((item) => item.id !== taskToDelete.id))
+    // 2. Hapus dari state lokal dan sinkronkan ke localStorage
+    setTasks((prev) => {
+      const updated = prev.filter((item) => item.id !== taskToDelete.id && item.code !== taskToDelete.id)
+      try {
+        localStorage.setItem('relink_tasks', JSON.stringify(updated))
+      } catch {}
+      return updated
+    })
 
     setIsProcessing(false)
     const deletedId = taskToDelete.id

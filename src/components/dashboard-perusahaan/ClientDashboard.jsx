@@ -35,7 +35,28 @@ function ClientDashboard() {
   const [currentMenu, setCurrentMenu] = useState('beranda') // 'beranda' | 'kanban' | 'data_tugas' | 'radar' | 'new_task' | 'escrow' | 'bantuan' | 'task_detail'
   const [previousMenu, setPreviousMenu] = useState('kanban')
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true)
-  const [tasks, setTasks] = useState(initialTaskBoard)
+
+  // Inisialisasi tasks dari localStorage agar aksi hapus/edit bertahan saat refresh
+  const [tasks, setTasks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('relink_tasks')
+      if (saved !== null) {
+        return JSON.parse(saved)
+      }
+      return initialTaskBoard
+    } catch {
+      return initialTaskBoard
+    }
+  })
+
+  // Sinkronisasi persistensi setiap ada perubahan tasks
+  useEffect(() => {
+    try {
+      localStorage.setItem('relink_tasks', JSON.stringify(tasks))
+    } catch (e) {
+      console.warn('Gagal sinkron tasks ke localStorage:', e)
+    }
+  }, [tasks])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProofTask, setSelectedProofTask] = useState(null)
   const [selectedTaskForDetail, setSelectedTaskForDetail] = useState(null)
@@ -106,7 +127,15 @@ function ClientDashboard() {
   async function handleConfirmDeleteTask(taskId) {
     setIsProcessingTask(true)
     await deleteTaskFromDb(taskId)
-    setTasks((prev) => prev.filter((item) => item.id !== taskId && item.task_code !== taskId))
+    const updated = tasks.filter(
+      (item) => item.id !== taskId && item.code !== taskId && item.task_code !== taskId
+    )
+    setTasks(updated)
+    try {
+      localStorage.setItem('relink_tasks', JSON.stringify(updated))
+    } catch (e) {
+      console.warn('Gagal simpan ke localStorage:', e)
+    }
     if (selectedTaskForDetail?.id === taskId) {
       setSelectedTaskForDetail(null)
       setCurrentMenu(previousMenu || 'kanban')
@@ -227,8 +256,21 @@ function ClientDashboard() {
           fetchEscrowFromDb(),
         ])
         if (isMounted) {
-          if (dbTasks && dbTasks.length > 0) setTasks(dbTasks)
-          if (dbEscrow && dbEscrow.length > 0) setEscrowTransactions(dbEscrow)
+          if (Array.isArray(dbTasks)) {
+            const savedLocal = localStorage.getItem('relink_tasks')
+            if (dbTasks.length > 0) {
+              setTasks(dbTasks)
+              localStorage.setItem('relink_tasks', JSON.stringify(dbTasks))
+            } else if (savedLocal !== null) {
+              // Jika di DB kosong dan di localStorage ada status (misal user sudah hapus semua jadi [])
+              setTasks(JSON.parse(savedLocal))
+            } else {
+              setTasks([])
+            }
+          }
+          if (Array.isArray(dbEscrow) && dbEscrow.length > 0) {
+            setEscrowTransactions(dbEscrow)
+          }
         }
       } catch (err) {
         console.warn('[Relink Supabase] Menggunakan data lokal cadangan:', err)
@@ -246,7 +288,10 @@ function ClientDashboard() {
           { event: '*', schema: 'public', table: 'tasks' },
           async () => {
             const freshTasks = await fetchTasksFromDb()
-            if (isMounted && freshTasks?.length > 0) setTasks(freshTasks)
+            if (isMounted && Array.isArray(freshTasks)) {
+              setTasks(freshTasks)
+              localStorage.setItem('relink_tasks', JSON.stringify(freshTasks))
+            }
           }
         )
         .on(

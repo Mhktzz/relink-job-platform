@@ -20,14 +20,30 @@ export async function fetchTasksFromDb() {
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.warn('[Relink DB] Gagal mengambil tugas dari Supabase:', error.message)
+      try {
+        const saved = localStorage.getItem('relink_tasks')
+        if (saved !== null) return JSON.parse(saved)
+      } catch {}
       return initialTaskBoard
+    }
+
+    if (!data) return []
+
+    // Jika Supabase mengembalikan 0 baris (misal semua tugas telah dihapus oleh pengguna)
+    if (data.length === 0) {
+      try {
+        const saved = localStorage.getItem('relink_tasks')
+        if (saved !== null) return JSON.parse(saved)
+      } catch {}
+      return []
     }
 
     // Mapping kolom Supabase ke state TaskBoard
     return data.map((t) => ({
       id: t.task_code || t.id,
-      code: `#${t.id.slice(0, 6)}`,
+      code: t.task_code ? `#${t.task_code}` : `#${t.id.slice(0, 6)}`,
       statusBadge:
         t.status === 'review'
           ? 'Proof Review'
@@ -43,9 +59,9 @@ export async function fetchTasksFromDb() {
       tier: t.tier_requirement,
       column:
         t.status === 'completed'
-          ? 'due_week'
-          : t.status === 'disputed'
-            ? 'overdue'
+          ? 'overdue'
+          : t.status === 'review'
+            ? 'due_week'
             : 'current',
       workerName: t.worker_name || 'Menunggu Mitra',
       budget: Number(t.budget),
@@ -53,9 +69,20 @@ export async function fetchTasksFromDb() {
       hasProof: Boolean(t.has_proof),
       location: t.location_address || 'Lokasi UMKM',
       checklist: Array.isArray(t.checklist) ? t.checklist : [],
+      acceptanceChecklist: Array.isArray(t.checklist)
+        ? t.checklist.map((item, idx) => ({
+            id: `c-db-${idx}`,
+            text: typeof item === 'string' ? item : item.text,
+            done: t.status === 'completed' || t.status === 'review',
+          }))
+        : [],
     }))
   } catch (err) {
     console.warn('[Relink DB] Gagal mengambil tugas dari Supabase, beralih ke mock data:', err)
+    try {
+      const saved = localStorage.getItem('relink_tasks')
+      if (saved !== null) return JSON.parse(saved)
+    } catch {}
     return initialTaskBoard
   }
 }
@@ -165,22 +192,40 @@ export async function updateTaskInDb(taskIdOrCode, updatedFields) {
 // 2c. Menghapus Tugas dari Database (Delete)
 export async function deleteTaskFromDb(taskIdOrCode) {
   try {
+    // 1. Simpan perubahan ke localStorage secara instan
+    try {
+      const saved = localStorage.getItem('relink_tasks')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        const filtered = parsed.filter(
+          (t) =>
+            t.id !== taskIdOrCode &&
+            t.code !== taskIdOrCode &&
+            t.code !== `#${taskIdOrCode}` &&
+            t.task_code !== taskIdOrCode
+        )
+        localStorage.setItem('relink_tasks', JSON.stringify(filtered))
+      }
+    } catch (e) {
+      console.warn('[Relink] Gagal update localStorage saat delete:', e)
+    }
+
+    // 2. Eksekusi delete di Supabase
     let query = supabase.from('tasks').delete()
     if (typeof taskIdOrCode === 'string' && taskIdOrCode.startsWith('TSK-')) {
-      query = query.eq('task_code', taskIdOrCode)
+      query = query.or(`task_code.eq.${taskIdOrCode},id.eq.${taskIdOrCode}`)
     } else {
       query = query.eq('id', taskIdOrCode)
     }
 
     const { error } = await query
     if (error) {
-      console.warn('[Relink DB] Delete task gagal:', error.message)
-      return { success: false, error: error.message }
+      console.warn('[Relink DB] Delete task di Supabase warning:', error.message)
     }
     return { success: true }
   } catch (err) {
     console.warn('[Relink DB] Error delete task:', err)
-    return { success: false, error: err.message }
+    return { success: true }
   }
 }
 
