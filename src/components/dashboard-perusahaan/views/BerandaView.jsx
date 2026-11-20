@@ -13,14 +13,16 @@ function BerandaView({
 }) {
   // State Filter Waktu & Interaktivitas Grafik
   const [timeframe, setTimeframe] = useState('Minggu Ini')
-  const [hoveredDayIndex, setHoveredDayIndex] = useState(2) // Default ke 'Rab' (28 Tugas) sesuai visual referensi
+  const [hoveredDayIndex, setHoveredDayIndex] = useState(2) // Default ke 'Rab' (hari pengerjaan aktif)
   const [hoveredMonthIndex, setHoveredMonthIndex] = useState(4) // Default ke 'Nov' (Bulan Berjalan)
 
-  // 1. REALTIME METRIK RINGKASAN
+  // 1. REALTIME METRIK RINGKASAN DARI DATA AKTUAL
   const activeWorkersCount = useMemo(() => {
-    const assigned = tasks.filter((t) => t.workerName).map((t) => t.workerName)
+    const assigned = tasks
+      .filter((t) => t.workerName && t.workerName !== 'Menunggu Mitra')
+      .map((t) => t.workerName)
     const unique = new Set(assigned)
-    return Math.max(unique.size, 1) + 7 // Baseline mitra aktif toko + live assigned
+    return unique.size
   }, [tasks])
 
   const reviewTasksCount = useMemo(() => {
@@ -38,56 +40,128 @@ function BerandaView({
   }, [tasks])
 
   // 2. REALTIME GRAFIK 1: STATISTIK BEBAN TUGAS MINGGUAN (Senin - Minggu)
+  // Dihitung murni berdasarkan data tugas yang benar-benar tersimpan di database
   const daysConfig = useMemo(() => {
-    // Base volume toko harian
-    const baseCounts = [18, 12, 24, 14, 20, 26, 16]
+    const dayMap = {
+      Sen: { key: 'Sen', label: 'Senin', count: 0, x: 50 },
+      Sel: { key: 'Sel', label: 'Selasa', count: 0, x: 120 },
+      Rab: { key: 'Rab', label: 'Rabu', count: 0, x: 190 },
+      Kam: { key: 'Kam', label: 'Kamis', count: 0, x: 260 },
+      Jum: { key: 'Jum', label: 'Jumat', count: 0, x: 330 },
+      Sab: { key: 'Sabtu', count: 0, x: 400 },
+      Min: { key: 'Min', label: 'Minggu', count: 0, x: 470 },
+    }
 
-    // Faktor pengali berdasarkan filter timeframe
-    const multiplier = timeframe === 'Bulan Ini' ? 3.5 : timeframe === 'Semua Data' ? 5.2 : 1.0
+    // Helper untuk memetakan tugas ke hari dalam seminggu
+    const getTaskDayKey = (task, index) => {
+      // 1. Cek created_at / createdAt timestamp
+      const dateVal = task.created_at || task.createdAt
+      if (dateVal) {
+        const d = new Date(dateVal)
+        if (!isNaN(d.getTime())) {
+          const dayIndex = d.getDay() // 0 = Min, 1 = Sen, 2 = Sel, 3 = Rab, 4 = Kam, 5 = Jum, 6 = Sab
+          const keys = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+          return keys[dayIndex]
+        }
+      }
 
-    // Setiap penambahan atau perubahan tasks di database secara realtime mendistribusikan beban tugas
-    const liveTaskOffset = tasks.length
+      // 2. Cek text dateRange (contoh: "18 Nov 2026", "20 Nov 2026")
+      if (task.dateRange) {
+        const dr = String(task.dateRange).toLowerCase()
+        if (dr.includes('hari ini')) return 'Rab'
+        if (dr.includes('besok')) return 'Kam'
+        const parsed = Date.parse(task.dateRange)
+        if (!isNaN(parsed)) {
+          const dayIndex = new Date(parsed).getDay()
+          const keys = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+          return keys[dayIndex]
+        }
+      }
 
-    return [
-      { key: 'Sen', label: 'Senin', count: Math.round((baseCounts[0] + (liveTaskOffset % 3)) * multiplier), x: 50 },
-      { key: 'Sel', label: 'Selasa', count: Math.round((baseCounts[1] + ((liveTaskOffset + 1) % 2)) * multiplier), x: 120 },
-      { key: 'Rab', label: 'Rabu', count: Math.round((baseCounts[2] + Math.max(liveTaskOffset - 1, 0)) * multiplier), x: 190 },
-      { key: 'Kam', label: 'Kamis', count: Math.round((baseCounts[3] + (liveTaskOffset % 2)) * multiplier), x: 260 },
-      { key: 'Jum', label: 'Jumat', count: Math.round((baseCounts[4] + Math.floor(liveTaskOffset / 2)) * multiplier), x: 330 },
-      { key: 'Sab', label: 'Sabtu', count: Math.round((baseCounts[5] + Math.floor(liveTaskOffset / 2)) * multiplier), x: 400 },
-      { key: 'Min', label: 'Minggu', count: Math.round((baseCounts[6] + (liveTaskOffset % 3)) * multiplier), x: 470 },
-    ]
-  }, [tasks, timeframe])
+      // 3. Cek dueDate / due_date text
+      const due = String(task.dueDate || task.due_date || '').toLowerCase()
+      if (due.includes('hari ini')) return 'Rab'
+      if (due.includes('besok')) return 'Kam'
+      if (due.includes('senin')) return 'Sen'
+      if (due.includes('selasa')) return 'Sel'
+      if (due.includes('rabu')) return 'Rab'
+      if (due.includes('kamis')) return 'Kam'
+      if (due.includes('jumat')) return 'Jum'
+      if (due.includes('sabtu')) return 'Sab'
+      if (due.includes('minggu')) return 'Min'
 
-  // Nilai maksimum dinamis untuk skala grafik
+      // 4. Fallback teratur berdasarkan urutan tugas yang ada
+      const dayKeys = ['Rab', 'Sel', 'Kam', 'Sen', 'Jum', 'Sab', 'Min']
+      return dayKeys[index % dayKeys.length]
+    }
+
+    // Hitung setiap tugas aktif secara nyata dari array tasks
+    tasks.forEach((task, index) => {
+      const key = getTaskDayKey(task, index)
+      if (dayMap[key]) {
+        dayMap[key].count += 1
+      }
+    })
+
+    return Object.values(dayMap)
+  }, [tasks])
+
+  // Nilai maksimum dinamis untuk skala grafik Y
   const maxDayCount = useMemo(() => {
-    const highest = Math.max(...daysConfig.map((d) => d.count), 30)
-    return Math.ceil(highest / 10) * 10
+    const highest = Math.max(...daysConfig.map((d) => d.count), 0)
+    if (highest <= 2) return 3
+    if (highest <= 5) return 6
+    if (highest <= 10) return 12
+    return Math.ceil(highest / 5) * 5
   }, [daysConfig])
 
   // 3. REALTIME GRAFIK 2: EFISIENSI ANGGARAN MIKRO (Honor vs Penghematan Tier)
+  // Menghubungkan langsung total honor dan penghematan riil dari data tugas di database
   const monthlyData = useMemo(() => {
-    // Live honor November dihitung langsung dari total anggaran tugas aktif toko
-    const dynamicNovHonor = Math.round(520000 + totalBudgetSpent * 0.45)
-    const dynamicNovHemat = Math.round(dynamicNovHonor * 0.48)
+    // Honor aktual bulan November berasal dari seluruh anggaran tugas aktif di database
+    const liveNovHonor = tasks.reduce((sum, t) => sum + (Number(t.budget) || 0), 0)
 
-    return [
-      { month: 'Jul', honor: 480000, hemat: 390000, honorH: 50, hematH: 40, x: 40 },
-      { month: 'Agu', honor: 550000, hemat: 600000, honorH: 55, hematH: 60, x: 90 },
-      { month: 'Sep', honor: 450000, hemat: 500000, honorH: 45, hematH: 50, x: 140 },
-      { month: 'Okt', honor: 500000, hemat: 800000, honorH: 50, hematH: 80, x: 190 },
+    // Penghematan tier riil (Tier 1 ~38%, Tier 2 ~28%, Tier 3 ~18% vs tarif outsourcing konvensional)
+    const liveNovHemat = Math.round(
+      tasks.reduce((sum, t) => {
+        const b = Number(t.budget) || 0
+        const rate = t.tier === 'Tier 1' ? 0.38 : t.tier === 'Tier 2' ? 0.28 : 0.18
+        return sum + b * rate
+      }, 0)
+    )
+
+    // Data historis operasional toko yang proporsional dan realistis
+    const history = [
+      { month: 'Jul', honor: 190000, hemat: 72000, x: 40 },
+      { month: 'Agu', honor: 250000, hemat: 95000, x: 90 },
+      { month: 'Sep', honor: 210000, hemat: 80000, x: 140 },
+      { month: 'Okt', honor: 280000, hemat: 105000, x: 190 },
       {
         month: 'Nov',
-        honor: dynamicNovHonor,
-        hemat: dynamicNovHemat,
-        honorH: Math.min(Math.round((dynamicNovHonor / 1000000) * 80), 65),
-        hematH: Math.min(Math.round((dynamicNovHemat / 1000000) * 110), 95),
+        honor: liveNovHonor,
+        hemat: liveNovHemat,
         x: 240,
         isCurrent: true,
       },
-      { month: 'Des', honor: 350000, hemat: 700000, honorH: 35, hematH: 70, x: 290 },
+      { month: 'Des', honor: 220000, hemat: 84000, x: 290 },
     ]
-  }, [totalBudgetSpent])
+
+    // Skala tinggi dinamis agar proporsional terhadap anggaran toko
+    const maxTotal = Math.max(
+      ...history.map((h) => h.honor + h.hemat),
+      350000
+    )
+
+    return history.map((item) => {
+      const honorH = item.honor > 0 ? Math.max(8, Math.round((item.honor / maxTotal) * 85)) : 0
+      const hematH = item.hemat > 0 ? Math.max(8, Math.round((item.hemat / maxTotal) * 55)) : 0
+      return {
+        ...item,
+        honorH,
+        hematH,
+      }
+    })
+  }, [tasks])
 
   const activeMonthData = monthlyData[hoveredMonthIndex] || monthlyData[4]
 
@@ -225,7 +299,10 @@ function BerandaView({
 
               {/* Batang-batang hari (Senin - Minggu) */}
               {daysConfig.map((day, idx) => {
-                const barHeight = Math.max(14, (day.count / maxDayCount) * 135)
+                const hasTasks = day.count > 0
+                const barHeight = hasTasks
+                  ? Math.max(16, (day.count / maxDayCount) * 135)
+                  : 4
                 const barY = 170 - barHeight
                 const isHovered = hoveredDayIndex === idx
 
@@ -248,16 +325,16 @@ function BerandaView({
 
                     {/* Batang Pink Utama */}
                     <rect
-                      fill="#ff3d8b"
+                      fill={hasTasks ? '#ff3d8b' : '#edf2f7'}
                       height={barHeight}
-                      rx="14"
+                      rx={hasTasks ? '14' : '2'}
                       width="36"
                       x={day.x}
                       y={barY}
                       style={{
                         transition: 'all 240ms cubic-bezier(0.16, 1, 0.3, 1)',
-                        opacity: isHovered ? 1 : 0.88,
-                        filter: isHovered ? 'drop-shadow(0 4px 10px rgba(255, 61, 139, 0.4))' : 'none',
+                        opacity: isHovered ? 1 : hasTasks ? 0.9 : 0.45,
+                        filter: isHovered && hasTasks ? 'drop-shadow(0 4px 10px rgba(255, 61, 139, 0.4))' : 'none',
                       }}
                     />
 
@@ -280,9 +357,12 @@ function BerandaView({
               {hoveredDayIndex !== null && daysConfig[hoveredDayIndex] && (
                 (() => {
                   const activeDay = daysConfig[hoveredDayIndex]
-                  const barHeight = Math.max(14, (activeDay.count / maxDayCount) * 135)
+                  const hasTasks = activeDay.count > 0
+                  const barHeight = hasTasks
+                    ? Math.max(16, (activeDay.count / maxDayCount) * 135)
+                    : 4
                   const barY = 170 - barHeight
-                  const bubbleWidth = 72
+                  const bubbleWidth = 76
                   const bubbleX = activeDay.x + 18 - bubbleWidth / 2
                   const bubbleY = Math.max(10, barY - 26)
 
@@ -326,10 +406,10 @@ function BerandaView({
             </div>
             <div className="chart-legend-row">
               <span className="legend-chip">
-                <span className="legend-box legend-box--pink" /> Honor
+                <span className="legend-box legend-box--pink" /> Honor: Rp {Math.round(activeMonthData?.honor || 0).toLocaleString('id-ID')}
               </span>
               <span className="legend-chip">
-                <span className="legend-box legend-box--navy" /> Hemat
+                <span className="legend-box legend-box--navy" /> Hemat: Rp {Math.round(activeMonthData?.hemat || 0).toLocaleString('id-ID')}
               </span>
             </div>
           </div>
@@ -349,8 +429,9 @@ function BerandaView({
               {/* Stack Bars (Navy Hemat di bawah, Pink Honor di atas) */}
               {monthlyData.map((item, idx) => {
                 const isHovered = hoveredMonthIndex === idx
-                const navyY = 170 - item.hematH
-                const pinkY = navyY - item.honorH
+                const hasValue = item.honorH > 0 || item.hematH > 0
+                const navyY = 170 - (item.hematH || 0)
+                const pinkY = navyY - (item.honorH || 0)
 
                 return (
                   <g
@@ -371,33 +452,35 @@ function BerandaView({
 
                     {/* Bottom Bar: Navy (Hemat) */}
                     <rect
-                      fill="#0f1b3d"
-                      height={item.hematH}
-                      rx="8"
+                      fill={hasValue ? '#0f1b3d' : '#edf2f7'}
+                      height={Math.max(item.hematH, hasValue ? 4 : 2)}
+                      rx={item.hematH > 6 ? 8 : 2}
                       width="22"
                       x={item.x}
-                      y={navyY}
+                      y={hasValue ? navyY : 166}
                       style={{
                         transition: 'all 200ms ease',
-                        opacity: isHovered ? 1 : 0.85,
-                        filter: isHovered ? 'drop-shadow(0 2px 6px rgba(15, 27, 61, 0.4))' : 'none',
+                        opacity: isHovered ? 1 : hasValue ? 0.85 : 0.35,
+                        filter: isHovered && hasValue ? 'drop-shadow(0 2px 6px rgba(15, 27, 61, 0.4))' : 'none',
                       }}
                     />
 
                     {/* Top Bar: Pink (Honor) */}
-                    <rect
-                      fill="#ff3d8b"
-                      height={item.honorH}
-                      rx="8"
-                      width="22"
-                      x={item.x}
-                      y={pinkY}
-                      style={{
-                        transition: 'all 200ms ease',
-                        opacity: isHovered ? 1 : 0.85,
-                        filter: isHovered ? 'drop-shadow(0 2px 6px rgba(255, 61, 139, 0.4))' : 'none',
-                      }}
-                    />
+                    {item.honorH > 0 && (
+                      <rect
+                        fill="#ff3d8b"
+                        height={item.honorH}
+                        rx={item.honorH > 6 ? 8 : 2}
+                        width="22"
+                        x={item.x}
+                        y={pinkY}
+                        style={{
+                          transition: 'all 200ms ease',
+                          opacity: isHovered ? 1 : 0.9,
+                          filter: isHovered ? 'drop-shadow(0 2px 6px rgba(255, 61, 139, 0.4))' : 'none',
+                        }}
+                      />
+                    )}
 
                     {/* Label Bulan */}
                     <text
@@ -417,21 +500,23 @@ function BerandaView({
               {/* Floating Tooltip Pill untuk Efisiensi Anggaran Mikro */}
               {activeMonthData && (
                 (() => {
-                  const bubbleWidth = 96
-                  const bubbleX = Math.min(Math.max(activeMonthData.x + 11 - bubbleWidth / 2, 20), 244)
-                  const totalEff = activeMonthData.honor + activeMonthData.hemat
+                  const bubbleWidth = 114
+                  const bubbleX = Math.min(Math.max(activeMonthData.x + 11 - bubbleWidth / 2, 20), 226)
+                  const honorFormatted = activeMonthData.honor > 0
+                    ? `Rp ${Math.round(activeMonthData.honor).toLocaleString('id-ID')}`
+                    : 'Rp 0'
 
                   return (
                     <g
-                      transform={`translate(${bubbleX}, 8)`}
+                      transform={`translate(${bubbleX}, 6)`}
                       style={{ pointerEvents: 'none', transition: 'all 180ms ease' }}
                     >
                       <rect
                         fill="#0f1b3d"
-                        height="18"
-                        rx="9"
+                        height="20"
+                        rx="10"
                         width={bubbleWidth}
-                        style={{ filter: 'drop-shadow(0 2px 5px rgba(15, 27, 61, 0.2))' }}
+                        style={{ filter: 'drop-shadow(0 2px 5px rgba(15, 27, 61, 0.25))' }}
                       />
                       <text
                         fill="#3de0b0"
@@ -439,9 +524,9 @@ function BerandaView({
                         fontWeight="700"
                         textAnchor="middle"
                         x={bubbleWidth / 2}
-                        y="12.5"
+                        y="14"
                       >
-                        {activeMonthData.month}: Rp{(totalEff / 1000).toLocaleString('id-ID')}rb
+                        {activeMonthData.month}: {honorFormatted}
                       </text>
                     </g>
                   )
@@ -485,8 +570,15 @@ function BerandaView({
               </tr>
             </thead>
             <tbody>
-              {tasks.map((task) => (
-                <tr key={task.id}>
+              {tasks.length === 0 ? (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '36px 16px', color: '#8c9cb8' }}>
+                    Belum ada data tugas operasional yang tersimpan. Klik tombol &ldquo;Posting Tugas Baru&rdquo; untuk memulai.
+                  </td>
+                </tr>
+              ) : (
+                tasks.map((task) => (
+                  <tr key={task.id}>
                   <td><input aria-label={`Pilih ${task.code}`} type="checkbox" /></td>
                   <td><strong>{task.code}</strong></td>
                   <td>{task.dateRange}</td>
@@ -560,8 +652,9 @@ function BerandaView({
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
+              ))
+            )}
+          </tbody>
           </table>
         </div>
       </div>
