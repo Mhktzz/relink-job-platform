@@ -184,7 +184,11 @@ function AuthPage({ mode, role }) {
         }
 
         setMessageType("success");
-        setMessage("Akun UMKM berhasil dibuat! Mengalihkan ke dashboard...");
+        setMessage(
+          isWorker
+            ? "Akun Pekerja berhasil dibuat! Mengalihkan ke dashboard..."
+            : "Akun UMKM berhasil dibuat! Mengalihkan ke dashboard..."
+        );
         setTimeout(() => {
           window.location.href = isWorker ? "/pekerja" : "/dashboard";
         }, 1200);
@@ -232,7 +236,11 @@ function AuthPage({ mode, role }) {
         }
 
         setMessageType("success");
-        setMessage("Login berhasil! Membuka dashboard UMKM...");
+        setMessage(
+          isWorker
+            ? "Login berhasil! Membuka dashboard Pekerja..."
+            : "Login berhasil! Membuka dashboard UMKM..."
+        );
         setTimeout(() => {
           window.location.href = isWorker ? "/pekerja" : "/dashboard";
         }, 800);
@@ -262,6 +270,27 @@ function AuthPage({ mode, role }) {
     setMessageType("success");
     setTimeout(() => {
       window.location.href = "/dashboard";
+    }, 600);
+  }
+
+  // Handler Masuk Cepat Akun Demo Pekerja (Dimas Prasetyo)
+  function handleWorkerDemoLogin() {
+    localStorage.setItem(
+      "relink_user",
+      JSON.stringify({
+        id: "w-1",
+        email: "dimas.prasetyo@relink.id",
+        full_name: "Dimas Prasetyo",
+        business_name: "Mitra Mandiri",
+        role: "mitra",
+        tier: "Tier 1",
+        trust_score: 98,
+      })
+    );
+    setMessage("Masuk sebagai Dimas Prasetyo (Demo Mitra Tier 1)...");
+    setMessageType("success");
+    setTimeout(() => {
+      window.location.href = "/pekerja";
     }, 600);
   }
 
@@ -712,26 +741,32 @@ function AuthPage({ mode, role }) {
                     {isLoading ? (
                       "Memproses..."
                     ) : isSignup ? (
-                      "Daftar Akun UMKM"
+                      isWorker ? "Daftar Akun Mitra Pekerja" : "Daftar Akun UMKM"
                     ) : (
                       "Masuk ke Dashboard"
                     )}
                   </button>
 
-                  {/* Tombol Akses Cepat Demo UMKM */}
-                  {!isWorker && (
-                    <>
-                      <div className="auth-demo-divider">
-                        <span>ATAU COBA LANGSUNG</span>
-                      </div>
-                      <button
-                        className="btn-auth-demo"
-                        onClick={handleDemoLogin}
-                        type="button"
-                      >
-                        Masuk Cepat Demo (Toko Kue Bu Rina) &rarr;
-                      </button>
-                    </>
+                  {/* Tombol Akses Cepat Demo */}
+                  <div className="auth-demo-divider">
+                    <span>ATAU COBA LANGSUNG</span>
+                  </div>
+                  {isWorker ? (
+                    <button
+                      className="btn-auth-demo"
+                      onClick={handleWorkerDemoLogin}
+                      type="button"
+                    >
+                      Masuk Cepat Demo Mitra (Dimas Prasetyo) &rarr;
+                    </button>
+                  ) : (
+                    <button
+                      className="btn-auth-demo"
+                      onClick={handleDemoLogin}
+                      type="button"
+                    >
+                      Masuk Cepat Demo (Toko Kue Bu Rina) &rarr;
+                    </button>
                   )}
                 </form>
 

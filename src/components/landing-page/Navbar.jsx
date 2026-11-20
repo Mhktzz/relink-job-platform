@@ -16,7 +16,7 @@ const workerLinks = [
   { label: 'Sistem Tier', href: '#tier' },
   { label: 'Untuk UMKM', href: '/#fitur-adil' },
   { label: 'Untuk Pekerja', href: '#manfaat-pekerja' },
-  { label: 'Dashboard UMKM', href: '/dashboard' },
+  { label: 'Dashboard Pekerja', href: '/dashboard-pekerja' },
 ]
 
 function Navbar({ workerPage = false }) {

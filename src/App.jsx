@@ -10,19 +10,37 @@ import VerificationSection from './components/landing-page/VerificationSection.j
 import WorkerLandingPage from './components/landing-page/WorkerLandingPage.jsx'
 import AuthPage from './components/auth/AuthPage.jsx'
 import ClientDashboard from './components/dashboard-perusahaan/ClientDashboard.jsx'
+import WorkerDashboard from './components/dashboard-pekerja/WorkerDashboard.jsx'
 import './App.css'
 
 function App() {
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
+  const searchParams = new URLSearchParams(window.location.search)
+  const portalParam = searchParams.get('portal')
+
+  const userSession = (() => {
+    try {
+      const saved = localStorage.getItem('relink_user')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })()
+  const isWorkerRole = userSession?.role === 'mitra' || userSession?.role === 'pekerja'
+
+  const workerDashboardDirect =
+    pathname === '/dashboard-pekerja' || pathname === '/mitra' || pathname === '/pekerja/dashboard'
+  const clientDashboardDirect =
+    pathname === '/dashboard-umkm' || pathname === '/klien' || pathname === '/admin'
   const workerPage = pathname === '/pekerja'
-  const dashboardPage =
-    pathname === '/dashboard' || pathname === '/klien' || pathname === '/admin'
+  const dashboardPage = pathname === '/dashboard'
+
   const isResetPassword =
     pathname === '/reset-password' ||
-    new URLSearchParams(window.location.search).get('reset') === 'true' ||
+    searchParams.get('reset') === 'true' ||
     window.location.hash.includes('type=recovery')
   const authMode = pathname === '/masuk' ? 'login' : pathname === '/daftar' ? 'signup' : isResetPassword ? 'reset-password' : null
-  const requestedRole = new URLSearchParams(window.location.search).get('peran')
+  const requestedRole = searchParams.get('peran')
   const authRole = requestedRole === 'pekerja' ? 'pekerja' : 'umkm'
 
   useEffect(() => {
@@ -153,12 +171,31 @@ function App() {
     return <AuthPage mode={authMode} role={authRole} />
   }
 
-  if (dashboardPage) {
+  // Khusus URL langsung portal pekerja
+  if (workerDashboardDirect) {
+    return <WorkerDashboard />
+  }
+
+  // Khusus URL langsung portal UMKM
+  if (clientDashboardDirect) {
     return <ClientDashboard />
   }
 
+  // Akses halaman /pekerja
   if (workerPage) {
+    // Jika pekerja sudah register/login, tampilkan dashboard pekerja
+    if (isWorkerRole) {
+      return <WorkerDashboard />
+    }
     return <WorkerLandingPage />
+  }
+
+  // Akses halaman /dashboard umum
+  if (dashboardPage) {
+    if (portalParam === 'pekerja' || (isWorkerRole && portalParam !== 'umkm')) {
+      return <WorkerDashboard />
+    }
+    return <ClientDashboard />
   }
 
   return (

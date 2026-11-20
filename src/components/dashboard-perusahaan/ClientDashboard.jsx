@@ -836,6 +836,16 @@ function ClientDashboard() {
                   <button
                     className="dropdown-item"
                     onClick={() => {
+                      window.location.href = '/dashboard-pekerja'
+                    }}
+                    type="button"
+                  >
+                    <Icon name="briefcase" size={16} />
+                    <span>Beralih ke Dashboard Pekerja</span>
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
                       setShowUserMenu(false)
                       setCurrentMenu('bantuan')
                     }}
