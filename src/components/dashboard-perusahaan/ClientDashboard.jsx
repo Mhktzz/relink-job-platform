@@ -113,8 +113,36 @@ function ClientDashboard() {
       }
     }
     loadDataFromSupabase()
+
+    // Realtime Supabase Channel untuk Sinkronisasi Otomatis Data Tugas & Escrow
+    let realtimeChannel = null
+    try {
+      realtimeChannel = supabase
+        .channel('relink_realtime_dashboard')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'tasks' },
+          async () => {
+            const freshTasks = await fetchTasksFromDb()
+            if (isMounted && freshTasks?.length > 0) setTasks(freshTasks)
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'escrow_transactions' },
+          async () => {
+            const freshEscrow = await fetchEscrowFromDb()
+            if (isMounted && freshEscrow?.length > 0) setEscrowTransactions(freshEscrow)
+          }
+        )
+        .subscribe()
+    } catch (e) {
+      console.warn('[Relink] Realtime subscription init error:', e)
+    }
+
     return () => {
       isMounted = false
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel)
     }
   }, [])
 
@@ -566,6 +594,7 @@ function ClientDashboard() {
         {/* ======================================================== */}
         {currentMenu === 'beranda' && (
           <BerandaView
+            escrowTransactions={escrowTransactions}
             onOpenTaskDetail={(task) => handleOpenTaskDetail(task, 'beranda')}
             setCurrentMenu={setCurrentMenu}
             setSelectedProofTask={setSelectedProofTask}
