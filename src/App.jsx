@@ -27,6 +27,7 @@ function App() {
     }
   })()
   const isWorkerRole = userSession?.role === 'mitra' || userSession?.role === 'pekerja'
+  const isClientRole = userSession?.role === 'klien' || userSession?.role === 'umkm'
 
   const workerDashboardDirect =
     pathname === '/dashboard-pekerja' || pathname === '/mitra' || pathname === '/pekerja/dashboard'
@@ -171,31 +172,53 @@ function App() {
     return <AuthPage mode={authMode} role={authRole} />
   }
 
-  // Khusus URL langsung portal pekerja
+  // Khusus URL langsung portal pekerja (Guard: Hanya pekerja terverifikasi yang boleh akses)
   if (workerDashboardDirect) {
-    return <WorkerDashboard />
+    if (isWorkerRole) {
+      return <WorkerDashboard />
+    }
+    // Jika login sebagai admin perusahaan atau belum login, wajib melalui login mitra pekerja
+    window.location.replace('/masuk?peran=pekerja')
+    return null
   }
 
-  // Khusus URL langsung portal UMKM
+  // Khusus URL langsung portal UMKM (Guard: Hanya perusahaan/UMKM terverifikasi yang boleh akses)
   if (clientDashboardDirect) {
-    return <ClientDashboard />
+    if (isClientRole) {
+      return <ClientDashboard />
+    }
+    // Jika login sebagai mitra pekerja atau belum login, wajib melalui login UMKM
+    window.location.replace('/masuk?peran=umkm')
+    return null
   }
 
   // Akses halaman /pekerja
   if (workerPage) {
-    // Jika pekerja sudah register/login, tampilkan dashboard pekerja
+    // Jika pekerja sudah register/login, langsung tampilkan dashboard pekerja
     if (isWorkerRole) {
       return <WorkerDashboard />
     }
+    // Jika admin perusahaan atau publik, tampilkan landing page edukasi pekerja
     return <WorkerLandingPage />
   }
 
   // Akses halaman /dashboard umum
   if (dashboardPage) {
-    if (portalParam === 'pekerja' || (isWorkerRole && portalParam !== 'umkm')) {
-      return <WorkerDashboard />
+    if (portalParam === 'pekerja') {
+      if (isWorkerRole) {
+        return <WorkerDashboard />
+      }
+      window.location.replace('/masuk?peran=pekerja')
+      return null
     }
-    return <ClientDashboard />
+
+    if (isClientRole) {
+      return <ClientDashboard />
+    }
+
+    // Jika login sebagai mitra pekerja atau belum login, wajib login sebagai UMKM
+    window.location.replace('/masuk?peran=umkm')
+    return null
   }
 
   return (

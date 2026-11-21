@@ -345,8 +345,8 @@ function WorkerDashboard() {
 
             <button
               className="sidebar-nav-item"
-              onClick={() => { window.location.href = '/dashboard?portal=umkm' }}
-              title="Beralih ke Portal Perusahaan / UMKM"
+              onClick={() => { window.location.href = '/masuk?peran=umkm' }}
+              title="Masuk ke Portal Perusahaan / UMKM"
               type="button"
             >
               <Icon name="users" size={18} />
@@ -456,12 +456,12 @@ function WorkerDashboard() {
                     className="dropdown-item"
                     onClick={() => {
                       setShowUserDropdown(false)
-                      window.location.href = '/dashboard?portal=umkm'
+                      window.location.href = '/masuk?peran=umkm'
                     }}
                     type="button"
                   >
                     <Icon name="users" size={16} />
-                    <span>Beralih ke Portal UMKM</span>
+                    <span>Masuk ke Portal UMKM</span>
                   </button>
                   <button
                     className="dropdown-item"
