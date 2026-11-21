@@ -837,17 +837,6 @@ function ClientDashboard() {
                     className="dropdown-item"
                     onClick={() => {
                       setShowUserMenu(false)
-                      window.location.href = '/masuk?peran=pekerja'
-                    }}
-                    type="button"
-                  >
-                    <Icon name="briefcase" size={16} />
-                    <span>Masuk ke Akun Pekerja</span>
-                  </button>
-                  <button
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowUserMenu(false)
                       setCurrentMenu('bantuan')
                     }}
                     type="button"

@@ -344,16 +344,6 @@ function WorkerDashboard() {
             {isSidebarExpanded && <span className="group-label">Pengaturan</span>}
 
             <button
-              className="sidebar-nav-item"
-              onClick={() => { window.location.href = '/masuk?peran=umkm' }}
-              title="Masuk ke Portal Perusahaan / UMKM"
-              type="button"
-            >
-              <Icon name="users" size={18} />
-              {isSidebarExpanded && <span>Portal UMKM</span>}
-            </button>
-
-            <button
               className="sidebar-nav-item sidebar-nav-item--logout"
               onClick={handleLogout}
               title="Keluar dari Akun"
@@ -452,17 +442,6 @@ function WorkerDashboard() {
                     <small>{workerProfile.email}</small>
                   </div>
                   <div className="dropdown-divider" />
-                  <button
-                    className="dropdown-item"
-                    onClick={() => {
-                      setShowUserDropdown(false)
-                      window.location.href = '/masuk?peran=umkm'
-                    }}
-                    type="button"
-                  >
-                    <Icon name="users" size={16} />
-                    <span>Masuk ke Portal UMKM</span>
-                  </button>
                   <button
                     className="dropdown-item"
                     onClick={() => {
