@@ -149,6 +149,71 @@ export const initialAvailableJobs = [
       { id: 'j4-3', text: 'Menyerahkan hasil rekonsiliasi ke supervisor gudang' },
     ],
   },
+  {
+    id: 'TSK-205',
+    code: '#878912',
+    title: 'Pasang Instalasi Banner Promosi & Neon Box Toko',
+    category: 'Teknis & Konstruksi',
+    tag: 'Tier 2 (Terkunci)',
+    clientName: 'Kedai Kopi Selaras',
+    distance: '3.4 km',
+    duration: 'Sekitar 2–3 jam',
+    grossHonor: 152000,
+    netHonor: 140000,
+    tierRequired: 'Tier 2',
+    priority: 'Normal',
+    urgent: false,
+    locked: true,
+    checklistSummary: 'Instalasi rangka aluminium kokoh & kabel lampu LED aman',
+    description:
+      'Pemasangan spanduk banner baru ukuran 3x1 meter di fasad depan toko dan pengujian sambungan lampu neon box.',
+    checklist: [
+      { id: 'j5-1', text: 'Pemasangan klem braket siku kuat pada dinding bata' },
+      { id: 'j5-2', text: 'Insulasi sambungan listrik outdoor tahan hujan' },
+      { id: 'j5-3', text: 'Pembersihan sisa bor dan debu di etalase toko' },
+    ],
+  },
+]
+
+export const initialActionItems = [
+  {
+    id: 'act-1',
+    title: 'Rekam video portofolio kedua',
+    desc: 'Naikkan peluang masuk rekomendasi Rising Star radar UMKM',
+    tone: 'warn',
+    type: 'video',
+  },
+  {
+    id: 'act-2',
+    title: 'Beri ulasan untuk Toko Bu Rina',
+    desc: 'Selesai kemarin, dana honor Rp78.200 sudah cair ke saldo dompet',
+    tone: 'info',
+    type: 'review',
+  },
+  {
+    id: 'act-3',
+    title: '1 undangan Tim Tandem menunggu',
+    desc: 'Jawab sebelum besok pukul 12.00 WIB (Lead: Budi Santoso)',
+    tone: 'warn',
+    type: 'tandem',
+  },
+]
+
+export const initialUpcomingSchedule = [
+  {
+    id: 'sch-1',
+    time: 'Hari ini, 14.00 WIB',
+    title: 'Packing pesanan lebaran',
+    client: 'Toko Kue Bu Rina',
+    distance: '1.2 km',
+  },
+  {
+    id: 'sch-2',
+    time: 'Besok, 09.00 WIB',
+    title: 'Jaga stan bazar UMKM',
+    client: 'Warung Seblak Mang Ujang',
+    distance: '2.1 km',
+  },
 ]
 
 export const initialWalletData = {

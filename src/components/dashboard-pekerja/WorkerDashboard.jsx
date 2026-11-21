@@ -7,6 +7,8 @@ import {
   initialActiveTask,
   initialAvailableJobs,
   initialWalletData,
+  initialActionItems,
+  initialUpcomingSchedule,
 } from './workerMockData.js'
 
 import WorkerBerandaView from './views/WorkerBerandaView.jsx'
@@ -54,6 +56,8 @@ function WorkerDashboard() {
   const [activeTask, setActiveTask] = useState(initialActiveTask)
   const [availableJobs, setAvailableJobs] = useState(initialAvailableJobs)
   const [walletData, setWalletData] = useState(initialWalletData)
+  const [actionItems, setActionItems] = useState(initialActionItems)
+  const [upcomingSchedule, setUpcomingSchedule] = useState(initialUpcomingSchedule)
   const [isAvailableNow, setIsAvailableNow] = useState(true)
 
   // State Modals
@@ -320,6 +324,25 @@ function WorkerDashboard() {
             {isSidebarExpanded && <span className="group-label">Layanan</span>}
 
             <button
+              className={`sidebar-nav-item${currentMenu === 'pekerjaan-saya' ? ' sidebar-nav-item--active' : ''}`}
+              onClick={() => {
+                setCurrentMenu('beranda')
+                setTimeout(() => {
+                  const el = document.getElementById('active-task-section')
+                  if (el) el.scrollIntoView({ behavior: 'smooth' })
+                }, 100)
+              }}
+              title="Pekerjaan Saya yang Sedang Berjalan"
+              type="button"
+            >
+              <Icon name="briefcase" size={18} />
+              {isSidebarExpanded && <span>Pekerjaan Saya</span>}
+              {isSidebarExpanded && activeTask && (
+                <span className="nav-counter-pill nav-counter-pill--escrow">1</span>
+              )}
+            </button>
+
+            <button
               className={`sidebar-nav-item${currentMenu === 'dompet' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('dompet')}
               title="Dompet & Penarikan Saldo"
@@ -330,13 +353,33 @@ function WorkerDashboard() {
             </button>
 
             <button
+              className="sidebar-nav-item"
+              onClick={() => {
+                if (activeTask?.clientPhone) {
+                  window.open(
+                    `https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20Dimas%20dari%20Relink%20terkait%20tugas%20${encodeURIComponent(activeTask.title)}.`,
+                    '_blank'
+                  )
+                } else {
+                  showToast('Belum ada chat aktif dari pemesan tugas.')
+                }
+              }}
+              title="Chat dengan Klien & Tim Relink"
+              type="button"
+            >
+              <Icon name="chat" size={18} />
+              {isSidebarExpanded && <span>Chat</span>}
+              {isSidebarExpanded && <span className="nav-counter-pill">2</span>}
+            </button>
+
+            <button
               className={`sidebar-nav-item${currentMenu === 'keamanan' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('keamanan')}
               title="Pusat Keamanan, SOP & Siaga SOS"
               type="button"
             >
               <Icon name="shield" size={18} />
-              {isSidebarExpanded && <span>Keamanan &amp; SOP</span>}
+              {isSidebarExpanded && <span>Keamanan &amp; SOS</span>}
             </button>
           </div>
 
@@ -493,16 +536,19 @@ function WorkerDashboard() {
         {/* MODULAR VIEWS ROUTING */}
         {currentMenu === 'beranda' && (
           <WorkerBerandaView
+            actionItems={actionItems}
             activeTask={activeTask}
             availableJobs={availableJobs}
             isAvailableNow={isAvailableNow}
             onCheckInArrived={handleCheckInArrived}
             onOpenAcceptModal={(job) => setTaskToAccept(job)}
             onOpenProofModal={() => setShowProofModal(true)}
+            onOpenQuizModal={() => setShowQuizModal(true)}
             onOpenWithdrawModal={() => setShowWithdrawModal(true)}
             onTriggerSos={handleTriggerSos}
             setCurrentMenu={setCurrentMenu}
             setIsAvailableNow={setIsAvailableNow}
+            upcomingSchedule={upcomingSchedule}
             walletData={walletData}
             workerProfile={workerProfile}
           />

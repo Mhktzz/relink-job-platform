@@ -127,11 +127,13 @@ function PeluangTugasView({ availableJobs = [], onOpenAcceptModal, searchQueryGl
       ) : (
         <div className="worker-jobs-full-grid">
           {filteredJobs.map((job) => (
-            <div key={job.id} className="worker-job-card worker-job-card--detailed">
+            <div key={job.id} className={`worker-job-card worker-job-card--detailed ${job.locked ? 'worker-job-card--locked' : ''}`}>
               <div className="job-card-top">
                 <div className="job-tag-group">
                   <span className="task-tag-chip task-tag-chip--pink">{job.category}</span>
-                  <span className="task-tag-chip task-tag-chip--mint">{job.tag}</span>
+                  <span className={`task-tag-chip ${job.locked ? 'task-tag-chip--locked' : 'task-tag-chip--mint'}`}>
+                    {job.tag}
+                  </span>
                   {job.urgent && (
                     <span className="task-tag-chip task-tag-chip--urgent">Urgent</span>
                   )}
@@ -180,14 +182,26 @@ function PeluangTugasView({ availableJobs = [], onOpenAcceptModal, searchQueryGl
                     Honor Bruto Rp{job.grossHonor.toLocaleString('id-ID')} &bull; Komisi 8% Rp{(job.grossHonor - job.netHonor).toLocaleString('id-ID')}
                   </small>
                 </div>
-                <button
-                  className="btn-take-job btn-take-job--full"
-                  onClick={() => onOpenAcceptModal(job)}
-                  type="button"
-                >
-                  <Icon name="bolt" size={16} />
-                  <span>Ambil Tugas Ini</span>
-                </button>
+                {job.locked ? (
+                  <button
+                    className="btn-take-job btn-take-job--locked btn-take-job--full"
+                    disabled
+                    title="Selesaikan tugas dasar untuk membuka akses Tier 2"
+                    type="button"
+                  >
+                    <Icon name="lock" size={16} />
+                    <span>Buka di Tier 2</span>
+                  </button>
+                ) : (
+                  <button
+                    className="btn-take-job btn-take-job--full"
+                    onClick={() => onOpenAcceptModal(job)}
+                    type="button"
+                  >
+                    <Icon name="bolt" size={16} />
+                    <span>Ambil Tugas Ini</span>
+                  </button>
+                )}
               </div>
             </div>
           ))}

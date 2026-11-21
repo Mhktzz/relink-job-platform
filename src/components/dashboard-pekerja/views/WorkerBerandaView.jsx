@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
 
+function InfoTooltip({ text }) {
+  return (
+    <span className="dm-info-tooltip" tabIndex={0} title={text}>
+      i
+    </span>
+  )
+}
+
 function WorkerBerandaView({
   workerProfile,
   activeTask,
@@ -13,6 +21,9 @@ function WorkerBerandaView({
   availableJobs = [],
   onOpenWithdrawModal,
   onTriggerSos,
+  actionItems = [],
+  upcomingSchedule = [],
+  onOpenQuizModal,
 }) {
   const [hoveredDayIndex, setHoveredDayIndex] = useState(2) // Default ke Rabu
   const [hoveredMonthIndex, setHoveredMonthIndex] = useState(4) // Default ke Nov
@@ -44,12 +55,12 @@ function WorkerBerandaView({
 
   return (
     <main className="dashboard-content-flow">
-      {/* 1. Content Heading Bar Identik dengan Dashboard Perusahaan */}
+      {/* 1. Content Heading Bar Identik dengan Panduan Dashboard */}
       <div className="content-heading-bar">
         <div>
           <h1>Beranda Mitra Kerja</h1>
           <p>
-            Radar lokasimu aktif dalam radius 1–5 km. Amankan honor escrow, selesaikan tugas mikro tepat waktu, dan bangun reputasi profesionalmu.
+            Radar lokasimu aktif dalam radius 1–5 km. Selesaikan tugas tepat waktu, amankan honor escrow, dan bangun reputasimu.
           </p>
         </div>
         <div className="escrow-header-actions">
@@ -58,7 +69,7 @@ function WorkerBerandaView({
             onClick={onOpenWithdrawModal}
             type="button"
           >
-            <Icon name="download" size={15} />
+            <Icon name="wallet" size={16} />
             <span>Tarik Saldo Dompet</span>
           </button>
         </div>
@@ -77,12 +88,16 @@ function WorkerBerandaView({
             <strong>Rp{(walletData.availableBalance || 0).toLocaleString('id-ID')}</strong>
             <span className="metric-trend metric-trend--good">Siap Tarik</span>
           </div>
-          <small className="metric-sub-note">Bebas biaya admin transfer ke e-wallet &amp; rekening bank</small>
+          <small className="metric-sub-note">
+            <span className="text-mint font-bold">+Rp98.000 minggu ini</span> &bull; bebas biaya admin ke e-wallet &amp; bank
+          </small>
         </div>
 
         <div className="metric-box-card">
           <div className="metric-box-card__header">
-            <span>Dana Tertahan di Escrow</span>
+            <span>
+              Dana Tertahan di Escrow <InfoTooltip text="Uang Klien yang ditahan di rekening penampung resmi Relink dan dicairkan otomatis setelah pekerjaan selesai." />
+            </span>
             <div className="metric-icon-bubble metric-icon-bubble--warn">
               <Icon name="shield" size={16} />
             </div>
@@ -94,7 +109,7 @@ function WorkerBerandaView({
             </span>
           </div>
           <small className="metric-sub-note">
-            {activeTask ? `Escrow Ref: ${activeTask.escrowRef}` : 'Dana aman di penampungan berlisensi'}
+            {activeTask ? `${activeTask.title} &bull; cair setelah Klien konfirmasi` : 'Dana aman di penampungan resmi berlisensi'}
           </small>
         </div>
 
@@ -109,14 +124,19 @@ function WorkerBerandaView({
             <strong>{workerProfile.completedTasksCount} / {workerProfile.targetTasksForNextTier} Tugas</strong>
             <span className="metric-trend metric-trend--good">Rating {workerProfile.rating}</span>
           </div>
+          <div className="dm-mini-progress-track">
+            <i style={{ width: `${Math.min(100, Math.round((workerProfile.completedTasksCount / workerProfile.targetTasksForNextTier) * 100))}%` }} />
+          </div>
           <small className="metric-sub-note">
-            Selesaikan {workerProfile.targetTasksForNextTier - workerProfile.completedTasksCount} tugas lagi untuk buka akses tugas bernilai tinggi
+            Rating syarat min. 4.7 <strong className="text-mint">terpenuhi</strong>. Selesaikan {Math.max(0, workerProfile.targetTasksForNextTier - workerProfile.completedTasksCount)} tugas lagi untuk buka tugas umum &amp; Tandem.
           </small>
         </div>
 
         <div className="metric-box-card">
           <div className="metric-box-card__header">
-            <span>Reputasi &amp; Garansi K3</span>
+            <span>
+              Reputasi &amp; Garansi K3 <InfoTooltip text="K3: Standar Keselamatan dan Kesehatan Kerja lapangan serta etika layanan mitra." />
+            </span>
             <div className="metric-icon-bubble metric-icon-bubble--mint">
               <Icon name="check" size={16} />
             </div>
@@ -126,23 +146,266 @@ function WorkerBerandaView({
             <span className="metric-trend metric-trend--good">0 Komplain</span>
           </div>
           <small className="metric-sub-note">
-            {workerProfile.isRisingStar ? 'Lencana Rising Star Aktif di Radar UMKM' : 'Garansi perlindungan Relink aktif'}
+            &starf; {workerProfile.rating} &bull; {workerProfile.completedTasksCount} tugas selesai &bull; respons 96% &bull; Rising Star aktif di radar UMKM
           </small>
         </div>
       </div>
 
-      {/* 3. Realtime Double Analytics Chart (Identik dengan Beranda Perusahaan) */}
+      {/* 3. Row 2: Grid 2 Kolom (Tugas Aktif & Alur Escrow + Perlu Tindakan) */}
+      <div className="active-and-action-grid">
+        {/* Left: Alur Transaksi Escrow Interaktif (Stepper 5 Tahap) */}
+        {activeTask ? (
+          <section className="escrow-lifecycle-card" id="active-task-section">
+            <div className="escrow-lifecycle-header">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span className="task-tag-chip task-tag-chip--pink">Tugas Aktif</span>
+                  <span className="task-tag-chip task-tag-chip--mint">Escrow {activeTask.escrowRef}</span>
+                </div>
+                <h3>{activeTask.title}</h3>
+                <small className="text-muted">
+                  {activeTask.clientName} &bull; <Icon name="pin" size={13} /> {activeTask.distance} &bull; tiba sekitar 6 menit
+                </small>
+              </div>
+              <span className="escrow-verified-pill">
+                <Icon name="shield" size={14} /> Terverifikasi Escrow
+              </span>
+            </div>
+
+            <div className="escrow-steps-grid">
+              <div className={`escrow-step-item ${currentStep >= 0 ? 'escrow-step-item--done' : ''}`}>
+                <div className="escrow-step-num">1</div>
+                <h4>Dana Ditahan</h4>
+                <p>Klien setor Rp{activeTask.grossHonor.toLocaleString('id-ID')} ke rekening escrow aman.</p>
+              </div>
+              <div className="escrow-step-connector" />
+              <div className={`escrow-step-item ${currentStep >= 1 ? 'escrow-step-item--done' : currentStep === 1 ? 'escrow-step-item--highlight' : ''}`}>
+                <div className="escrow-step-num">2</div>
+                <h4>Menuju Lokasi</h4>
+                <p>Mitra bergerak ke alamat toko. Tekan check-in saat tiba.</p>
+              </div>
+              <div className="escrow-step-connector" />
+              <div className={`escrow-step-item ${currentStep >= 2 ? 'escrow-step-item--done' : currentStep === 2 ? 'escrow-step-item--highlight' : ''}`}>
+                <div className="escrow-step-num">3</div>
+                <h4>Pengerjaan</h4>
+                <p>Mengerjakan kriteria acceptance checklist sesuai SOP.</p>
+              </div>
+              <div className="escrow-step-connector" />
+              <div className={`escrow-step-item ${currentStep >= 3 ? 'escrow-step-item--done' : currentStep === 3 ? 'escrow-step-item--highlight' : ''}`}>
+                <div className="escrow-step-num">4</div>
+                <h4>Menunggu Konfirmasi</h4>
+                <p>Klien memeriksa foto bukti hasil kerja (Auto-release 24-48j).</p>
+              </div>
+              <div className="escrow-step-connector" />
+              <div className={`escrow-step-item ${currentStep >= 4 ? 'escrow-step-item--highlight' : ''}`}>
+                <div className="escrow-step-num">5</div>
+                <h4>Dana Cair</h4>
+                <p>Honor bersih Rp{activeTask.netHonor.toLocaleString('id-ID')} cair instan ke dompet.</p>
+              </div>
+            </div>
+
+            {/* Action Row Khusus Tugas Aktif */}
+            <div className="active-task-action-bar-row">
+              <div className="active-task-quick-info">
+                <span className="text-muted">Pendapatan bersih diterima:</span>
+                <strong className="text-pink" style={{ fontSize: '18px' }}>
+                  Rp{activeTask.netHonor.toLocaleString('id-ID')}
+                </strong>
+              </div>
+
+              <div className="active-task-buttons-cluster">
+                <a
+                  className="btn-worker-action btn-worker-action--whatsapp"
+                  href={`https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20Dimas%20dari%20Relink%20terkait%20tugas%20${encodeURIComponent(activeTask.title)}.`}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <Icon name="chat" size={16} />
+                  <span>Chat Klien</span>
+                </a>
+
+                <button
+                  className="btn-worker-action btn-worker-action--sos"
+                  onClick={onTriggerSos}
+                  type="button"
+                >
+                  <Icon name="alert" size={16} />
+                  <span>SOS</span>
+                </button>
+
+                {currentStep === 1 && (
+                  <button
+                    className="btn-worker-action btn-worker-action--primary"
+                    onClick={onCheckInArrived}
+                    type="button"
+                  >
+                    <Icon name="pin" size={16} />
+                    <span>Check-in di Lokasi</span>
+                  </button>
+                )}
+
+                {currentStep === 2 && (
+                  <button
+                    className="btn-worker-action btn-worker-action--pink"
+                    onClick={onOpenProofModal}
+                    type="button"
+                  >
+                    <Icon name="check" size={16} />
+                    <span>Selesai &amp; Serah Terima Bukti</span>
+                  </button>
+                )}
+
+                {currentStep === 3 && (
+                  <div className="waiting-client-pill">
+                    <Icon name="clock" size={15} />
+                    <span>Menunggu Review Klien</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="escrow-lifecycle-card">
+            <div className="escrow-lifecycle-header">
+              <div>
+                <h3>Radar Tugas Siap Siaga</h3>
+                <small>Tidak ada tugas yang sedang berjalan saat ini</small>
+              </div>
+              <button
+                className="btn-worker-action btn-worker-action--pink"
+                onClick={() => setCurrentMenu('peluang')}
+                type="button"
+              >
+                Cari Peluang Tugas Sekitar &rarr;
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* Right: Widget Perlu Tindakan (Action Items dari Panduan) */}
+        <section className="perlu-tindakan-card">
+          <div className="perlu-tindakan-header">
+            <div>
+              <h3>Perlu Tindakan</h3>
+              <small>Peluang percepatan order &amp; reputasi</small>
+            </div>
+            <span className="perlu-tindakan-counter-pill">{actionItems.length}</span>
+          </div>
+
+          <ul className="perlu-tindakan-list">
+            {actionItems.map((act) => (
+              <li key={act.id} className="perlu-tindakan-item">
+                <div className={`action-item-dot action-item-dot--${act.tone}`}>
+                  <Icon name={act.type === 'video' ? 'star' : act.type === 'review' ? 'check' : 'users'} size={15} />
+                </div>
+                <div className="action-item-text">
+                  <strong>{act.title}</strong>
+                  <small>{act.desc}</small>
+                </div>
+                {act.type === 'video' && onOpenQuizModal && (
+                  <button
+                    className="btn-action-item-go"
+                    onClick={onOpenQuizModal}
+                    title="Mulai Uji Kompetensi"
+                    type="button"
+                  >
+                    Mulai &rarr;
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      {/* 4. Rekomendasi Tugas Terdekat Untukmu (Grid 4 Kartu Horisontal) */}
+      <section className="dashboard-rekomendasi-section">
+        <div className="rekomendasi-header">
+          <div>
+            <h3>Tugas Terdekat Untukmu</h3>
+            <small>Pekerjaan instan terverifikasi escrow dalam radius 1–5 km</small>
+          </div>
+          <button
+            className="btn-view-all-link"
+            onClick={() => setCurrentMenu('peluang')}
+            type="button"
+          >
+            Lihat semua ({availableJobs.length}) &rarr;
+          </button>
+        </div>
+
+        <div className="rekomendasi-grid-cards">
+          {availableJobs.slice(0, 4).map((job) => (
+            <article
+              key={job.id}
+              className={`rekomendasi-task-card ${job.locked ? 'rekomendasi-task-card--locked' : ''}`}
+            >
+              <div className="rekomendasi-card-top">
+                <span className="task-tag-chip task-tag-chip--mint">{job.tag}</span>
+                <span className="rekomendasi-dist-tag">
+                  <Icon name="pin" size={12} /> {job.distance}
+                </span>
+              </div>
+              <h4>{job.title}</h4>
+              <p className="rekomendasi-meta">
+                <Icon name="clock" size={13} /> {job.duration} &bull; {job.clientName}
+              </p>
+              <div className="rekomendasi-pay-block">
+                <strong className="text-pink">Rp{job.netHonor.toLocaleString('id-ID')}</strong>
+                <small className="text-muted">bersih setelah komisi</small>
+              </div>
+              {job.locked ? (
+                <button
+                  className="btn-rekomendasi-action btn-rekomendasi-action--locked"
+                  disabled
+                  title="Selesaikan 3 tugas lagi untuk membuka akses ke Tier 2"
+                  type="button"
+                >
+                  <Icon name="lock" size={14} />
+                  <span>Buka di Tier 2</span>
+                </button>
+              ) : (
+                <button
+                  className="btn-rekomendasi-action"
+                  onClick={() => onOpenAcceptModal(job)}
+                  type="button"
+                >
+                  <span>Lihat &amp; Ambil Tugas</span>
+                </button>
+              )}
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. Realtime Double Analytics Chart dengan KPI Summary */}
       <div className="analytics-double-grid">
         {/* GRAFIK 1: BEBAN JAM KERJA MINGGUAN */}
         <div className="analytics-chart-card">
           <div className="analytics-chart-card__header">
             <div>
               <h3>Statistik Jam Kerja Mingguan</h3>
-              <small>Jumlah jam pengerjaan tugas mikro per hari (Realtime Interaktif)</small>
+              <small>Jumlah jam pengerjaan tugas mikro per hari</small>
             </div>
             <button className="chart-pill-selector" type="button">
               <span>Minggu Ini &rarr;</span>
             </button>
+          </div>
+
+          {/* KPI Summary Bar (Inspirasi Panduan) */}
+          <div className="chart-kpis-summary-bar">
+            <div className="kpi-mini-col">
+              <small>Total Jam</small>
+              <strong>34.5 jam</strong>
+            </div>
+            <div className="kpi-mini-col">
+              <small>Rata-rata/hari</small>
+              <strong>4.9 jam</strong>
+            </div>
+            <div className="kpi-mini-col">
+              <small>Vs minggu lalu</small>
+              <strong className="text-mint">+3.5 jam</strong>
+            </div>
           </div>
 
           <div className="svg-chart-container">
@@ -251,12 +514,28 @@ function WorkerBerandaView({
         <div className="analytics-chart-card">
           <div className="analytics-chart-card__header">
             <div>
-              <h3>Efisiensi &amp; Pendapatan Bersih</h3>
+              <h3>Efisiensi &amp; Pendapatan Bersih <InfoTooltip text="Komisi platform Tier 1 sebesar 8% transparan untuk asuransi perlindungan kerja & operasional escrow." /></h3>
               <small>Perbandingan honor diterima vs komisi platform transparan</small>
             </div>
             <div className="chart-legend-row">
               <span className="legend-item"><span className="legend-dot legend-dot--pink" /> Honor</span>
               <span className="legend-item"><span className="legend-dot legend-dot--navy" /> Komisi</span>
+            </div>
+          </div>
+
+          {/* KPI Summary Bar (Inspirasi Panduan) */}
+          <div className="chart-kpis-summary-bar">
+            <div className="kpi-mini-col">
+              <small>Honor Kotor (Nov)</small>
+              <strong>Rp850.000</strong>
+            </div>
+            <div className="kpi-mini-col">
+              <small>Komisi 8%</small>
+              <strong>Rp68.000</strong>
+            </div>
+            <div className="kpi-mini-col">
+              <small>Bersih Diterima</small>
+              <strong className="text-pink">Rp782.000</strong>
             </div>
           </div>
 
@@ -365,207 +644,149 @@ function WorkerBerandaView({
         </div>
       </div>
 
-      {/* 4. Kartu Alur Transaksi Escrow Interaktif (Stepper 4-5 Tahap - FR-402) */}
-      {activeTask && (
-        <section className="escrow-lifecycle-card">
-          <div className="escrow-lifecycle-header">
+      {/* 6. Row 5: Jadwal Mendatang & Aktivitas Terkini */}
+      <div className="jadwal-and-activity-grid">
+        {/* Jadwal Mendatang (Inspirasi Panduan) */}
+        <section className="jadwal-mendatang-card">
+          <div className="jadwal-header">
             <div>
-              <h3>Alur Pengerjaan Tugas &amp; Proteksi Escrow Terkunci ({activeTask.code})</h3>
-              <small>Bagaimana dana dan hak Anda dilindungi sejak pemesanan hingga pencairan selesai</small>
+              <h3>Jadwal Mendatang</h3>
+              <small>Agenda penugasan kerja yang telah terkonfirmasi</small>
             </div>
-            <span className="escrow-verified-pill">
-              <Icon name="shield" size={14} /> Terverifikasi Payment Gateway Berlisensi
+            <span className="jadwal-verified-chip">
+              <Icon name="check" size={13} /> Terjadwal
             </span>
           </div>
 
-          <div className="escrow-steps-grid">
-            <div className={`escrow-step-item ${currentStep >= 0 ? 'escrow-step-item--done' : ''}`}>
-              <div className="escrow-step-num">1</div>
-              <h4>Deposit Terkunci</h4>
-              <p>UMKM menyetor dana Rp{activeTask.grossHonor.toLocaleString('id-ID')} ke escrow penampung resmi. Dana aman terjamin.</p>
-            </div>
-            <div className="escrow-step-connector" />
-            <div className={`escrow-step-item ${currentStep >= 1 ? 'escrow-step-item--done' : currentStep === 1 ? 'escrow-step-item--highlight' : ''}`}>
-              <div className="escrow-step-num">2</div>
-              <h4>Menuju Lokasi</h4>
-              <p>Mitra bergerak ke alamat {activeTask.clientName}. Tekan tombol Check-in saat telah tiba di depan toko.</p>
-            </div>
-            <div className="escrow-step-connector" />
-            <div className={`escrow-step-item ${currentStep >= 2 ? 'escrow-step-item--done' : currentStep === 2 ? 'escrow-step-item--highlight' : ''}`}>
-              <div className="escrow-step-num">3</div>
-              <h4>Pengerjaan SOP</h4>
-              <p>Mengerjakan kriteria acceptance checklist sesuai instruksi K3 dan standar operasional kerja.</p>
-            </div>
-            <div className="escrow-step-connector" />
-            <div className={`escrow-step-item ${currentStep >= 3 ? 'escrow-step-item--done' : currentStep === 3 ? 'escrow-step-item--highlight' : ''}`}>
-              <div className="escrow-step-num">4</div>
-              <h4>Bukti Foto GPS</h4>
-              <p>Unggah foto serah terima ber-watermark GPS dan persetujuan tanda tangan digital pemilik toko.</p>
-            </div>
-            <div className="escrow-step-connector" />
-            <div className={`escrow-step-item ${currentStep >= 4 ? 'escrow-step-item--highlight' : ''}`}>
-              <div className="escrow-step-num">5</div>
-              <h4>Dana Cair ke Saldo</h4>
-              <p>Dana bersih Rp{activeTask.netHonor.toLocaleString('id-ID')} cair instan ke dompet Anda tanpa biaya admin.</p>
-            </div>
-          </div>
-
-          {/* Action Row Khusus Tugas Aktif */}
-          <div className="active-task-action-bar-row">
-            <div className="active-task-quick-info">
-              <span className="task-tag-chip task-tag-chip--pink">{activeTask.category}</span>
-              <strong>{activeTask.title}</strong> &bull; <span className="text-muted">{activeTask.clientName} ({activeTask.distance})</span>
-            </div>
-
-            <div className="active-task-buttons-cluster">
-              {currentStep === 1 && (
-                <button
-                  className="btn-worker-action btn-worker-action--primary"
-                  onClick={onCheckInArrived}
-                  type="button"
-                >
-                  <Icon name="pin" size={16} />
-                  <span>Saya Sudah Tiba di Lokasi Toko</span>
-                </button>
-              )}
-
-              {currentStep === 2 && (
-                <button
-                  className="btn-worker-action btn-worker-action--pink"
-                  onClick={onOpenProofModal}
-                  type="button"
-                >
-                  <Icon name="check-circle" size={16} />
-                  <span>Selesai &amp; Serah Terima Digital (Proof-of-Work)</span>
-                </button>
-              )}
-
-              {currentStep === 3 && (
-                <div className="waiting-client-pill">
-                  <Icon name="clock" size={15} />
-                  <span>Bukti telah diserahkan &bull; Menunggu review klien (Auto-release 24–48 jam)</span>
+          <ul className="jadwal-list">
+            {upcomingSchedule.map((sch) => (
+              <li key={sch.id} className="jadwal-item">
+                <div className="jadwal-icon-bubble">
+                  <Icon name="clock" size={16} />
                 </div>
-              )}
+                <div className="jadwal-item-info">
+                  <strong>{sch.title}</strong>
+                  <small>{sch.time} &bull; {sch.client} ({sch.distance})</small>
+                </div>
+                <button
+                  className="btn-jadwal-detail"
+                  onClick={() => {
+                    const el = document.getElementById('active-task-section')
+                    if (el) el.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  type="button"
+                >
+                  Detail
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-              <a
-                className="btn-worker-action btn-worker-action--whatsapp"
-                href={`https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20Dimas%20dari%20Relink%20terkait%20tugas%20${encodeURIComponent(activeTask.title)}.`}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <Icon name="whatsapp" size={16} />
-                <span>Chat Klien</span>
-              </a>
-
+        {/* Tabel Aktivitas Tugas Terkini */}
+        <div className="recent-orders-card" style={{ marginBottom: 0 }}>
+          <div className="recent-orders-card__header">
+            <div>
+              <h3>Aktivitas &amp; Peluang Tugas Terkini</h3>
+              <small>Daftar penugasan berjalan dan rekomendasi sekitar</small>
+            </div>
+            <div className="table-action-filters">
               <button
-                className="btn-worker-action btn-worker-action--sos"
-                onClick={onTriggerSos}
+                className="btn-view-kanban-link"
+                onClick={() => setCurrentMenu('peluang')}
                 type="button"
               >
-                <Icon name="alert" size={16} />
-                <span>Siaga SOS</span>
+                Buka Semua ({availableJobs.length}) &rarr;
               </button>
             </div>
           </div>
-        </section>
-      )}
 
-      {/* 5. Tabel Aktivitas Tugas Terkini (Identik dengan Recent Orders Card di Dashboard Perusahaan) */}
-      <div className="recent-orders-card">
-        <div className="recent-orders-card__header">
-          <div>
-            <h3>Aktivitas &amp; Peluang Tugas Terkini</h3>
-            <small>Daftar penugasan berjalan dan rekomendasi tugas sekitar radius 1–5 km</small>
-          </div>
-          <div className="table-action-filters">
-            <button
-              className="btn-view-kanban-link"
-              onClick={() => setCurrentMenu('peluang')}
-              type="button"
-            >
-              Buka Semua Peluang Tugas ({availableJobs.length}) &rarr;
-            </button>
-          </div>
-        </div>
-
-        <div className="table-responsive-wrapper">
-          <table className="clean-data-table">
-            <thead>
-              <tr>
-                <th width="40"><input aria-label="Pilih semua" type="checkbox" /></th>
-                <th>Kode</th>
-                <th>Tugas / Kategori</th>
-                <th>Pemesan (UMKM)</th>
-                <th>Jarak</th>
-                <th>Status</th>
-                <th>Honor Bersih</th>
-                <th>Tindakan</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Tugas Aktif Berjalan */}
-              {activeTask && (
-                <tr className="table-row--highlight">
-                  <td><input aria-label={`Pilih ${activeTask.code}`} type="checkbox" /></td>
-                  <td><strong>{activeTask.code}</strong></td>
-                  <td>
-                    <strong>{activeTask.title}</strong>
-                    <div className="text-muted text-small">{activeTask.category}</div>
-                  </td>
-                  <td>{activeTask.clientName}</td>
-                  <td>{activeTask.distance}</td>
-                  <td>
-                    <span className="table-status-pill table-status-pill--in-progress">
-                      {currentStep === 1 ? 'Menuju Lokasi' : currentStep === 2 ? 'Sedang Dikerjakan' : currentStep === 3 ? 'Review Bukti' : 'Selesai'}
-                    </span>
-                  </td>
-                  <td>
-                    <strong className="text-pink">Rp{activeTask.netHonor.toLocaleString('id-ID')}</strong>
-                  </td>
-                  <td>
-                    <button
-                      className="btn-table-action btn-table-action--pink"
-                      onClick={onOpenProofModal}
-                      type="button"
-                    >
-                      Buka Checklist
-                    </button>
-                  </td>
+          <div className="table-responsive-wrapper">
+            <table className="clean-data-table">
+              <thead>
+                <tr>
+                  <th>Kode</th>
+                  <th>Tugas / Kategori</th>
+                  <th>Pemesan</th>
+                  <th>Jarak</th>
+                  <th>Status</th>
+                  <th>Honor Bersih</th>
+                  <th>Tindakan</th>
                 </tr>
-              )}
+              </thead>
+              <tbody>
+                {activeTask && (
+                  <tr className="table-row--highlight">
+                    <td><strong>{activeTask.code}</strong></td>
+                    <td>
+                      <strong>{activeTask.title}</strong>
+                      <div className="text-muted text-small">{activeTask.category}</div>
+                    </td>
+                    <td>{activeTask.clientName}</td>
+                    <td>{activeTask.distance}</td>
+                    <td>
+                      <span className="table-status-pill table-status-pill--in-progress">
+                        {currentStep === 1 ? 'Menuju Lokasi' : currentStep === 2 ? 'Sedang Dikerjakan' : currentStep === 3 ? 'Review Bukti' : 'Selesai'}
+                      </span>
+                    </td>
+                    <td>
+                      <strong className="text-pink">Rp{activeTask.netHonor.toLocaleString('id-ID')}</strong>
+                    </td>
+                    <td>
+                      <button
+                        className="btn-table-action btn-table-action--pink"
+                        onClick={onOpenProofModal}
+                        type="button"
+                      >
+                        Buka Checklist
+                      </button>
+                    </td>
+                  </tr>
+                )}
 
-              {/* Daftar Peluang Tugas Baru */}
-              {availableJobs.map((job) => (
-                <tr key={job.id}>
-                  <td><input aria-label={`Pilih ${job.code}`} type="checkbox" /></td>
-                  <td><strong>{job.code}</strong></td>
-                  <td>
-                    <strong>{job.title}</strong>
-                    <div className="text-muted text-small">{job.category} &bull; {job.tag}</div>
-                  </td>
-                  <td>{job.clientName}</td>
-                  <td>{job.distance}</td>
-                  <td>
-                    <span className="table-status-pill table-status-pill--open">
-                      Tersedia
-                    </span>
-                  </td>
-                  <td>
-                    <strong className="text-navy">Rp{job.netHonor.toLocaleString('id-ID')}</strong>
-                  </td>
-                  <td>
-                    <button
-                      className="btn-table-action"
-                      onClick={() => onOpenAcceptModal(job)}
-                      type="button"
-                    >
-                      Ambil Tugas
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                {availableJobs.slice(0, 3).map((job) => (
+                  <tr key={job.id}>
+                    <td><strong>{job.code}</strong></td>
+                    <td>
+                      <strong>{job.title}</strong>
+                      <div className="text-muted text-small">{job.category} &bull; {job.tag}</div>
+                    </td>
+                    <td>{job.clientName}</td>
+                    <td>{job.distance}</td>
+                    <td>
+                      <span className="table-status-pill table-status-pill--open">
+                        {job.locked ? 'Tier 2' : 'Tersedia'}
+                      </span>
+                    </td>
+                    <td>
+                      <strong className="text-navy">Rp{job.netHonor.toLocaleString('id-ID')}</strong>
+                    </td>
+                    <td>
+                      {job.locked ? (
+                        <button
+                          className="btn-table-action"
+                          disabled
+                          style={{ opacity: 0.6, cursor: 'not-allowed' }}
+                          title="Buka di Tier 2"
+                          type="button"
+                        >
+                          Terkunci
+                        </button>
+                      ) : (
+                        <button
+                          className="btn-table-action"
+                          onClick={() => onOpenAcceptModal(job)}
+                          type="button"
+                        >
+                          Ambil Tugas
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
