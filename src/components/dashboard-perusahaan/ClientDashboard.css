@@ -321,6 +321,18 @@
   transition: background-color 160ms ease;
 }
 
+.topbar-chevron {
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.topbar-chevron--open {
+  transform: rotate(180deg);
+  color: var(--white);
+}
+
 .topbar-user-capsule:hover {
   background: rgba(255, 255, 255, 0.16);
 }

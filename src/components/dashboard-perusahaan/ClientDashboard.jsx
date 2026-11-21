@@ -823,7 +823,11 @@ function ClientDashboard() {
                   <strong>{currentUser.business_name || 'Toko Kue Bu Rina'}</strong>
                   <small>{currentUser.full_name || 'Admin UMKM'}</small>
                 </div>
-                <Icon name="arrow" size={12} />
+                <Icon
+                  className={`topbar-chevron ${showUserMenu ? 'topbar-chevron--open' : ''}`}
+                  name="chevron-down"
+                  size={14}
+                />
               </button>
 
               {showUserMenu && (
@@ -849,7 +853,7 @@ function ClientDashboard() {
                     onClick={handleLogout}
                     type="button"
                   >
-                    <Icon name="close" size={16} />
+                    <Icon name="logout" size={16} />
                     <span>Keluar Akun (Logout)</span>
                   </button>
                 </div>

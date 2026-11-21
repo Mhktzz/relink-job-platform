@@ -128,6 +128,22 @@ const paths = {
   ),
   'chevron-left': <path d="m15 18-6-6 6-6" />,
   'chevron-right': <path d="m9 18 6-6-6-6" />,
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
+  'chevron-up': <path d="m18 15-6-6-6 6" />,
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </>
+  ),
+  'log-out': (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </>
+  ),
   download: (
     <>
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

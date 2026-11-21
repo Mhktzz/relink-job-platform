@@ -349,7 +349,7 @@ function WorkerDashboard() {
               title="Keluar dari Akun"
               type="button"
             >
-              <Icon name="close" size={18} />
+              <Icon name="logout" size={18} />
               {isSidebarExpanded && <span>Keluar Akun</span>}
             </button>
           </div>
@@ -432,7 +432,11 @@ function WorkerDashboard() {
                   <strong>{workerProfile.name}</strong>
                   <small>{workerProfile.tierLabel}</small>
                 </div>
-                <Icon name="arrow" size={12} />
+                <Icon
+                  className={`topbar-chevron ${showUserDropdown ? 'topbar-chevron--open' : ''}`}
+                  name="chevron-down"
+                  size={14}
+                />
               </button>
 
               {showUserDropdown && (
@@ -469,7 +473,7 @@ function WorkerDashboard() {
                     onClick={handleLogout}
                     type="button"
                   >
-                    <Icon name="close" size={16} />
+                    <Icon name="logout" size={16} />
                     <span>Keluar Akun (Logout)</span>
                   </button>
                 </div>
