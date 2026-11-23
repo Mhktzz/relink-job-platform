@@ -8,7 +8,7 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
       done: item.done !== undefined ? item.done : true,
     }))
   )
-  const [photoUploaded, setPhotoUploaded] = useState(true)
+  const photoUploaded = true
   const [clientSignatureAccepted, setClientSignatureAccepted] = useState(false)
   const [workNotes, setWorkNotes] = useState('Pekerjaan telah selesai rapi dan sudah diuji coba bersama pemilik toko.')
 

@@ -60,7 +60,7 @@ function WorkerBerandaView({
         <div>
           <h1>Beranda Mitra Kerja</h1>
           <p>
-            Radar lokasimu aktif dalam radius 1–5 km. Selesaikan tugas tepat waktu, amankan honor escrow, dan bangun reputasimu.
+            Radar lokasimu {isAvailableNow ? 'aktif' : 'nonaktif'} dalam radius 1–5 km. Selesaikan tugas tepat waktu, amankan honor escrow, dan bangun reputasimu.
           </p>
         </div>
         <div className="escrow-header-actions">
@@ -216,7 +216,7 @@ function WorkerBerandaView({
               <div className="active-task-buttons-cluster">
                 <a
                   className="btn-worker-action btn-worker-action--whatsapp"
-                  href={`https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20Dimas%20dari%20Relink%20terkait%20tugas%20${encodeURIComponent(activeTask.title)}.`}
+                  href={`https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20${encodeURIComponent(workerProfile.name)}%20dari%20Relink%20terkait%20tugas%20${encodeURIComponent(activeTask.title)}.`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

@@ -1,5 +1,4 @@
 import technicianPhoto from '../../assets/technician.jpg'
-import cashierPhoto from '../../assets/cashier.jpg'
 
 export const initialWorkerProfile = {
   id: 'w-1',

@@ -2953,3 +2953,214 @@
     width: 100%;
   }
 }
+
+/* Cool, high-contrast surfaces for the worker dashboard navigation. */
+.worker-dashboard .admin-navy-sidebar {
+  background: #f2f6fc;
+  border-right-color: #dfe7f2;
+  box-shadow: 6px 0 24px rgba(27, 43, 92, 0.04);
+}
+
+.worker-dashboard .sidebar-brand-name {
+  color: var(--navy);
+}
+
+.worker-dashboard .group-label {
+  color: #75839b;
+}
+
+.worker-dashboard .sidebar-group--bottom {
+  border-top-color: #dfe7f2;
+}
+
+.worker-dashboard .sidebar-nav-item {
+  color: #52617a;
+}
+
+.worker-dashboard .sidebar-nav-item:not(.sidebar-nav-item--active):hover {
+  background: #e7eef9;
+  color: var(--navy);
+}
+
+.worker-dashboard .sidebar-nav-item--active,
+.worker-dashboard .sidebar-nav-item--active:hover,
+.worker-dashboard .sidebar-nav-item--active:focus {
+  background: #dce8f8;
+  color: var(--navy);
+  box-shadow: inset 3px 0 #4776b9, 0 3px 10px rgba(36, 74, 128, 0.08);
+}
+
+.worker-dashboard .sidebar-nav-item--logout {
+  color: #b42332;
+}
+
+.worker-dashboard .sidebar-nav-item--logout:hover {
+  background: #fff0f1;
+  color: #a11b28;
+}
+
+.worker-dashboard .sidebar-nav-item:not(.sidebar-nav-item--active) .nav-counter-pill:not(.nav-counter-pill--escrow) {
+  background: #e1eaf7 !important;
+  color: #385273 !important;
+}
+
+.worker-dashboard .sidebar-nav-item--active .nav-counter-pill:not(.nav-counter-pill--escrow) {
+  background: #fff !important;
+  color: var(--navy) !important;
+}
+
+.worker-dashboard .admin-navy-topbar {
+  background: #f7f9fd;
+  border-bottom-color: #e1e8f2;
+  box-shadow: 0 4px 16px rgba(27, 43, 92, 0.035);
+}
+
+.worker-dashboard .topbar-search {
+  background: #fff;
+  border-color: #dce5f1;
+  color: #64748b;
+}
+
+.worker-dashboard .topbar-search:focus-within {
+  background: #fff;
+  border-color: #8ca9d0;
+  box-shadow: 0 0 0 3px rgba(71, 118, 185, 0.12);
+}
+
+.worker-dashboard .topbar-search input {
+  color: var(--navy);
+}
+
+.worker-dashboard .topbar-search input::placeholder {
+  color: #8794a9;
+}
+
+.worker-dashboard .search-shortcut-badge {
+  color: #53647d;
+  background: #f1f5fa;
+  border-color: #dfe7f1;
+}
+
+.worker-dashboard .topbar-radar-toggle-pill {
+  background: #fff;
+  border-color: #dce5f1;
+  color: #52617a;
+}
+
+.worker-dashboard .topbar-radar-toggle-pill:hover {
+  background: #edf3fa;
+}
+
+.worker-dashboard .topbar-radar-toggle-pill--active {
+  background: #e7f8f2;
+  border-color: #9bdcc8;
+  color: #087451;
+  box-shadow: none;
+}
+
+.worker-dashboard .radar-indicator-dot--active {
+  background: #0c9b70;
+  box-shadow: 0 0 0 3px rgba(12, 155, 112, 0.16);
+}
+
+.worker-dashboard .topbar-action-icon {
+  background: #fff;
+  border-color: #dce5f1;
+  color: #52617a;
+}
+
+.worker-dashboard .topbar-action-icon:hover,
+.worker-dashboard .topbar-action-icon--active {
+  background: #e8f0fb;
+  border-color: #c9d8ec;
+  color: #244a80;
+}
+
+.worker-dashboard .topbar-user-capsule {
+  background: #fff;
+  border-color: #dce5f1;
+  color: var(--navy);
+}
+
+.worker-dashboard .topbar-user-capsule:hover {
+  background: #edf3fa;
+}
+
+.worker-dashboard .topbar-chevron {
+  color: #66758d;
+}
+
+.worker-dashboard .topbar-chevron--open,
+.worker-dashboard .topbar-user-info strong {
+  color: var(--navy);
+}
+
+.worker-dashboard .topbar-user-info small {
+  color: #65748c;
+}
+
+.worker-dashboard .mobile-bottom-nav {
+  background: rgba(247, 249, 253, 0.97);
+  border-top-color: #dfe7f2;
+  box-shadow: 0 -6px 18px rgba(27, 43, 92, 0.06);
+}
+
+.worker-dashboard .bottom-nav-item {
+  color: #5b6b84;
+}
+
+.worker-dashboard .bottom-nav-item--active {
+  color: #315f9d;
+}
+
+.worker-dashboard :is(button, a, input, select):focus-visible {
+  outline: 3px solid rgba(71, 118, 185, 0.55);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .worker-dashboard .admin-navy-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'brand actions'
+      'search search';
+    gap: 10px 12px;
+    padding: 10px 14px;
+  }
+
+  .worker-dashboard .topbar-brand-mobile {
+    grid-area: brand;
+    min-width: 0;
+  }
+
+  .worker-dashboard .topbar-brand-icon {
+    height: 24px;
+  }
+
+  .worker-dashboard .topbar-brand-name {
+    color: var(--navy);
+    font-size: 15px;
+  }
+
+  .worker-dashboard .topbar-search {
+    grid-area: search;
+    width: 100%;
+  }
+
+  .worker-dashboard .topbar-actions {
+    grid-area: actions;
+    gap: 8px;
+  }
+
+  .worker-dashboard .topbar-radar-toggle-pill {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .worker-dashboard .topbar-radar-toggle-pill > span:not(.radar-indicator-dot) {
+    display: none;
+  }
+}

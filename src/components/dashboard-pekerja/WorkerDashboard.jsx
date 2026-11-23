@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import relinkIcon from '../../assets/main-relink-1.svg'
+import relinkDarkLogo from '../../assets/main-relink-dark.svg'
 import Icon from '../common/Icon.jsx'
 import { supabase } from '../../lib/supabaseClient.js'
 import {
@@ -56,8 +57,8 @@ function WorkerDashboard() {
   const [activeTask, setActiveTask] = useState(initialActiveTask)
   const [availableJobs, setAvailableJobs] = useState(initialAvailableJobs)
   const [walletData, setWalletData] = useState(initialWalletData)
-  const [actionItems, setActionItems] = useState(initialActionItems)
-  const [upcomingSchedule, setUpcomingSchedule] = useState(initialUpcomingSchedule)
+  const actionItems = initialActionItems
+  const upcomingSchedule = initialUpcomingSchedule
   const [isAvailableNow, setIsAvailableNow] = useState(true)
 
   // State Modals
@@ -252,7 +253,7 @@ function WorkerDashboard() {
   }
 
   return (
-    <div className="admin-clean-app">
+    <div className="admin-clean-app worker-dashboard">
       {/* 1. SIDEBAR NAVY DENGAN PENGELOMPOKAN MENU (KONSISTEN DENGAN DASHBOARD PERUSAHAAN) */}
       <aside
         className={`admin-navy-sidebar${isSidebarExpanded ? ' admin-navy-sidebar--expanded' : ' admin-navy-sidebar--collapsed'}`}
@@ -326,7 +327,7 @@ function WorkerDashboard() {
             <button
               className={`sidebar-nav-item${currentMenu === 'pekerjaan-saya' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => {
-                setCurrentMenu('beranda')
+                setCurrentMenu('pekerjaan-saya')
                 setTimeout(() => {
                   const el = document.getElementById('active-task-section')
                   if (el) el.scrollIntoView({ behavior: 'smooth' })
@@ -357,7 +358,7 @@ function WorkerDashboard() {
               onClick={() => {
                 if (activeTask?.clientPhone) {
                   window.open(
-                    `https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20Dimas%20dari%20Relink%20terkait%20tugas%20${encodeURIComponent(activeTask.title)}.`,
+                    `https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20${encodeURIComponent(workerProfile.name)}%20dari%20Relink%20terkait%20tugas%20${encodeURIComponent(activeTask.title)}.`,
                     '_blank'
                   )
                 } else {
@@ -410,8 +411,8 @@ function WorkerDashboard() {
               onClick={() => setCurrentMenu('beranda')}
               type="button"
             >
-              <img alt="Relink Logo" className="topbar-brand-icon" src={relinkIcon} />
-              <span className="topbar-brand-name">Relink Mitra</span>
+              <img alt="Relink" className="topbar-brand-icon" src={relinkDarkLogo} />
+              <span className="topbar-brand-name">Mitra</span>
             </button>
           </div>
 
@@ -432,6 +433,7 @@ function WorkerDashboard() {
             {/* Toggle Status Siap Kerja Instan di Topbar */}
             <button
               className={`topbar-radar-toggle-pill ${isAvailableNow ? 'topbar-radar-toggle-pill--active' : ''}`}
+              aria-label={isAvailableNow ? 'Nonaktifkan status siap kerja' : 'Aktifkan status siap kerja'}
               onClick={() => setIsAvailableNow(!isAvailableNow)}
               title={isAvailableNow ? 'Radar Aktif: Menerima Order Instan' : 'Radar Nonaktif: Istirahat'}
               type="button"
@@ -534,7 +536,7 @@ function WorkerDashboard() {
         )}
 
         {/* MODULAR VIEWS ROUTING */}
-        {currentMenu === 'beranda' && (
+        {(currentMenu === 'beranda' || currentMenu === 'pekerjaan-saya') && (
           <WorkerBerandaView
             actionItems={actionItems}
             activeTask={activeTask}
@@ -584,7 +586,7 @@ function WorkerDashboard() {
       {/* 3. MOBILE & TABLET BOTTOM APP NAVIGATION BAR */}
       <nav aria-label="Navigasi Menu Pekerja" className="mobile-bottom-nav">
         <button
-          className={`bottom-nav-item${currentMenu === 'beranda' ? ' bottom-nav-item--active' : ''}`}
+          className={`bottom-nav-item${currentMenu === 'beranda' || currentMenu === 'pekerjaan-saya' ? ' bottom-nav-item--active' : ''}`}
           onClick={() => {
             setCurrentMenu('beranda')
             window.scrollTo({ top: 0, behavior: 'smooth' })
