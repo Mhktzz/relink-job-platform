@@ -13,9 +13,6 @@ function RadarMitraView({
           <h1>Radar Mitra Terdekat (1–5 km)</h1>
           <p>Mitra berkeahlian di sekitar toko Anda. 30% slot teratas dicadangkan untuk Rising Star.</p>
         </div>
-        <button className="btn-create-pill" onClick={() => setCurrentMenu('beranda')} type="button">
-          Kembali ke Dashboard
-        </button>
       </div>
 
       <div className="nearby-workers-grid">
