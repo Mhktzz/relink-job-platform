@@ -93,7 +93,12 @@ function WorkerBerandaView({
       {/* 2. ROW 1: 4 KARTU STATISTIK UTAMA (BOOKED TODAY / WAITING NOW / PATIENTS / STAFF) */}
       <section className="clean-stat-cards-grid">
         {/* Card 1: Tugas Aktif */}
-        <article className="clean-stat-card">
+        <article
+          className="clean-stat-card"
+          onClick={() => setCurrentMenu('pekerjaan-saya')}
+          style={{ cursor: 'pointer' }}
+          title="Buka Menu Pekerjaan Saya"
+        >
           <div className="clean-stat-card__top">
             <div className="clean-stat-card__label-group">
               <Icon name="briefcase" size={13} />
@@ -105,7 +110,7 @@ function WorkerBerandaView({
             {activeTasksCount < 10 ? `0${activeTasksCount}` : activeTasksCount}
           </div>
           <div className="clean-stat-card__subtext">
-            {activeTask ? activeTask.clientName : 'Belum ada tugas berjalan'}
+            {activeTask ? `${activeTask.clientName} • Buka →` : 'Belum ada tugas berjalan'}
           </div>
         </article>
 
@@ -315,106 +320,67 @@ function WorkerBerandaView({
 
       {/* 5. ROW 4: ALUR TUGAS AKTIF & AGENDA PERLU TINDAKAN */}
       <div className="clean-bottom-sections-grid">
-        {/* Kolom Kiri: Alur Transaksi Escrow Interaktif */}
+        {/* Kolom Kiri: Status Tugas Berjalan atau Radar Siap Order */}
         {activeTask ? (
-          <section className="clean-card clean-active-task-card" id="active-task-section">
-            <div className="clean-card__header">
-              <div>
-                <span className="clean-section-eyebrow">TUGAS SEDANG BERJALAN</span>
-                <h3 className="clean-card-title">{activeTask.title}</h3>
-                <p className="clean-card-subtitle">
-                  {activeTask.clientName} • <Icon name="pin" size={12} /> {activeTask.distance} • Estimasi tiba 6 menit
-                </p>
-              </div>
-              <span className="clean-badge clean-badge--mint">
-                <Icon name="shield" size={13} /> Escrow {activeTask.escrowRef}
-              </span>
-            </div>
-
-            {/* Stepper 5 Tahap Transparan */}
-            <div className="clean-stepper-row">
-              {[
-                { step: 1, title: 'Dana Ditahan', desc: `Rp${activeTask.grossHonor.toLocaleString('id-ID')}` },
-                { step: 2, title: 'Menuju Lokasi', desc: 'Check-in saat tiba' },
-                { step: 3, title: 'Pengerjaan', desc: 'Sesuai SOP checklist' },
-                { step: 4, title: 'Review Bukti', desc: 'Konfirmasi Klien' },
-                { step: 5, title: 'Dana Cair', desc: `Rp${activeTask.netHonor.toLocaleString('id-ID')}` },
-              ].map((s, idx) => {
-                const isDone = currentStep >= s.step
-                const isCurrent = currentStep === s.step - 1
-
-                return (
-                  <div key={s.step} className="clean-stepper-node-wrapper">
-                    <div className="clean-stepper-node">
-                      <div className={`clean-step-circle ${isDone ? 'clean-step-circle--done' : isCurrent ? 'clean-step-circle--active' : ''}`}>
-                        {isDone ? <Icon name="check" size={12} /> : s.step}
-                      </div>
-                      <div className="clean-step-labels">
-                        <strong className={isCurrent ? 'text-pink' : ''}>{s.title}</strong>
-                        <small>{s.desc}</small>
-                      </div>
-                    </div>
-                    {idx < 4 && <div className={`clean-step-line ${currentStep > idx ? 'clean-step-line--done' : ''}`} />}
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Baris Tombol Aksi */}
-            <div className="clean-active-task-actions">
-              <div className="clean-active-task-honor">
-                <span className="text-muted">Honor Bersih:</span>
-                <strong className="text-pink">Rp{activeTask.netHonor.toLocaleString('id-ID')}</strong>
+          <section className="clean-card clean-active-task-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div className="clean-card__header">
+                <div>
+                  <span className="clean-section-eyebrow">TUGAS SEDANG BERJALAN</span>
+                  <h3 className="clean-card-title">{activeTask.title}</h3>
+                  <p className="clean-card-subtitle">
+                    Klien: <strong>{activeTask.clientName}</strong> • <Icon name="pin" size={12} /> {activeTask.distance} • Honor Bersih: <strong className="text-pink">Rp{activeTask.netHonor?.toLocaleString('id-ID')}</strong>
+                  </p>
+                </div>
+                <span className="clean-badge clean-badge--mint">
+                  <Icon name="shield" size={13} /> Escrow {activeTask.escrowRef}
+                </span>
               </div>
 
-              <div className="clean-active-task-btn-group">
-                <a
-                  className="clean-btn-pill clean-btn-pill--whatsapp"
-                  href={`https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20${encodeURIComponent(workerProfile.name)}%20dari%20Relink.`}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <Icon name="chat" size={14} />
-                  <span>Chat Klien</span>
-                </a>
-
+              <div
+                style={{
+                  background: '#f8fafc',
+                  padding: '14px 18px',
+                  borderRadius: '12px',
+                  border: '1px solid #edf2f7',
+                  margin: '12px 0 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div>
+                  <small style={{ color: '#64748b', display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Status Pengerjaan
+                  </small>
+                  <strong style={{ color: 'var(--navy)', fontSize: '14px' }}>
+                    {currentStep === 1 && 'Tahap 1: Menuju Lokasi (Perlu Check-in)'}
+                    {currentStep === 2 && 'Tahap 2: Pengerjaan Sesuai SOP'}
+                    {currentStep === 3 && 'Tahap 3: Menunggu Review Klien'}
+                    {currentStep >= 4 && 'Tahap Selesai: Dana Siap Cair'}
+                  </strong>
+                </div>
                 <button
-                  className="clean-btn-pill clean-btn-pill--sos"
-                  onClick={onTriggerSos}
+                  className="clean-btn-pill clean-btn-pill--primary"
+                  onClick={() => setCurrentMenu('pekerjaan-saya')}
                   type="button"
                 >
-                  <Icon name="alert" size={14} />
-                  <span>SOS</span>
+                  Kelola di Pekerjaan Saya &rarr;
                 </button>
-
-                {currentStep === 1 && (
-                  <button
-                    className="clean-btn-pill clean-btn-pill--primary"
-                    onClick={onCheckInArrived}
-                    type="button"
-                  >
-                    <Icon name="pin" size={14} />
-                    <span>Check-in di Lokasi</span>
-                  </button>
-                )}
-
-                {currentStep === 2 && (
-                  <button
-                    className="clean-btn-pill clean-btn-pill--pink"
-                    onClick={onOpenProofModal}
-                    type="button"
-                  >
-                    <Icon name="check" size={14} />
-                    <span>Serahkan Bukti Hasil</span>
-                  </button>
-                )}
-
-                {currentStep === 3 && (
-                  <span className="clean-badge clean-badge--navy">
-                    <Icon name="clock" size={13} /> Menunggu Review Klien
-                  </span>
-                )}
               </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '12px', fontSize: '12.5px', color: '#64748b' }}>
+              <span>Perlindungan 100% Escrow Relink</span>
+              <button
+                onClick={() => setCurrentMenu('pekerjaan-saya')}
+                style={{ background: 'transparent', border: 0, color: 'var(--navy)', fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                type="button"
+              >
+                Buka Halaman Tugas &rarr;
+              </button>
             </div>
           </section>
         ) : (

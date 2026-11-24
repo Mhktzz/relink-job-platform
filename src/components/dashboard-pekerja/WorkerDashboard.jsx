@@ -18,6 +18,7 @@ import {
 } from './workerMockData.js'
 
 import WorkerBerandaView from './views/WorkerBerandaView.jsx'
+import PekerjaanSayaView from './views/PekerjaanSayaView.jsx'
 import PeluangTugasView from './views/PeluangTugasView.jsx'
 import TierReputasiView from './views/TierReputasiView.jsx'
 import DompetMitraView from './views/DompetMitraView.jsx'
@@ -553,13 +554,7 @@ function WorkerDashboard() {
 
             <button
               className={`sidebar-nav-item${currentMenu === 'pekerjaan-saya' ? ' sidebar-nav-item--active' : ''}`}
-              onClick={() => {
-                setCurrentMenu('pekerjaan-saya')
-                setTimeout(() => {
-                  const el = document.getElementById('active-task-section')
-                  if (el) el.scrollIntoView({ behavior: 'smooth' })
-                }, 100)
-              }}
+              onClick={() => setCurrentMenu('pekerjaan-saya')}
               title="Pekerjaan Saya yang Sedang Berjalan"
               type="button"
             >
@@ -762,7 +757,7 @@ function WorkerDashboard() {
         )}
 
         {/* MODULAR VIEWS ROUTING */}
-        {(currentMenu === 'beranda' || currentMenu === 'pekerjaan-saya') && (
+        {currentMenu === 'beranda' && (
           <WorkerBerandaView
             actionItems={actionItems}
             activeTask={activeTask}
@@ -778,6 +773,19 @@ function WorkerDashboard() {
             setIsAvailableNow={setIsAvailableNow}
             upcomingSchedule={upcomingSchedule}
             walletData={walletData}
+            workerProfile={workerProfile}
+          />
+        )}
+
+        {currentMenu === 'pekerjaan-saya' && (
+          <PekerjaanSayaView
+            actionItems={actionItems}
+            activeTask={activeTask}
+            onCheckInArrived={handleCheckInArrived}
+            onOpenProofModal={() => setShowProofModal(true)}
+            onTriggerSos={handleTriggerSos}
+            setCurrentMenu={setCurrentMenu}
+            upcomingSchedule={upcomingSchedule}
             workerProfile={workerProfile}
           />
         )}
@@ -812,7 +820,7 @@ function WorkerDashboard() {
       {/* 3. MOBILE & TABLET BOTTOM APP NAVIGATION BAR */}
       <nav aria-label="Navigasi Menu Pekerja" className="mobile-bottom-nav">
         <button
-          className={`bottom-nav-item${currentMenu === 'beranda' || currentMenu === 'pekerjaan-saya' ? ' bottom-nav-item--active' : ''}`}
+          className={`bottom-nav-item${currentMenu === 'beranda' ? ' bottom-nav-item--active' : ''}`}
           onClick={() => {
             setCurrentMenu('beranda')
             window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -821,6 +829,21 @@ function WorkerDashboard() {
         >
           <Icon name="home" size={20} />
           <span>Beranda</span>
+        </button>
+
+        <button
+          className={`bottom-nav-item${currentMenu === 'pekerjaan-saya' ? ' bottom-nav-item--active' : ''}`}
+          onClick={() => {
+            setCurrentMenu('pekerjaan-saya')
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          type="button"
+        >
+          <div className="bottom-nav-icon-wrap">
+            <Icon name="briefcase" size={20} />
+            {activeTask && <span className="bottom-nav-badge">1</span>}
+          </div>
+          <span>Tugas</span>
         </button>
 
         <button
