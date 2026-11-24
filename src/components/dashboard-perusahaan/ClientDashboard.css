@@ -3118,13 +3118,13 @@
   .topbar-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     width: 100%;
-    gap: 12px;
+    gap: 8px;
   }
 
   .topbar-user-wrapper {
     order: -1;
+    margin-right: auto;
   }
 
   /* KANBAN: Swipeable Horizontal Carousel */
