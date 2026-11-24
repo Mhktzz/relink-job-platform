@@ -553,7 +553,7 @@ function AuthPage({ mode, role }) {
                     {!errors.passwordConfirm && isPasswordMatched && (
                       <span className="auth-field-success" role="status">
                         <Icon name="check" size={13} />
-                        <span>password sudah sesuai</span>
+                        <span>Password Sudah Sesuai</span>
                       </span>
                     )}
                     {!errors.passwordConfirm && isPasswordMismatch && (
@@ -865,7 +865,7 @@ function AuthPage({ mode, role }) {
                       {!errors.passwordConfirm && isPasswordMatched && (
                         <span className="auth-field-success" role="status">
                           <Icon name="check" size={13} />
-                          <span>password sudah sesuai</span>
+                          <span>Password Sudah Sesuai</span>
                         </span>
                       )}
                       {!errors.passwordConfirm && isPasswordMismatch && (
