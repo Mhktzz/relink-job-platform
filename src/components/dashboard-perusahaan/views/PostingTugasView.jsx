@@ -26,9 +26,6 @@ function PostingTugasView({
           <h1>Smart Task Posting</h1>
           <p>Formulir posting kebutuhan UMKM dengan penyesuaian tier dan opsi Paket Tandem.</p>
         </div>
-        <button className="btn-create-pill" onClick={() => setCurrentMenu('beranda')} type="button">
-          Batal & Kembali
-        </button>
       </div>
 
       <div className="task-posting-layout">
