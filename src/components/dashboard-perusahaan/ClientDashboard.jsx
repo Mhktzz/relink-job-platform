@@ -27,6 +27,7 @@ import PostingTugasView from './views/PostingTugasView.jsx'
 import DanaEscrowView from './views/DanaEscrowView.jsx'
 import PusatBantuanView from './views/PusatBantuanView.jsx'
 import DataTugasView from './views/DataTugasView.jsx'
+import PengaturanView from './views/PengaturanView.jsx'
 import ProofModal from './modals/ProofModal.jsx'
 import EscrowDetailModal from './modals/EscrowDetailModal.jsx'
 import DisputeModal from './modals/DisputeModal.jsx'
@@ -289,6 +290,31 @@ function ClientDashboard() {
     }
     localStorage.removeItem('relink_user')
     window.location.href = '/masuk?peran=umkm'
+  }
+
+  // Handler Perbarui Profil & Pengaturan UMKM
+  async function handleUpdateProfile(updatedData) {
+    const updatedUser = {
+      ...currentUser,
+      ...updatedData,
+    }
+    setCurrentUser(updatedUser)
+    try {
+      localStorage.setItem('relink_user', JSON.stringify(updatedUser))
+      if (updatedUser.id) {
+        await supabase
+          .from('profiles')
+          .update({
+            full_name: updatedUser.full_name,
+            business_name: updatedUser.business_name,
+          })
+          .eq('id', updatedUser.id)
+      }
+    } catch (e) {
+      console.warn('Profile sync warning:', e)
+    }
+    setActionSuccessMsg('Profil dan pengaturan toko berhasil diperbarui!')
+    setTimeout(() => setActionSuccessMsg(''), 4000)
   }
 
   // Sinkronisasi data awal dari Supabase Database (dengan fallback data lokal)
@@ -771,9 +797,9 @@ function ClientDashboard() {
           <div className="sidebar-group sidebar-group--bottom">
             {isSidebarExpanded && <span className="group-label">Pengaturan</span>}
             <button
-              className="sidebar-nav-item"
-              onClick={() => alert('Menu Pengaturan: Konfigurasi profil UMKM, jam operasional, dan staf toko.')}
-              title="Pengaturan"
+              className={`sidebar-nav-item${currentMenu === 'pengaturan' ? ' sidebar-nav-item--active' : ''}`}
+              onClick={() => setCurrentMenu('pengaturan')}
+              title="Pengaturan Profil UMKM, Jam Operasional & Escrow"
               type="button"
             >
               <Icon name="settings" size={18} />
@@ -860,6 +886,17 @@ function ClientDashboard() {
                     <small>{currentUser.email || 'Akun UMKM Terverifikasi'}</small>
                   </div>
                   <div className="dropdown-divider" />
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      setShowUserMenu(false)
+                      setCurrentMenu('pengaturan')
+                    }}
+                    type="button"
+                  >
+                    <Icon name="settings" size={16} />
+                    <span>Pengaturan Toko &amp; Akun</span>
+                  </button>
                   <button
                     className="dropdown-item"
                     onClick={() => {
@@ -1018,6 +1055,15 @@ function ClientDashboard() {
             setActionSuccessMsg={setActionSuccessMsg}
             setCurrentMenu={setCurrentMenu}
             tasks={tasks}
+          />
+        )}
+
+        {currentMenu === 'pengaturan' && (
+          <PengaturanView
+            currentUser={currentUser}
+            onUpdateProfile={handleUpdateProfile}
+            setActionSuccessMsg={setActionSuccessMsg}
+            setCurrentMenu={setCurrentMenu}
           />
         )}
       </div>
