@@ -1,11 +1,13 @@
-.pengaturan-view {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  animation: fadeInView 0.25s ease-out;
+/* ========================================================
+   PENGATURAN VIEW — DASHBOARD PERUSAHAAN / UMKM RELINK
+   ======================================================== */
+
+.pengaturan-dashboard-flow {
+  padding-bottom: 80px;
+  animation: fadeInPengaturan 0.22s ease-out;
 }
 
-@keyframes fadeInView {
+@keyframes fadeInPengaturan {
   from {
     opacity: 0;
     transform: translateY(6px);
@@ -16,113 +18,98 @@
   }
 }
 
-/* Header Halaman Pengaturan */
-.pengaturan-header {
+/* 1. Header Actions */
+.pengaturan-header-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.pengaturan-header-title-box {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/* 2. Capsule Pill Tabs Bar */
+.pengaturan-tabs-wrapper {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 5px;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  box-shadow: 0 1px 3px rgba(15, 27, 61, 0.04);
 }
 
-.pengaturan-icon-bubble {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: rgba(15, 27, 61, 0.06);
-  color: var(--navy);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.pengaturan-tabs-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
-.pengaturan-header-title-box h1 {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--navy);
-  margin: 0 0 4px 0;
-  letter-spacing: -0.02em;
-}
-
-.pengaturan-header-title-box p {
-  font-size: 13px;
-  color: var(--ink-muted);
-  margin: 0;
-}
-
-/* Tab Navigasi Pengaturan */
 .pengaturan-tabs-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.pengaturan-tabs-bar::-webkit-scrollbar {
-  display: none;
+  gap: 4px;
 }
 
 .pengaturan-tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 9px 18px;
+  border-radius: 999px;
   border: 0;
   background: transparent;
-  color: var(--ink-muted);
-  font-family: inherit;
+  color: #64748b;
+  font-family: var(--font-display);
   font-size: 13px;
   font-weight: 700;
-  border-radius: 12px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 160ms ease;
+  transition: all 180ms ease;
 }
 
 .pengaturan-tab-btn:hover {
   color: var(--navy);
-  background: rgba(15, 27, 61, 0.04);
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .pengaturan-tab-btn--active {
-  color: var(--navy) !important;
-  background: #fff !important;
-  box-shadow: 0 2px 8px rgba(15, 27, 61, 0.08);
-  border: 1px solid #e2e8f0;
+  background: var(--navy) !important;
+  color: var(--white) !important;
+  box-shadow: 0 4px 14px rgba(15, 27, 61, 0.18);
+  font-weight: 800;
 }
 
-/* Container Kartu Pengaturan */
+.pengaturan-tab-btn svg {
+  flex-shrink: 0;
+}
+
+/* 3. Container Kartu Pengaturan Utama */
 .pengaturan-card-section {
-  background: #fff;
-  border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  padding: 28px;
+  background: var(--white);
+  border-radius: 24px;
+  border: 1px solid #edf2f7;
+  padding: 32px;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  box-shadow: 0 4px 16px rgba(15, 27, 61, 0.02);
+  box-shadow: 0 4px 20px rgba(15, 27, 61, 0.03);
 }
 
 .pengaturan-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid #f1f5f9;
   padding-bottom: 16px;
+  gap: 16px;
 }
 
 .pengaturan-card-header h2 {
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 18px;
   font-weight: 800;
   color: var(--navy);
   margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
 }
 
 .pengaturan-card-header p {
@@ -131,11 +118,91 @@
   margin: 0;
 }
 
-/* Layout Form Grid */
+/* 4. Banner Profil Toko & Usaha */
+.pengaturan-profile-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 20px;
+  padding: 22px 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.pengaturan-avatar-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ff3d8b 0%, #ff6aa5 100%);
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 18px rgba(255, 61, 139, 0.28);
+}
+
+.pengaturan-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pengaturan-profile-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pengaturan-profile-title-row h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.pengaturan-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.pengaturan-verified-badge svg {
+  color: #059669;
+}
+
+.pengaturan-profile-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+
+.meta-separator {
+  color: #cbd5e1;
+}
+
+/* 5. Layout Form Grid */
 .pengaturan-form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: 20px 24px;
 }
 
 .pengaturan-form-grid--full {
@@ -145,188 +212,161 @@
 .pengaturan-form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pengaturan-form-group label {
-  font-size: 13px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 800;
   color: var(--navy);
+  letter-spacing: -0.01em;
 }
 
-.pengaturan-form-group input,
-.pengaturan-form-group select,
-.pengaturan-form-group textarea {
+/* Input Wrapper Dengan Icon */
+.pengaturan-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid #dce2ed;
+}
+
+.pengaturan-input-icon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.pengaturan-input-wrapper input,
+.pengaturan-input-wrapper select {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  border: 1.5px solid #dce2ed;
+  border-radius: 14px;
   background: #fff;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--navy);
   transition: all 160ms ease;
   box-sizing: border-box;
 }
 
-.pengaturan-form-group input:focus,
-.pengaturan-form-group select:focus,
+.pengaturan-input-wrapper input:focus,
+.pengaturan-input-wrapper select:focus,
 .pengaturan-form-group textarea:focus {
   outline: none;
   border-color: var(--mint);
-  box-shadow: 0 0 0 3px rgba(61, 224, 176, 0.2);
+  box-shadow: 0 0 0 4px rgba(61, 224, 176, 0.16);
 }
 
-.pengaturan-form-group input:disabled {
+.pengaturan-input-wrapper input:hover:not(:focus):not(:disabled),
+.pengaturan-input-wrapper select:hover:not(:focus):not(:disabled),
+.pengaturan-form-group textarea:hover:not(:focus) {
+  border-color: #cbd5e1;
+}
+
+.pengaturan-input-wrapper input:disabled {
   background: #f8fafc;
-  color: #94a3b8;
+  color: #64748b;
+  border-color: #e2e8f0;
   cursor: not-allowed;
 }
 
 .pengaturan-form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #dce2ed;
+  background: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--navy);
   resize: vertical;
-  min-height: 80px;
+  min-height: 84px;
+  box-sizing: border-box;
+  transition: all 160ms ease;
 }
 
 .pengaturan-field-hint {
   font-size: 11.5px;
-  color: var(--ink-muted);
+  color: #8c9cb8;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
-/* Banner Profil UMKM Terverifikasi */
-.pengaturan-profile-banner {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: #f8fafc;
-  border-radius: 16px;
-  padding: 20px;
-  border: 1px solid #e2e8f0;
-}
-
-.pengaturan-avatar-huge {
-  width: 68px;
-  height: 68px;
-  border-radius: 20px;
-  background: var(--pink);
-  color: var(--navy);
-  font-size: 24px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 6px 16px rgba(255, 77, 106, 0.24);
-}
-
-.pengaturan-profile-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.pengaturan-profile-info strong {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--navy);
-}
-
-.pengaturan-profile-info span {
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-
-.pengaturan-verified-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: #ecfdf5;
-  color: #059669;
-  font-size: 12px;
-  font-weight: 700;
-  width: fit-content;
-}
-
-/* Kartu Status Legalitas NIB */
+/* 6. Legalitas Usaha Cards */
 .legalitas-status-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
 .legalitas-card {
-  padding: 20px;
-  border-radius: 16px;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
-  background: #fff;
+  border-radius: 18px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .legalitas-card--highlight {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
+  background: #f0fdf9;
+  border-color: #a7f3d0;
 }
 
 .legalitas-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .legalitas-card-top strong {
+  font-family: var(--font-display);
   font-size: 14px;
+  font-weight: 800;
   color: var(--navy);
-}
-
-.legalitas-badge {
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.legalitas-badge--verified {
-  background: #dcfce7;
-  color: #15803d;
 }
 
 .legalitas-card p {
   font-size: 12.5px;
-  color: var(--ink-muted);
+  color: #64748b;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
-/* Toggle Switch Sederhana */
+/* 7. Toggle Switch Row */
 .pengaturan-toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-radius: 14px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-}
-
-.pengaturan-toggle-label {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  border-radius: 18px;
+  padding: 18px 22px;
+  gap: 20px;
 }
 
 .pengaturan-toggle-label strong {
-  font-size: 13.5px;
+  display: block;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
   color: var(--navy);
+  margin-bottom: 3px;
 }
 
 .pengaturan-toggle-label span {
-  font-size: 12px;
-  color: var(--ink-muted);
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.4;
 }
 
 .toggle-switch-pill {
@@ -334,49 +374,52 @@
   height: 26px;
   border-radius: 999px;
   background: #cbd5e1;
-  position: relative;
-  cursor: pointer;
-  transition: background-color 180ms ease;
   border: 0;
-  padding: 0;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 200ms ease;
+  flex-shrink: 0;
 }
 
 .toggle-switch-pill--active {
-  background: #10b981;
+  background: var(--mint);
 }
 
 .toggle-switch-handle {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #fff;
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  transition: transform 180ms ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 200ms ease;
+  transform: translateX(0);
 }
 
 .toggle-switch-pill--active .toggle-switch-handle {
   transform: translateX(22px);
 }
 
-/* Tombol Aksi Bawah */
+/* 8. Footer Actions Row */
 .pengaturan-actions-row {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding-top: 12px;
+  padding-top: 20px;
   border-top: 1px solid #f1f5f9;
+  margin-top: 12px;
 }
 
-@media (max-width: 768px) {
-  .pengaturan-form-grid {
+/* Responsive Breakpoints */
+@media (max-width: 900px) {
+  .pengaturan-form-grid,
+  .legalitas-status-grid {
     grid-template-columns: 1fr;
   }
-  .pengaturan-header {
-    flex-direction: column;
-    align-items: flex-start;
+
+  .pengaturan-card-section {
+    padding: 22px 18px;
   }
 }
