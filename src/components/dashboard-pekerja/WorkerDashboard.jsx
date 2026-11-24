@@ -538,14 +538,11 @@ function WorkerDashboard() {
             <button
               className={`sidebar-nav-item${currentMenu === 'jenjang' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('jenjang')}
-              title="Jenjang Reputasi & Verifikasi"
+              title="Reputasi & Verifikasi"
               type="button"
             >
               <Icon name="star" size={18} />
-              {isSidebarExpanded && <span>Jenjang &amp; Reputasi</span>}
-              {isSidebarExpanded && (
-                <span className="nav-counter-pill nav-counter-pill--escrow">Tier 1</span>
-              )}
+              {isSidebarExpanded && <span>Reputasi</span>}
             </button>
           </div>
 
@@ -870,7 +867,7 @@ function WorkerDashboard() {
           type="button"
         >
           <Icon name="star" size={20} />
-          <span>Jenjang</span>
+          <span>Reputasi</span>
         </button>
 
         <button

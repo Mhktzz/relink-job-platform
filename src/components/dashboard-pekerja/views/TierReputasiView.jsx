@@ -34,14 +34,6 @@ function TierReputasiView({ workerProfile = {}, onOpenQuizModal }) {
       <section className="clean-card clean-tier-progress-card">
         <div className="clean-tier-progress-header">
           <div>
-            <div className="clean-tier-badges-row">
-              <span className="clean-badge clean-badge--mint">
-                {workerProfile.tierLabel || 'Tier 1 – Basic'}
-              </span>
-              <span className="clean-badge clean-badge--navy">
-                Trust Score {workerProfile.trustScore || 98}%
-              </span>
-            </div>
             <h3 className="clean-tier-card-title">Jalur Kenaikan ke Tier 2 (Terverifikasi)</h3>
             <p className="clean-tier-card-subtitle">
               {remainingTasks > 0
