@@ -4,6 +4,11 @@ import relinkDarkLogo from '../../assets/main-relink-dark.svg'
 import Icon from '../common/Icon.jsx'
 import { supabase } from '../../lib/supabaseClient.js'
 import {
+  fetchTasksFromDb,
+  isTaskActive,
+  getDeletedTaskIds,
+} from '../../lib/databaseService.js'
+import {
   initialWorkerProfile,
   initialActiveTask,
   initialAvailableJobs,
@@ -105,6 +110,116 @@ function WorkerDashboard() {
     })
   }, [])
 
+  // Helper: Mapping tugas postingan perusahaan/admin ke format peluang tugas pekerja
+  function mapTaskToAvailableJob(task) {
+    const budget = Number(task.budget) || 50000
+    const netHonor = Math.round(budget * 0.92) // Potongan komisi platform 8% transparan
+    const rawId = task.id || task.task_code || `TSK-${Math.floor(100 + Math.random() * 900)}`
+    const code = task.code || (String(rawId).startsWith('#') ? rawId : `#${rawId}`)
+
+    return {
+      id: rawId,
+      code: code,
+      title: task.title || 'Tugas Baru UMKM Sekitar',
+      category: task.category || 'Operasional Toko',
+      tag: task.tier === 'Tier 2' ? 'Buka di Tier 2' : 'Instan (Tier 1)',
+      locked: task.tier === 'Tier 2' || task.tier === 'Tier 3',
+      clientName: task.business_name || task.clientName || 'Toko UMKM Terdaftar',
+      distance: task.distance || '0.9 km',
+      duration: task.duration || 'Sekitar 2–3 jam',
+      grossHonor: budget,
+      netHonor: netHonor,
+      tierRequired: task.tier || 'Tier 1',
+      priority: task.priority || 'Normal',
+      urgent: task.priority === 'Urgent' || task.priority === 'High',
+      checklistSummary: `${(task.acceptanceChecklist || task.checklist || []).length} butir SOP checklist`,
+      description: task.description || 'Pekerjaan mikro terverifikasi escrow dari UMKM terdaftar.',
+      checklist: (task.acceptanceChecklist || task.checklist || []).map((c, i) => ({
+        id: typeof c === 'object' && c.id ? c.id : `chk-${i}`,
+        text: typeof c === 'object' ? c.text : String(c),
+      })),
+    }
+  }
+
+  // Sinkronisasi tugas dari Database Supabase & LocalStorage (relink_tasks)
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadTasks() {
+      try {
+        const deletedIds = getDeletedTaskIds()
+        const dbTasks = await fetchTasksFromDb()
+
+        let localTasks = []
+        try {
+          const saved = localStorage.getItem('relink_tasks')
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            if (Array.isArray(parsed)) {
+              localTasks = parsed.filter((t) => isTaskActive(t, deletedIds))
+            }
+          }
+        } catch {}
+
+        const combinedMap = new Map()
+
+        // 1. Masukkan tugas dari postingan perusahaan (local storage & database)
+        ;[...localTasks, ...dbTasks].forEach((t) => {
+          if (!t) return
+          const tid = String(t.id || t.task_code || '')
+          if (
+            tid &&
+            !combinedMap.has(tid) &&
+            isTaskActive(t, deletedIds) &&
+            t.status !== 'completed' &&
+            t.column !== 'overdue' &&
+            tid !== activeTask?.id
+          ) {
+            combinedMap.set(tid, mapTaskToAvailableJob(t))
+          }
+        })
+
+        // 2. Tambahkan tugas default jika belum diambil
+        initialAvailableJobs.forEach((job) => {
+          if (!combinedMap.has(job.id) && job.id !== activeTask?.id) {
+            combinedMap.set(job.id, job)
+          }
+        })
+
+        if (isMounted) {
+          setAvailableJobs(Array.from(combinedMap.values()))
+        }
+      } catch (e) {
+        console.warn('Gagal sinkron tugas pekerja:', e)
+      }
+    }
+
+    loadTasks()
+
+    // Dengarkan event perubahan tugas dari dashboard perusahaan
+    function handleSyncEvent() {
+      loadTasks()
+    }
+
+    window.addEventListener('storage', handleSyncEvent)
+    window.addEventListener('relink_tasks_updated', handleSyncEvent)
+
+    // Dengarkan event realtime Supabase postgres_changes
+    const channel = supabase
+      .channel('relink_worker_task_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+        loadTasks()
+      })
+      .subscribe()
+
+    return () => {
+      isMounted = false
+      window.removeEventListener('storage', handleSyncEvent)
+      window.removeEventListener('relink_tasks_updated', handleSyncEvent)
+      supabase.removeChannel(channel)
+    }
+  }, [activeTask])
+
   // Handler Toast Notifikasi
   function showToast(msg) {
     setActionSuccessMsg(msg)
@@ -148,6 +263,30 @@ function WorkerDashboard() {
         ...prev,
         heldEscrowBalance: prev.heldEscrowBalance + task.netHonor,
       }))
+
+      // Perbarui status tugas di relink_tasks agar tersinkron ke dashboard perusahaan
+      try {
+        const saved = localStorage.getItem('relink_tasks')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          const updated = parsed.map((item) => {
+            if (item.id === task.id || item.task_code === task.id || item.code === task.code) {
+              return {
+                ...item,
+                workerName: workerProfile.name || 'Dimas Prasetyo',
+                status: 'in_progress',
+                statusBadge: 'In Progress',
+                column: 'current',
+              }
+            }
+            return item
+          })
+          localStorage.setItem('relink_tasks', JSON.stringify(updated))
+          window.dispatchEvent(new CustomEvent('relink_tasks_updated', { detail: updated }))
+        }
+      } catch (e) {
+        console.warn('Gagal update task accepted:', e)
+      }
 
       setIsProcessing(false)
       setTaskToAccept(null)

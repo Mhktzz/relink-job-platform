@@ -83,6 +83,7 @@ function ClientDashboard() {
   useEffect(() => {
     try {
       localStorage.setItem('relink_tasks', JSON.stringify(tasks))
+      window.dispatchEvent(new CustomEvent('relink_tasks_updated', { detail: tasks }))
     } catch (e) {
       console.warn('Gagal sinkron tasks ke localStorage:', e)
     }
