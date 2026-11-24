@@ -229,7 +229,6 @@ function DataTugasView({
           </div>
           <div className="metric-box-card__body">
             <strong>{totalCount} Tugas</strong>
-            <span className="metric-trend metric-trend--good">Tersimpan</span>
           </div>
           <small className="metric-sub-note">Seluruh tugas UMKM aktif di sistem</small>
         </div>
@@ -243,7 +242,6 @@ function DataTugasView({
           </div>
           <div className="metric-box-card__body">
             <strong>{inProgressCount} Tugas</strong>
-            <span className="metric-trend metric-trend--warn">In Progress</span>
           </div>
           <small className="metric-sub-note">Mitra sedang bekerja di lokasi</small>
         </div>
@@ -257,7 +255,6 @@ function DataTugasView({
           </div>
           <div className="metric-box-card__body">
             <strong className="text-pink">{proofReviewCount} Tugas</strong>
-            <span className="metric-trend metric-trend--warn">Siap Verifikasi</span>
           </div>
           <small className="metric-sub-note">Bukti foto & GPS siap divalidasi</small>
         </div>
@@ -271,7 +268,6 @@ function DataTugasView({
           </div>
           <div className="metric-box-card__body">
             <strong>{completedCount} Tugas</strong>
-            <span className="metric-trend metric-trend--good">Tuntas</span>
           </div>
           <small className="metric-sub-note">Pekerjaan disetujui & dana cair</small>
         </div>

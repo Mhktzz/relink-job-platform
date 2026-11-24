@@ -53,9 +53,6 @@ function DanaEscrowView({
           </div>
           <div className="metric-box-card__body">
             <strong>Rp{(totalHeldEscrow || 0).toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--good">
-              {(totalHeldEscrow || 0) > 0 ? 'Tersimpan Aman' : 'Rekening Bersih'}
-            </span>
           </div>
           <small className="metric-sub-note">
             {(heldCount || 0) + (reviewCount || 0) > 0
@@ -73,7 +70,6 @@ function DanaEscrowView({
           </div>
           <div className="metric-box-card__body">
             <strong className="text-pink">Rp{(totalReviewEscrow || 0).toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--warn">{reviewCount || 0} Tugas</span>
           </div>
           <small className="metric-sub-note">
             {(reviewCount || 0) > 0
@@ -91,9 +87,6 @@ function DanaEscrowView({
           </div>
           <div className="metric-box-card__body">
             <strong>Rp{(totalReleasedAmount || 0).toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--good">
-              {releasedCount || 0} Tugas Tuntas
-            </span>
           </div>
           <small className="metric-sub-note">
             {(disputeCount || 0) > 0
@@ -113,9 +106,6 @@ function DanaEscrowView({
           </div>
           <div className="metric-box-card__body">
             <strong>Rp{(totalGuaranteeBalance || 0).toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--good">
-              {(disputeCount || 0) > 0 ? `${disputeCount} Klaim Mediasi` : 'Siap Klaim'}
-            </span>
           </div>
           <small className="metric-sub-note">
             {(disputeCount || 0) > 0

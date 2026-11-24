@@ -1,312 +1,491 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
 
-function InfoTooltip({ text }) {
-  return (
-    <span className="dm-info-tooltip" tabIndex={0} title={text}>
-      i
-    </span>
-  )
-}
-
 function WorkerBerandaView({
-  workerProfile,
-  activeTask,
-  walletData,
-  isAvailableNow,
-  setCurrentMenu,
-  onOpenAcceptModal,
-  onOpenProofModal,
-  onCheckInArrived,
+  workerProfile = {},
+  activeTask = null,
+  walletData = {},
+  isAvailableNow = true,
+  setCurrentMenu = () => {},
+  onOpenAcceptModal = () => {},
+  onOpenProofModal = () => {},
+  onCheckInArrived = () => {},
   availableJobs = [],
-  onOpenWithdrawModal,
-  onTriggerSos,
+  onOpenWithdrawModal = () => {},
+  onTriggerSos = () => {},
   actionItems = [],
   upcomingSchedule = [],
-  onOpenQuizModal,
+  onOpenQuizModal = () => {},
 }) {
-  const [hoveredDayIndex, setHoveredDayIndex] = useState(2) // Default ke Rabu
-  const [hoveredMonthIndex, setHoveredMonthIndex] = useState(4) // Default ke Nov
+  // 14 hari data jam kerja (ala contoh gambar referensi)
+  const dailyWorkload = [
+    { date: '11/11', day: 'Sen', hours: 2.5, earnings: 55000 },
+    { date: '12/11', day: 'Sel', hours: 3.0, earnings: 70000 },
+    { date: '13/11', day: 'Rab', hours: 2.0, earnings: 45000 },
+    { date: '14/11', day: 'Kam', hours: 4.0, earnings: 90000 },
+    { date: '15/11', day: 'Jum', hours: 3.5, earnings: 80000 },
+    { date: '16/11', day: 'Sab', hours: 5.0, earnings: 115000 },
+    { date: '17/11', day: 'Min', hours: 6.0, earnings: 135000 },
+    { date: '18/11', day: 'Sen', hours: 4.5, earnings: 100000 },
+    { date: '19/11', day: 'Sel', hours: 3.0, earnings: 68000 },
+    { date: '20/11', day: 'Rab', hours: 7.0, earnings: 155000 }, // Peak / Active bar
+    { date: '21/11', day: 'Kam', hours: 4.0, earnings: 92000 },
+    { date: '22/11', day: 'Jum', hours: 5.5, earnings: 124000 },
+    { date: '23/11', day: 'Sab', hours: 6.5, earnings: 145000 },
+    { date: '24/11', day: 'Min', hours: 4.0, earnings: 90000 },
+  ]
+
+  const [hoveredBarIndex, setHoveredBarIndex] = useState(9) // Default: 20/11 (active bar)
 
   const currentStep = activeTask?.currentStepIndex || 0
+  const totalHours = dailyWorkload.reduce((sum, d) => sum + d.hours, 0)
+  const activeDay = dailyWorkload[hoveredBarIndex] || dailyWorkload[9]
 
-  // 1. DATA GRAFIK 1: BEBAN JAM KERJA MINGGUAN (Senin - Minggu)
-  const daysData = [
-    { key: 'Sen', label: 'Senin', hours: 4.5, jobs: 1, x: 50 },
-    { key: 'Sel', label: 'Selasa', hours: 3.0, jobs: 1, x: 120 },
-    { key: 'Rab', label: 'Rabu', hours: 6.5, jobs: 2, x: 190 },
-    { key: 'Kam', label: 'Kamis', hours: 4.0, jobs: 1, x: 260 },
-    { key: 'Jum', label: 'Jumat', hours: 5.5, jobs: 1, x: 330 },
-    { key: 'Sab', label: 'Sabtu', hours: 7.0, jobs: 2, x: 400 },
-    { key: 'Min', label: 'Minggu', hours: 4.0, jobs: 1, x: 470 },
-  ]
-
-  // 2. DATA GRAFIK 2: EFISIENSI PENDAPATAN & KOMISI PLATFORM (Bulan Jul - Des)
-  const monthlyData = [
-    { month: 'Jul', net: 380000, fee: 32000, x: 40, netH: 42, feeH: 18 },
-    { month: 'Agu', net: 520000, fee: 44000, x: 86, netH: 56, feeH: 26 },
-    { month: 'Sep', net: 410000, fee: 35000, x: 132, netH: 46, feeH: 20 },
-    { month: 'Okt', net: 650000, fee: 55000, x: 178, netH: 70, feeH: 30 },
-    { month: 'Nov', net: 782000, fee: 68000, x: 224, netH: 84, feeH: 36 },
-    { month: 'Des', net: 490000, fee: 42000, x: 270, netH: 52, feeH: 24 },
-  ]
-
-  const activeMonth = monthlyData[hoveredMonthIndex]
+  // Formatter nilai angka
+  const activeTasksCount = activeTask ? 1 : 0
+  const availableCount = availableJobs.length || 4
+  const ratingValue = workerProfile.rating ? Number(workerProfile.rating).toFixed(1) : '5.0'
+  const availableBalance = walletData.availableBalance || 145000
+  const heldEscrow = walletData.heldEscrowBalance || (activeTask ? activeTask.netHonor || 78200 : 0)
+  const totalMonthlyEarnings = availableBalance + heldEscrow
 
   return (
-    <main className="dashboard-content-flow">
-      {/* 1. Content Heading Bar Identik dengan Panduan Dashboard */}
-      <div className="content-heading-bar">
-        <div>
-          <h1>Beranda Mitra Kerja</h1>
-          <p>
-            Radar lokasimu {isAvailableNow ? 'aktif' : 'nonaktif'} dalam radius 1–5 km. Selesaikan tugas tepat waktu, amankan honor escrow, dan bangun reputasimu.
+    <main className="clean-dash-wrapper">
+      {/* 1. HEADER (Ala Contoh Gambar Referensi) */}
+      <header className="clean-dash-header">
+        <div className="clean-dash-header__intro">
+          <span className="clean-dash-eyebrow">RINGKASAN HARI INI</span>
+          <h1 className="clean-dash-title">{workerProfile.name || 'Dimas'}, ini ringkasan tugasmu</h1>
+          <p className="clean-dash-subtitle">
+            Aktivitas tugas hari ini dan performa tokomu 30 hari terakhir. Radar: {isAvailableNow ? 'Aktif (1–5 km)' : 'Nonaktif'}.
           </p>
         </div>
-        <div className="escrow-header-actions">
+        <div className="clean-dash-header__actions">
           <button
-            className="btn-download-recap"
+            className="clean-btn-pill clean-btn-pill--secondary"
+            onClick={() => setCurrentMenu('peluang')}
+            type="button"
+          >
+            <Icon name="search" size={14} />
+            <span>Peluang Tugas ({availableJobs.length})</span>
+          </button>
+          <button
+            className="clean-btn-pill clean-btn-pill--primary"
             onClick={onOpenWithdrawModal}
             type="button"
           >
-            <Icon name="wallet" size={16} />
-            <span>Tarik Saldo Dompet</span>
+            <Icon name="wallet" size={14} />
+            <span>Tarik Saldo</span>
           </button>
         </div>
+      </header>
+
+      {/* 2. ROW 1: 4 KARTU STATISTIK UTAMA (BOOKED TODAY / WAITING NOW / PATIENTS / STAFF) */}
+      <section className="clean-stat-cards-grid">
+        {/* Card 1: Tugas Aktif */}
+        <article className="clean-stat-card">
+          <div className="clean-stat-card__top">
+            <div className="clean-stat-card__label-group">
+              <Icon name="briefcase" size={14} />
+              <span>TUGAS AKTIF</span>
+            </div>
+            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+          </div>
+          <div className="clean-stat-card__value">
+            {activeTasksCount < 10 ? `0${activeTasksCount}` : activeTasksCount}
+          </div>
+          <div className="clean-stat-card__subtext">
+            {activeTask ? activeTask.clientName : 'Belum ada tugas berjalan'}
+          </div>
+        </article>
+
+        {/* Card 2: Radar Peluang */}
+        <article className="clean-stat-card">
+          <div className="clean-stat-card__top">
+            <div className="clean-stat-card__label-group">
+              <Icon name="pin" size={14} />
+              <span>RADAR ORDER</span>
+            </div>
+            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+          </div>
+          <div className="clean-stat-card__value">
+            {availableCount < 10 ? `0${availableCount}` : availableCount}
+          </div>
+          <div className="clean-stat-card__subtext">
+            Radius 1–5 km siap diambil
+          </div>
+        </article>
+
+        {/* Card 3: Rating Mitra */}
+        <article className="clean-stat-card">
+          <div className="clean-stat-card__top">
+            <div className="clean-stat-card__label-group">
+              <Icon name="star" size={14} />
+              <span>RATING MITRA</span>
+            </div>
+            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+          </div>
+          <div className="clean-stat-card__value">
+            {ratingValue}
+          </div>
+          <div className="clean-stat-card__subtext">
+            Tier 1 &bull; {workerProfile.completedTasksCount || 2} ulasan selesai
+          </div>
+        </article>
+
+        {/* Card 4: Kepatuhan K3 */}
+        <article className="clean-stat-card">
+          <div className="clean-stat-card__top">
+            <div className="clean-stat-card__label-group">
+              <Icon name="shield" size={14} />
+              <span>KEPATUHAN K3</span>
+            </div>
+            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+          </div>
+          <div className="clean-stat-card__value">
+            100%
+          </div>
+          <div className="clean-stat-card__subtext">
+            0 sengketa &bull; SOP Terverifikasi
+          </div>
+        </article>
+      </section>
+
+      {/* 3. ROW 2: EYEBROW + 3 KARTU KEUANGAN / ESCROW (LAST 30 DAYS: COLLECTED / SEEN / OUTSTANDING) */}
+      <div className="clean-section-eyebrow-row">
+        <span className="clean-section-eyebrow">30 HARI TERAKHIR</span>
       </div>
 
-      {/* 2. 4 Kartu Metrik Ringkasan Utama (Summary Metrics Grid) */}
-      <div className="summary-metrics-grid">
-        <div className="metric-box-card">
-          <div className="metric-box-card__header">
-            <span>Saldo Siap Cair</span>
-            <div className="metric-icon-bubble metric-icon-bubble--mint">
-              <Icon name="wallet" size={16} />
+      <section className="clean-financial-cards-grid">
+        {/* Fin Card 1: Saldo Siap Cair */}
+        <article className="clean-fin-card">
+          <div className="clean-fin-card__top">
+            <div className="clean-fin-card__label-group">
+              <Icon name="wallet" size={15} />
+              <span>SALDO SIAP CAIR</span>
             </div>
+            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
           </div>
-          <div className="metric-box-card__body">
-            <strong>Rp{(walletData.availableBalance || 0).toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--good">Siap Tarik</span>
-          </div>
-          <small className="metric-sub-note">
-            <span className="text-mint font-bold">+Rp98.000 minggu ini</span> &bull; bebas biaya admin ke e-wallet &amp; bank
-          </small>
-        </div>
-
-        <div className="metric-box-card">
-          <div className="metric-box-card__header">
-            <span>
-              Dana Tertahan di Escrow <InfoTooltip text="Uang Klien yang ditahan di rekening penampung resmi Relink dan dicairkan otomatis setelah pekerjaan selesai." />
-            </span>
-            <div className="metric-icon-bubble metric-icon-bubble--warn">
-              <Icon name="shield" size={16} />
-            </div>
-          </div>
-          <div className="metric-box-card__body">
-            <strong className="text-pink">Rp{(walletData.heldEscrowBalance || 0).toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--warn">
-              {activeTask ? '1 Tugas Berjalan' : 'Tidak Ada'}
+          <div className="clean-fin-card__body">
+            <strong className="clean-fin-card__amount">
+              Rp{availableBalance.toLocaleString('id-ID')}
+            </strong>
+            <span className="clean-badge clean-badge--mint">
+              +Rp98.000
             </span>
           </div>
-          <small className="metric-sub-note">
-            {activeTask ? `${activeTask.title} &bull; cair setelah Klien konfirmasi` : 'Dana aman di penampungan resmi berlisensi'}
-          </small>
-        </div>
+          <div className="clean-fin-card__subtext">
+            Bebas biaya admin transfer ke e-wallet &amp; bank
+          </div>
+        </article>
 
-        <div className="metric-box-card">
-          <div className="metric-box-card__header">
-            <span>Progres Menuju Tier 2</span>
-            <div className="metric-icon-bubble metric-icon-bubble--good">
-              <Icon name="star" size={16} />
+        {/* Fin Card 2: Dana Tertahan di Escrow */}
+        <article className="clean-fin-card">
+          <div className="clean-fin-card__top">
+            <div className="clean-fin-card__label-group">
+              <Icon name="check" size={15} />
+              <span>DANA DI ESCROW</span>
             </div>
+            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
           </div>
-          <div className="metric-box-card__body">
-            <strong>{workerProfile.completedTasksCount} / {workerProfile.targetTasksForNextTier} Tugas</strong>
-            <span className="metric-trend metric-trend--good">Rating {workerProfile.rating}</span>
-          </div>
-          <div className="dm-mini-progress-track">
-            <i style={{ width: `${Math.min(100, Math.round((workerProfile.completedTasksCount / workerProfile.targetTasksForNextTier) * 100))}%` }} />
-          </div>
-          <small className="metric-sub-note">
-            Rating syarat min. 4.7 <strong className="text-mint">terpenuhi</strong>. Selesaikan {Math.max(0, workerProfile.targetTasksForNextTier - workerProfile.completedTasksCount)} tugas lagi untuk buka tugas umum &amp; Tandem.
-          </small>
-        </div>
-
-        <div className="metric-box-card">
-          <div className="metric-box-card__header">
-            <span>
-              Reputasi &amp; Garansi K3 <InfoTooltip text="K3: Standar Keselamatan dan Kesehatan Kerja lapangan serta etika layanan mitra." />
+          <div className="clean-fin-card__body">
+            <strong className="clean-fin-card__amount clean-fin-card__amount--pink">
+              Rp{heldEscrow.toLocaleString('id-ID')}
+            </strong>
+            <span className="clean-badge clean-badge--pink">
+              {activeTask ? '1 Berjalan' : 'Aman'}
             </span>
-            <div className="metric-icon-bubble metric-icon-bubble--mint">
-              <Icon name="check" size={16} />
+          </div>
+          <div className="clean-fin-card__subtext">
+            {activeTask ? `${activeTask.title} &bull; cair setelah konfirmasi` : 'Rekening penampungan resmi Relink'}
+          </div>
+        </article>
+
+        {/* Fin Card 3: Total Pendapatan Bulan Ini */}
+        <article className="clean-fin-card">
+          <div className="clean-fin-card__top">
+            <div className="clean-fin-card__label-group">
+              <Icon name="clock" size={15} />
+              <span>TOTAL PENDAPATAN</span>
             </div>
+            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
           </div>
-          <div className="metric-box-card__body">
-            <strong>100% Bersih</strong>
-            <span className="metric-trend metric-trend--good">0 Komplain</span>
+          <div className="clean-fin-card__body">
+            <strong className="clean-fin-card__amount">
+              Rp{totalMonthlyEarnings.toLocaleString('id-ID')}
+            </strong>
+            <span className="clean-badge clean-badge--navy">
+              Bulan Ini
+            </span>
           </div>
-          <small className="metric-sub-note">
-            &starf; {workerProfile.rating} &bull; {workerProfile.completedTasksCount} tugas selesai &bull; respons 96% &bull; Rising Star aktif di radar UMKM
-          </small>
-        </div>
+          <div className="clean-fin-card__subtext">
+            Akumulasi honor bersih yang telah diterima
+          </div>
+        </article>
+      </section>
+
+      {/* 4. ROW 3: ULTRA-CLEAN PILL BAR CHART (COLLECTED PER DAY ALA REFERENSI) */}
+      <div className="clean-section-eyebrow-row">
+        <span className="clean-section-eyebrow">STATISTIK JAM KERJA HARIAN</span>
+        <span className="clean-section-eyebrow-stat">
+          Total {totalHours.toFixed(1)} jam dalam 14 hari terakhir
+        </span>
       </div>
 
-      {/* 3. Row 2: Grid 2 Kolom (Tugas Aktif & Alur Escrow + Perlu Tindakan) */}
-      <div className="active-and-action-grid">
-        {/* Left: Alur Transaksi Escrow Interaktif (Stepper 5 Tahap) */}
+      <section className="clean-chart-card">
+        <div className="clean-chart-inner">
+          <svg
+            className="clean-chart-svg"
+            preserveAspectRatio="none"
+            viewBox="0 0 840 220"
+          >
+            {/* Garis Grid Horizontal Lembut */}
+            <line stroke="#f1f5f9" strokeDasharray="3 3" x1="50" x2="820" y1="35" y2="35" />
+            <line stroke="#f1f5f9" strokeDasharray="3 3" x1="50" x2="820" y1="75" y2="75" />
+            <line stroke="#f1f5f9" strokeDasharray="3 3" x1="50" x2="820" y1="115" y2="115" />
+            <line stroke="#f1f5f9" strokeDasharray="3 3" x1="50" x2="820" y1="155" y2="155" />
+
+            {/* Label Sumbu Y */}
+            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="42" y="39">8 Jam</text>
+            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="42" y="79">6 Jam</text>
+            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="42" y="119">4 Jam</text>
+            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="42" y="159">0</text>
+
+            {/* Pill Bar Chart Bars (14 Bars) */}
+            {dailyWorkload.map((item, idx) => {
+              // Bar width: 26, spacing: 54
+              const xPos = 65 + idx * 54
+              const maxHours = 8
+              const barHeight = Math.max(18, (item.hours / maxHours) * 125)
+              const yPos = 160 - barHeight
+              const isSelected = hoveredBarIndex === idx
+
+              return (
+                <g
+                  key={item.date}
+                  className="clean-chart-bar-group"
+                  onClick={() => setHoveredBarIndex(idx)}
+                  onMouseEnter={() => setHoveredBarIndex(idx)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Invisible hit area */}
+                  <rect fill="transparent" height="175" width="48" x={xPos - 11} y="15" />
+
+                  {/* Rounded Pill Bar */}
+                  <rect
+                    fill={isSelected ? '#0f1b3d' : '#e2e8f0'}
+                    height={barHeight}
+                    rx="12"
+                    style={{
+                      transition: 'all 220ms ease',
+                    }}
+                    width="24"
+                    x={xPos}
+                    y={yPos}
+                  />
+
+                  {/* Label Tanggal / Hari */}
+                  <text
+                    fill={isSelected ? '#0f1b3d' : '#94a3b8'}
+                    fontSize="11"
+                    fontWeight={isSelected ? '700' : '500'}
+                    textAnchor="middle"
+                    x={xPos + 12}
+                    y="186"
+                  >
+                    {item.date}
+                  </text>
+                </g>
+              )
+            })}
+
+            {/* Active Floating Tooltip Bubble */}
+            {activeDay && (
+              (() => {
+                const activeX = 65 + hoveredBarIndex * 54 + 12
+                const tooltipWidth = 140
+                const bubbleX = Math.min(Math.max(activeX - tooltipWidth / 2, 50), 680)
+
+                return (
+                  <g
+                    className="clean-chart-tooltip"
+                    style={{ pointerEvents: 'none', transition: 'all 180ms ease' }}
+                    transform={`translate(${bubbleX}, 6)`}
+                  >
+                    <rect
+                      fill="#0f1b3d"
+                      height="24"
+                      rx="12"
+                      style={{ filter: 'drop-shadow(0 2px 6px rgba(15, 27, 61, 0.2))' }}
+                      width={tooltipWidth}
+                    />
+                    <text
+                      fill="#ffffff"
+                      fontSize="11"
+                      fontWeight="700"
+                      textAnchor="middle"
+                      x={tooltipWidth / 2}
+                      y="16"
+                    >
+                      {activeDay.day}, {activeDay.date}: {activeDay.hours} Jam (Rp{activeDay.earnings.toLocaleString('id-ID')})
+                    </text>
+                  </g>
+                )
+              })()
+            )}
+          </svg>
+        </div>
+      </section>
+
+      {/* 5. ROW 4: ALUR TUGAS AKTIF & TABEL AKTIVITAS TERKINI (CLEAN & TIDAK KERAMAIAN) */}
+      <div className="clean-bottom-sections-grid">
+        {/* Left Column: Alur Tugas Aktif (Escrow Lifecycle) */}
         {activeTask ? (
-          <section className="escrow-lifecycle-card" id="active-task-section">
-            <div className="escrow-lifecycle-header">
+          <section className="clean-card clean-active-task-card" id="active-task-section">
+            <div className="clean-card__header">
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <span className="task-tag-chip task-tag-chip--pink">Tugas Aktif</span>
-                  <span className="task-tag-chip task-tag-chip--mint">Escrow {activeTask.escrowRef}</span>
-                </div>
-                <h3>{activeTask.title}</h3>
-                <small className="text-muted">
-                  {activeTask.clientName} &bull; <Icon name="pin" size={13} /> {activeTask.distance} &bull; tiba sekitar 6 menit
-                </small>
+                <span className="clean-section-eyebrow">TUGAS SEDANG BERJALAN</span>
+                <h3 className="clean-card-title">{activeTask.title}</h3>
+                <p className="clean-card-subtitle">
+                  {activeTask.clientName} &bull; <Icon name="pin" size={12} /> {activeTask.distance} &bull; Estimasi tiba 6 menit
+                </p>
               </div>
-              <span className="escrow-verified-pill">
-                <Icon name="shield" size={14} /> Terverifikasi Escrow
+              <span className="clean-badge clean-badge--mint">
+                <Icon name="shield" size={13} /> Escrow {activeTask.escrowRef}
               </span>
             </div>
 
-            <div className="escrow-steps-grid">
-              <div className={`escrow-step-item ${currentStep >= 0 ? 'escrow-step-item--done' : ''}`}>
-                <div className="escrow-step-num">1</div>
-                <h4>Dana Ditahan</h4>
-                <p>Klien setor Rp{activeTask.grossHonor.toLocaleString('id-ID')} ke rekening escrow aman.</p>
-              </div>
-              <div className="escrow-step-connector" />
-              <div className={`escrow-step-item ${currentStep >= 1 ? 'escrow-step-item--done' : currentStep === 1 ? 'escrow-step-item--highlight' : ''}`}>
-                <div className="escrow-step-num">2</div>
-                <h4>Menuju Lokasi</h4>
-                <p>Mitra bergerak ke alamat toko. Tekan check-in saat tiba.</p>
-              </div>
-              <div className="escrow-step-connector" />
-              <div className={`escrow-step-item ${currentStep >= 2 ? 'escrow-step-item--done' : currentStep === 2 ? 'escrow-step-item--highlight' : ''}`}>
-                <div className="escrow-step-num">3</div>
-                <h4>Pengerjaan</h4>
-                <p>Mengerjakan kriteria acceptance checklist sesuai SOP.</p>
-              </div>
-              <div className="escrow-step-connector" />
-              <div className={`escrow-step-item ${currentStep >= 3 ? 'escrow-step-item--done' : currentStep === 3 ? 'escrow-step-item--highlight' : ''}`}>
-                <div className="escrow-step-num">4</div>
-                <h4>Menunggu Konfirmasi</h4>
-                <p>Klien memeriksa foto bukti hasil kerja (Auto-release 24-48j).</p>
-              </div>
-              <div className="escrow-step-connector" />
-              <div className={`escrow-step-item ${currentStep >= 4 ? 'escrow-step-item--highlight' : ''}`}>
-                <div className="escrow-step-num">5</div>
-                <h4>Dana Cair</h4>
-                <p>Honor bersih Rp{activeTask.netHonor.toLocaleString('id-ID')} cair instan ke dompet.</p>
-              </div>
+            {/* 5-Step Progress Tracker */}
+            <div className="clean-stepper-row">
+              {[
+                { step: 1, title: 'Dana Ditahan', desc: `Rp${activeTask.grossHonor.toLocaleString('id-ID')}` },
+                { step: 2, title: 'Menuju Lokasi', desc: 'Check-in saat tiba' },
+                { step: 3, title: 'Pengerjaan', desc: 'Sesuai SOP checklist' },
+                { step: 4, title: 'Review Bukti', desc: 'Konfirmasi Klien' },
+                { step: 5, title: 'Dana Cair', desc: `Rp${activeTask.netHonor.toLocaleString('id-ID')}` },
+              ].map((s, idx) => {
+                const isDone = currentStep >= s.step
+                const isCurrent = currentStep === s.step - 1
+
+                return (
+                  <div key={s.step} className="clean-stepper-node-wrapper">
+                    <div className="clean-stepper-node">
+                      <div className={`clean-step-circle ${isDone ? 'clean-step-circle--done' : isCurrent ? 'clean-step-circle--active' : ''}`}>
+                        {isDone ? <Icon name="check" size={12} /> : s.step}
+                      </div>
+                      <div className="clean-step-labels">
+                        <strong className={isCurrent ? 'text-pink' : ''}>{s.title}</strong>
+                        <small>{s.desc}</small>
+                      </div>
+                    </div>
+                    {idx < 4 && <div className={`clean-step-line ${currentStep > idx ? 'clean-step-line--done' : ''}`} />}
+                  </div>
+                )
+              })}
             </div>
 
-            {/* Action Row Khusus Tugas Aktif */}
-            <div className="active-task-action-bar-row">
-              <div className="active-task-quick-info">
-                <span className="text-muted">Pendapatan bersih diterima:</span>
-                <strong className="text-pink" style={{ fontSize: '18px' }}>
-                  Rp{activeTask.netHonor.toLocaleString('id-ID')}
-                </strong>
+            {/* Action Bar */}
+            <div className="clean-active-task-actions">
+              <div className="clean-active-task-honor">
+                <span className="text-muted">Honor Bersih:</span>
+                <strong className="text-pink">Rp{activeTask.netHonor.toLocaleString('id-ID')}</strong>
               </div>
 
-              <div className="active-task-buttons-cluster">
+              <div className="clean-active-task-btn-group">
                 <a
-                  className="btn-worker-action btn-worker-action--whatsapp"
-                  href={`https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20${encodeURIComponent(workerProfile.name)}%20dari%20Relink%20terkait%20tugas%20${encodeURIComponent(activeTask.title)}.`}
+                  className="clean-btn-pill clean-btn-pill--whatsapp"
+                  href={`https://wa.me/${activeTask.clientPhone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(activeTask.clientName)},%20saya%20${encodeURIComponent(workerProfile.name)}%20dari%20Relink.`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  <Icon name="chat" size={16} />
+                  <Icon name="chat" size={14} />
                   <span>Chat Klien</span>
                 </a>
 
                 <button
-                  className="btn-worker-action btn-worker-action--sos"
+                  className="clean-btn-pill clean-btn-pill--sos"
                   onClick={onTriggerSos}
                   type="button"
                 >
-                  <Icon name="alert" size={16} />
+                  <Icon name="alert" size={14} />
                   <span>SOS</span>
                 </button>
 
                 {currentStep === 1 && (
                   <button
-                    className="btn-worker-action btn-worker-action--primary"
+                    className="clean-btn-pill clean-btn-pill--primary"
                     onClick={onCheckInArrived}
                     type="button"
                   >
-                    <Icon name="pin" size={16} />
+                    <Icon name="pin" size={14} />
                     <span>Check-in di Lokasi</span>
                   </button>
                 )}
 
                 {currentStep === 2 && (
                   <button
-                    className="btn-worker-action btn-worker-action--pink"
+                    className="clean-btn-pill clean-btn-pill--pink"
                     onClick={onOpenProofModal}
                     type="button"
                   >
-                    <Icon name="check" size={16} />
-                    <span>Selesai &amp; Serah Terima Bukti</span>
+                    <Icon name="check" size={14} />
+                    <span>Serahkan Bukti Hasil</span>
                   </button>
                 )}
 
                 {currentStep === 3 && (
-                  <div className="waiting-client-pill">
-                    <Icon name="clock" size={15} />
-                    <span>Menunggu Review Klien</span>
-                  </div>
+                  <span className="clean-badge clean-badge--navy">
+                    <Icon name="clock" size={13} /> Menunggu Review Klien
+                  </span>
                 )}
               </div>
             </div>
           </section>
         ) : (
-          <section className="escrow-lifecycle-card">
-            <div className="escrow-lifecycle-header">
+          <section className="clean-card clean-active-task-card">
+            <div className="clean-card__header">
               <div>
-                <h3>Radar Tugas Siap Siaga</h3>
-                <small>Tidak ada tugas yang sedang berjalan saat ini</small>
+                <span className="clean-section-eyebrow">STATUS RADAR</span>
+                <h3 className="clean-card-title">Siap Menerima Order Baru</h3>
+                <p className="clean-card-subtitle">
+                  Aktifkan status kerja untuk menerima pesanan UMKM di sekitarmu secara instan.
+                </p>
               </div>
               <button
-                className="btn-worker-action btn-worker-action--pink"
+                className="clean-btn-pill clean-btn-pill--pink"
                 onClick={() => setCurrentMenu('peluang')}
                 type="button"
               >
-                Cari Peluang Tugas Sekitar &rarr;
+                Cari Tugas &rarr;
               </button>
             </div>
           </section>
         )}
 
-        {/* Right: Widget Perlu Tindakan (Action Items dari Panduan) */}
-        <section className="perlu-tindakan-card">
-          <div className="perlu-tindakan-header">
+        {/* Right Column: Perlu Tindakan & Pelatihan */}
+        <section className="clean-card clean-action-items-card">
+          <div className="clean-card__header">
             <div>
-              <h3>Perlu Tindakan</h3>
-              <small>Peluang percepatan order &amp; reputasi</small>
+              <span className="clean-section-eyebrow">AGENDA KERJA</span>
+              <h3 className="clean-card-title">Perlu Tindakan</h3>
             </div>
-            <span className="perlu-tindakan-counter-pill">{actionItems.length}</span>
+            <span className="clean-badge clean-badge--navy">{actionItems.length}</span>
           </div>
 
-          <ul className="perlu-tindakan-list">
+          <ul className="clean-action-list">
             {actionItems.map((act) => (
-              <li key={act.id} className="perlu-tindakan-item">
-                <div className={`action-item-dot action-item-dot--${act.tone}`}>
-                  <Icon name={act.type === 'video' ? 'star' : act.type === 'review' ? 'check' : 'users'} size={15} />
+              <li key={act.id} className="clean-action-item">
+                <div className={`clean-action-item__icon clean-action-item__icon--${act.tone}`}>
+                  <Icon name={act.type === 'video' ? 'star' : act.type === 'review' ? 'check' : 'users'} size={14} />
                 </div>
-                <div className="action-item-text">
+                <div className="clean-action-item__content">
                   <strong>{act.title}</strong>
-                  <small>{act.desc}</small>
+                  <p>{act.desc}</p>
                 </div>
                 {act.type === 'video' && onOpenQuizModal && (
                   <button
-                    className="btn-action-item-go"
+                    className="clean-btn-small-link"
                     onClick={onOpenQuizModal}
-                    title="Mulai Uji Kompetensi"
                     type="button"
                   >
                     Mulai &rarr;
@@ -318,477 +497,108 @@ function WorkerBerandaView({
         </section>
       </div>
 
-      {/* 4. Rekomendasi Tugas Terdekat Untukmu (Grid 4 Kartu Horisontal) */}
-      <section className="dashboard-rekomendasi-section">
-        <div className="rekomendasi-header">
+      {/* 6. TABEL PELUANG TUGAS & AKTIVITAS TERKINI (CLEAN DATA TABLE) */}
+      <section className="clean-card clean-table-card">
+        <div className="clean-card__header">
           <div>
-            <h3>Tugas Terdekat Untukmu</h3>
-            <small>Pekerjaan instan terverifikasi escrow dalam radius 1–5 km</small>
+            <span className="clean-section-eyebrow">DAFTAR PENUGASAN</span>
+            <h3 className="clean-card-title">Peluang Tugas Sekitar</h3>
+            <p className="clean-card-subtitle">Pekerjaan mikro terverifikasi escrow dalam radius 1–5 km</p>
           </div>
           <button
-            className="btn-view-all-link"
+            className="clean-btn-pill clean-btn-pill--secondary"
             onClick={() => setCurrentMenu('peluang')}
             type="button"
           >
-            Lihat semua ({availableJobs.length}) &rarr;
+            Lihat Semua ({availableJobs.length}) &rarr;
           </button>
         </div>
 
-        <div className="rekomendasi-grid-cards">
-          {availableJobs.slice(0, 4).map((job) => (
-            <article
-              key={job.id}
-              className={`rekomendasi-task-card ${job.locked ? 'rekomendasi-task-card--locked' : ''}`}
-            >
-              <div className="rekomendasi-card-top">
-                <span className="task-tag-chip task-tag-chip--mint">{job.tag}</span>
-                <span className="rekomendasi-dist-tag">
-                  <Icon name="pin" size={12} /> {job.distance}
-                </span>
-              </div>
-              <h4>{job.title}</h4>
-              <p className="rekomendasi-meta">
-                <Icon name="clock" size={13} /> {job.duration} &bull; {job.clientName}
-              </p>
-              <div className="rekomendasi-pay-block">
-                <strong className="text-pink">Rp{job.netHonor.toLocaleString('id-ID')}</strong>
-                <small className="text-muted">bersih setelah komisi</small>
-              </div>
-              {job.locked ? (
-                <button
-                  className="btn-rekomendasi-action btn-rekomendasi-action--locked"
-                  disabled
-                  title="Selesaikan 3 tugas lagi untuk membuka akses ke Tier 2"
-                  type="button"
-                >
-                  <Icon name="lock" size={14} />
-                  <span>Buka di Tier 2</span>
-                </button>
-              ) : (
-                <button
-                  className="btn-rekomendasi-action"
-                  onClick={() => onOpenAcceptModal(job)}
-                  type="button"
-                >
-                  <span>Lihat &amp; Ambil Tugas</span>
-                </button>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* 5. Realtime Double Analytics Chart dengan KPI Summary */}
-      <div className="analytics-double-grid">
-        {/* GRAFIK 1: BEBAN JAM KERJA MINGGUAN */}
-        <div className="analytics-chart-card">
-          <div className="analytics-chart-card__header">
-            <div>
-              <h3>Statistik Jam Kerja Mingguan</h3>
-              <small>Jumlah jam pengerjaan tugas mikro per hari</small>
-            </div>
-            <button className="chart-pill-selector" type="button">
-              <span>Minggu Ini &rarr;</span>
-            </button>
-          </div>
-
-          {/* KPI Summary Bar (Inspirasi Panduan) */}
-          <div className="chart-kpis-summary-bar">
-            <div className="kpi-mini-col">
-              <small>Total Jam</small>
-              <strong>34.5 jam</strong>
-            </div>
-            <div className="kpi-mini-col">
-              <small>Rata-rata/hari</small>
-              <strong>4.9 jam</strong>
-            </div>
-            <div className="kpi-mini-col">
-              <small>Vs minggu lalu</small>
-              <strong className="text-mint">+3.5 jam</strong>
-            </div>
-          </div>
-
-          <div className="svg-chart-container">
-            <svg
-              className="chart-svg-root"
-              preserveAspectRatio="xMidYMid meet"
-              viewBox="0 0 540 210"
-              width="100%"
-            >
-              {/* Garis Grid Horizontal */}
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="40" x2="510" y1="35" y2="35" />
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="40" x2="510" y1="80" y2="80" />
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="40" x2="510" y1="125" y2="125" />
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="40" x2="510" y1="170" y2="170" />
-
-              {/* Label Sumbu Y (Jam) */}
-              <text fill="#8c9cb8" fontSize="11" textAnchor="end" x="32" y="38">8 Jam</text>
-              <text fill="#8c9cb8" fontSize="11" textAnchor="end" x="32" y="83">6 Jam</text>
-              <text fill="#8c9cb8" fontSize="11" textAnchor="end" x="32" y="128">4 Jam</text>
-              <text fill="#8c9cb8" fontSize="11" textAnchor="end" x="32" y="173">0</text>
-
-              {/* Batang-batang hari (Senin - Minggu) */}
-              {daysData.map((d, idx) => {
-                const barHeight = Math.max(16, (d.hours / 8) * 135)
-                const barY = 170 - barHeight
-                const isHovered = hoveredDayIndex === idx
-
-                return (
-                  <g
-                    key={d.key}
-                    className="chart-bar-group"
-                    onClick={() => setHoveredDayIndex(idx)}
-                    onMouseEnter={() => setHoveredDayIndex(idx)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <rect fill="transparent" height="160" width="50" x={d.x - 7} y="15" />
-                    <rect
-                      fill="#ff3d8b"
-                      height={barHeight}
-                      rx="14"
-                      style={{
-                        transition: 'all 240ms cubic-bezier(0.16, 1, 0.3, 1)',
-                        opacity: isHovered ? 1 : 0.9,
-                        filter: isHovered ? 'drop-shadow(0 4px 10px rgba(255, 61, 139, 0.4))' : 'none',
-                      }}
-                      width="36"
-                      x={d.x}
-                      y={barY}
-                    />
-                    <text
-                      fill={isHovered ? '#0f1b3d' : '#5c6c8d'}
-                      fontSize="11"
-                      fontWeight={isHovered ? '800' : '600'}
-                      textAnchor="middle"
-                      x={d.x + 18}
-                      y="190"
+        <div className="clean-table-container">
+          <table className="clean-table">
+            <thead>
+              <tr>
+                <th>KODE</th>
+                <th>TUGAS / DESKRIPSI</th>
+                <th>KLIEN</th>
+                <th>JARAK</th>
+                <th>STATUS</th>
+                <th>HONOR BERSIH</th>
+                <th>TINDAKAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activeTask && (
+                <tr className="clean-table__row--highlight">
+                  <td><strong>{activeTask.code}</strong></td>
+                  <td>
+                    <strong className="text-navy">{activeTask.title}</strong>
+                    <div className="clean-table__meta">{activeTask.category}</div>
+                  </td>
+                  <td>{activeTask.clientName}</td>
+                  <td>{activeTask.distance}</td>
+                  <td>
+                    <span className="clean-badge clean-badge--pink">
+                      {currentStep === 1 ? 'Menuju Lokasi' : currentStep === 2 ? 'Sedang Dikerjakan' : 'Review Bukti'}
+                    </span>
+                  </td>
+                  <td>
+                    <strong className="text-pink">Rp{activeTask.netHonor.toLocaleString('id-ID')}</strong>
+                  </td>
+                  <td>
+                    <button
+                      className="clean-btn-small clean-btn-small--pink"
+                      onClick={onOpenProofModal}
+                      type="button"
                     >
-                      {d.key}
-                    </text>
-                  </g>
-                )
-              })}
-
-              {/* Tooltip Bubble Hari */}
-              {hoveredDayIndex !== null && daysData[hoveredDayIndex] && (
-                (() => {
-                  const day = daysData[hoveredDayIndex]
-                  const barHeight = (day.hours / 8) * 135
-                  const barY = 170 - barHeight
-                  const bubbleWidth = 92
-                  const bubbleX = day.x + 18 - bubbleWidth / 2
-                  const bubbleY = Math.max(10, barY - 26)
-
-                  return (
-                    <g
-                      className="chart-tooltip-bubble"
-                      style={{ pointerEvents: 'none', transition: 'transform 180ms ease' }}
-                      transform={`translate(${bubbleX}, ${bubbleY})`}
-                    >
-                      <rect
-                        fill="#0f1b3d"
-                        height="20"
-                        rx="10"
-                        style={{ filter: 'drop-shadow(0 2px 6px rgba(15, 27, 61, 0.25))' }}
-                        width={bubbleWidth}
-                      />
-                      <text
-                        fill="#ffffff"
-                        fontSize="10"
-                        fontWeight="700"
-                        textAnchor="middle"
-                        x={bubbleWidth / 2}
-                        y="14"
-                      >
-                        {day.hours} Jam ({day.jobs} Tugas)
-                      </text>
-                    </g>
-                  )
-                })()
-              )}
-            </svg>
-          </div>
-        </div>
-
-        {/* GRAFIK 2: ESTIMASI PENDAPATAN & KOMISI BULANAN */}
-        <div className="analytics-chart-card">
-          <div className="analytics-chart-card__header">
-            <div>
-              <h3>Efisiensi &amp; Pendapatan Bersih <InfoTooltip text="Komisi platform Tier 1 sebesar 8% transparan untuk asuransi perlindungan kerja & operasional escrow." /></h3>
-              <small>Perbandingan honor diterima vs komisi platform transparan</small>
-            </div>
-            <div className="chart-legend-row">
-              <span className="legend-item"><span className="legend-dot legend-dot--pink" /> Honor</span>
-              <span className="legend-item"><span className="legend-dot legend-dot--navy" /> Komisi</span>
-            </div>
-          </div>
-
-          {/* KPI Summary Bar (Inspirasi Panduan) */}
-          <div className="chart-kpis-summary-bar">
-            <div className="kpi-mini-col">
-              <small>Honor Kotor (Nov)</small>
-              <strong>Rp850.000</strong>
-            </div>
-            <div className="kpi-mini-col">
-              <small>Komisi 8%</small>
-              <strong>Rp68.000</strong>
-            </div>
-            <div className="kpi-mini-col">
-              <small>Bersih Diterima</small>
-              <strong className="text-pink">Rp782.000</strong>
-            </div>
-          </div>
-
-          <div className="svg-chart-container">
-            <svg
-              className="chart-svg-root"
-              preserveAspectRatio="xMidYMid meet"
-              viewBox="0 0 340 210"
-              width="100%"
-            >
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="25" x2="315" y1="35" y2="35" />
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="25" x2="315" y1="80" y2="80" />
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="25" x2="315" y1="125" y2="125" />
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="25" x2="315" y1="170" y2="170" />
-
-              {monthlyData.map((m, idx) => {
-                const isHovered = hoveredMonthIndex === idx
-                const navyY = 170 - m.feeH
-                const pinkY = navyY - m.netH
-
-                return (
-                  <g
-                    key={m.month}
-                    className="chart-bar-group"
-                    onClick={() => setHoveredMonthIndex(idx)}
-                    onMouseEnter={() => setHoveredMonthIndex(idx)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <rect fill="transparent" height="160" width="36" x={m.x - 7} y="15" />
-                    {/* Komisi Platform (Navy) */}
-                    <rect
-                      fill="#0f1b3d"
-                      height={m.feeH}
-                      rx="8"
-                      style={{
-                        transition: 'all 200ms ease',
-                        opacity: isHovered ? 1 : 0.85,
-                        filter: isHovered ? 'drop-shadow(0 2px 6px rgba(15, 27, 61, 0.4))' : 'none',
-                      }}
-                      width="22"
-                      x={m.x}
-                      y={navyY}
-                    />
-                    {/* Honor Bersih (Pink) */}
-                    <rect
-                      fill="#ff3d8b"
-                      height={m.netH}
-                      rx="8"
-                      style={{
-                        transition: 'all 200ms ease',
-                        opacity: isHovered ? 1 : 0.9,
-                        filter: isHovered ? 'drop-shadow(0 2px 6px rgba(255, 61, 139, 0.4))' : 'none',
-                      }}
-                      width="22"
-                      x={m.x}
-                      y={pinkY}
-                    />
-                    <text
-                      fill={isHovered ? '#0f1b3d' : '#5c6c8d'}
-                      fontSize="10"
-                      fontWeight={isHovered ? '800' : '600'}
-                      textAnchor="middle"
-                      x={m.x + 11}
-                      y="188"
-                    >
-                      {m.month}
-                    </text>
-                  </g>
-                )
-              })}
-
-              {/* Tooltip Bulan */}
-              {activeMonth && (
-                (() => {
-                  const bubbleWidth = 118
-                  const bubbleX = Math.min(Math.max(activeMonth.x + 11 - bubbleWidth / 2, 20), 226)
-
-                  return (
-                    <g
-                      style={{ pointerEvents: 'none', transition: 'all 180ms ease' }}
-                      transform={`translate(${bubbleX}, 6)`}
-                    >
-                      <rect
-                        fill="#0f1b3d"
-                        height="20"
-                        rx="10"
-                        style={{ filter: 'drop-shadow(0 2px 5px rgba(15, 27, 61, 0.25))' }}
-                        width={bubbleWidth}
-                      />
-                      <text
-                        fill="#ffffff"
-                        fontSize="10"
-                        fontWeight="700"
-                        textAnchor="middle"
-                        x={bubbleWidth / 2}
-                        y="14"
-                      >
-                        {activeMonth.month}: Rp {activeMonth.net.toLocaleString('id-ID')}
-                      </text>
-                    </g>
-                  )
-                })()
-              )}
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* 6. Row 5: Jadwal Mendatang & Aktivitas Terkini */}
-      <div className="jadwal-and-activity-grid">
-        {/* Jadwal Mendatang (Inspirasi Panduan) */}
-        <section className="jadwal-mendatang-card">
-          <div className="jadwal-header">
-            <div>
-              <h3>Jadwal Mendatang</h3>
-              <small>Agenda penugasan kerja yang telah terkonfirmasi</small>
-            </div>
-            <span className="jadwal-verified-chip">
-              <Icon name="check" size={13} /> Terjadwal
-            </span>
-          </div>
-
-          <ul className="jadwal-list">
-            {upcomingSchedule.map((sch) => (
-              <li key={sch.id} className="jadwal-item">
-                <div className="jadwal-icon-bubble">
-                  <Icon name="clock" size={16} />
-                </div>
-                <div className="jadwal-item-info">
-                  <strong>{sch.title}</strong>
-                  <small>{sch.time} &bull; {sch.client} ({sch.distance})</small>
-                </div>
-                <button
-                  className="btn-jadwal-detail"
-                  onClick={() => {
-                    const el = document.getElementById('active-task-section')
-                    if (el) el.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  type="button"
-                >
-                  Detail
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Tabel Aktivitas Tugas Terkini */}
-        <div className="recent-orders-card" style={{ marginBottom: 0 }}>
-          <div className="recent-orders-card__header">
-            <div>
-              <h3>Aktivitas &amp; Peluang Tugas Terkini</h3>
-              <small>Daftar penugasan berjalan dan rekomendasi sekitar</small>
-            </div>
-            <div className="table-action-filters">
-              <button
-                className="btn-view-kanban-link"
-                onClick={() => setCurrentMenu('peluang')}
-                type="button"
-              >
-                Buka Semua ({availableJobs.length}) &rarr;
-              </button>
-            </div>
-          </div>
-
-          <div className="table-responsive-wrapper">
-            <table className="clean-data-table">
-              <thead>
-                <tr>
-                  <th>Kode</th>
-                  <th>Tugas / Kategori</th>
-                  <th>Pemesan</th>
-                  <th>Jarak</th>
-                  <th>Status</th>
-                  <th>Honor Bersih</th>
-                  <th>Tindakan</th>
+                      Buka SOP
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {activeTask && (
-                  <tr className="table-row--highlight">
-                    <td><strong>{activeTask.code}</strong></td>
-                    <td>
-                      <strong>{activeTask.title}</strong>
-                      <div className="text-muted text-small">{activeTask.category}</div>
-                    </td>
-                    <td>{activeTask.clientName}</td>
-                    <td>{activeTask.distance}</td>
-                    <td>
-                      <span className="table-status-pill table-status-pill--in-progress">
-                        {currentStep === 1 ? 'Menuju Lokasi' : currentStep === 2 ? 'Sedang Dikerjakan' : currentStep === 3 ? 'Review Bukti' : 'Selesai'}
-                      </span>
-                    </td>
-                    <td>
-                      <strong className="text-pink">Rp{activeTask.netHonor.toLocaleString('id-ID')}</strong>
-                    </td>
-                    <td>
+              )}
+
+              {availableJobs.slice(0, 4).map((job) => (
+                <tr key={job.id}>
+                  <td><strong>{job.code}</strong></td>
+                  <td>
+                    <strong className="text-navy">{job.title}</strong>
+                    <div className="clean-table__meta">{job.category} &bull; {job.tag}</div>
+                  </td>
+                  <td>{job.clientName}</td>
+                  <td>{job.distance}</td>
+                  <td>
+                    <span className={`clean-badge ${job.locked ? 'clean-badge--navy' : 'clean-badge--mint'}`}>
+                      {job.locked ? 'Tier 2' : 'Tersedia'}
+                    </span>
+                  </td>
+                  <td>
+                    <strong className="text-navy">Rp{job.netHonor.toLocaleString('id-ID')}</strong>
+                  </td>
+                  <td>
+                    {job.locked ? (
                       <button
-                        className="btn-table-action btn-table-action--pink"
-                        onClick={onOpenProofModal}
+                        className="clean-btn-small clean-btn-small--disabled"
+                        disabled
                         type="button"
                       >
-                        Buka Checklist
+                        Buka di Tier 2
                       </button>
-                    </td>
-                  </tr>
-                )}
-
-                {availableJobs.slice(0, 3).map((job) => (
-                  <tr key={job.id}>
-                    <td><strong>{job.code}</strong></td>
-                    <td>
-                      <strong>{job.title}</strong>
-                      <div className="text-muted text-small">{job.category} &bull; {job.tag}</div>
-                    </td>
-                    <td>{job.clientName}</td>
-                    <td>{job.distance}</td>
-                    <td>
-                      <span className="table-status-pill table-status-pill--open">
-                        {job.locked ? 'Tier 2' : 'Tersedia'}
-                      </span>
-                    </td>
-                    <td>
-                      <strong className="text-navy">Rp{job.netHonor.toLocaleString('id-ID')}</strong>
-                    </td>
-                    <td>
-                      {job.locked ? (
-                        <button
-                          className="btn-table-action"
-                          disabled
-                          style={{ opacity: 0.6, cursor: 'not-allowed' }}
-                          title="Buka di Tier 2"
-                          type="button"
-                        >
-                          Terkunci
-                        </button>
-                      ) : (
-                        <button
-                          className="btn-table-action"
-                          onClick={() => onOpenAcceptModal(job)}
-                          type="button"
-                        >
-                          Ambil Tugas
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    ) : (
+                      <button
+                        className="clean-btn-small clean-btn-small--primary"
+                        onClick={() => onOpenAcceptModal(job)}
+                        type="button"
+                      >
+                        Ambil Tugas
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </section>
     </main>
   )
 }

@@ -190,7 +190,6 @@ function BerandaView({
           </div>
           <div className="metric-box-card__body">
             <strong>{tasks.length}</strong>
-            <span className="metric-trend metric-trend--up">↑ Realtime</span>
           </div>
           <small className="metric-sub-note">Tersinkronisasi otomatis</small>
         </div>
@@ -204,7 +203,6 @@ function BerandaView({
           </div>
           <div className="metric-box-card__body">
             <strong>{activeWorkersCount} Orang</strong>
-            <span className="metric-trend metric-trend--up">↑ 7.5%</span>
           </div>
           <small className="metric-sub-note">Radius 1–5 km aktif</small>
         </div>
@@ -218,7 +216,6 @@ function BerandaView({
           </div>
           <div className="metric-box-card__body">
             <strong className="text-pink">{reviewTasksCount} Tugas</strong>
-            <span className="metric-trend metric-trend--warn">Siap TTD</span>
           </div>
           <small className="metric-sub-note">Perlu persetujuan bukti</small>
         </div>
@@ -236,7 +233,6 @@ function BerandaView({
           </div>
           <div className="metric-box-card__body">
             <strong>Rp{totalHeldEscrow.toLocaleString('id-ID')}</strong>
-            <span className="metric-trend metric-trend--good">Buka Mutasi →</span>
           </div>
           <small className="metric-sub-note">100% dilindungi garansi Relink</small>
         </div>
