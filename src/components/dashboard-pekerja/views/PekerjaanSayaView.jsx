@@ -8,7 +8,6 @@ function PekerjaanSayaView({
   upcomingSchedule = [],
   onCheckInArrived,
   onOpenProofModal,
-  onTriggerSos,
   setCurrentMenu,
 }) {
   const [activeTab, setActiveTab] = useState('aktif') // 'aktif' | 'agenda' | 'riwayat'
@@ -40,90 +39,92 @@ function PekerjaanSayaView({
 
   return (
     <main className="clean-dash-wrapper">
-      {/* 1. HEADER HALAMAN */}
+      {/* 1. HEADER (Simple & Clean) */}
       <header className="clean-dash-header">
         <div className="clean-dash-header__intro">
           <span className="clean-dash-eyebrow">MANAJEMEN PENUGASAN</span>
           <h1 className="clean-dash-title">Pekerjaan Saya</h1>
           <p className="clean-dash-subtitle">
-            Pantau status penugasan aktif, check-in lokasi, kepatuhan SOP, dan serahkan laporan bukti hasil kerja.
+            Kelola penugasan aktif, konfirmasi kedatangan lokasi, dan serahkan laporan hasil kerja.
           </p>
         </div>
         <div className="clean-dash-header__actions">
           <span className="clean-badge clean-badge--mint">
-            <Icon name="shield" size={14} /> 100% Terlindungi Escrow
+            <Icon name="shield" size={13} /> 100% Terlindungi Escrow
           </span>
-          <button
-            className="clean-btn-pill clean-btn-pill--sos"
-            onClick={onTriggerSos}
-            type="button"
-          >
-            <Icon name="alert" size={14} /> Siaga SOS
-          </button>
         </div>
       </header>
 
-      {/* 2. FILTER TAB NAVIGASI */}
-      <div className="clean-filters-bar" style={{ marginBottom: '24px' }}>
-        <div className="clean-pill-tabs">
-          <button
-            className={`clean-pill-tab ${activeTab === 'aktif' ? 'clean-pill-tab--active' : ''}`}
-            onClick={() => setActiveTab('aktif')}
-            type="button"
-          >
-            Tugas Berjalan ({activeTask ? 1 : 0})
-          </button>
-          <button
-            className={`clean-pill-tab ${activeTab === 'agenda' ? 'clean-pill-tab--active' : ''}`}
-            onClick={() => setActiveTab('agenda')}
-            type="button"
-          >
-            Jadwal &amp; Agenda ({upcomingSchedule.length})
-          </button>
-          <button
-            className={`clean-pill-tab ${activeTab === 'riwayat' ? 'clean-pill-tab--active' : ''}`}
-            onClick={() => setActiveTab('riwayat')}
-            type="button"
-          >
-            Riwayat Selesai ({completedHistory.length})
-          </button>
-        </div>
+      {/* 2. PILL FILTER TABS (Style Seragam dengan Bursa Peluang) */}
+      <div className="clean-peluang-tabs" style={{ marginBottom: '22px' }}>
+        <button
+          className={`clean-peluang-tab-btn ${activeTab === 'aktif' ? 'clean-peluang-tab-btn--active' : ''}`}
+          onClick={() => setActiveTab('aktif')}
+          type="button"
+        >
+          <span>Tugas Berjalan</span>
+          <span style={{ opacity: 0.75, fontSize: '11px', marginLeft: '2px' }}>({activeTask ? 1 : 0})</span>
+        </button>
+
+        <button
+          className={`clean-peluang-tab-btn ${activeTab === 'agenda' ? 'clean-peluang-tab-btn--active' : ''}`}
+          onClick={() => setActiveTab('agenda')}
+          type="button"
+        >
+          <span>Jadwal &amp; Agenda</span>
+          <span style={{ opacity: 0.75, fontSize: '11px', marginLeft: '2px' }}>({upcomingSchedule.length})</span>
+        </button>
+
+        <button
+          className={`clean-peluang-tab-btn ${activeTab === 'riwayat' ? 'clean-peluang-tab-btn--active' : ''}`}
+          onClick={() => setActiveTab('riwayat')}
+          type="button"
+        >
+          <span>Riwayat Selesai</span>
+          <span style={{ opacity: 0.75, fontSize: '11px', marginLeft: '2px' }}>({completedHistory.length})</span>
+        </button>
       </div>
+
+      {/* 3. KONTEN TAB */}
 
       {/* TAB 1: TUGAS SEDANG BERJALAN */}
       {activeTab === 'aktif' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {activeTask ? (
             <>
-              {/* Card Utama Alur Transaksi Escrow Interaktif */}
+              {/* Card Utama Alur Transaksi Escrow */}
               <section className="clean-card clean-active-task-card" id="active-task-section">
-                <div className="clean-card__header">
+                {/* Header Card */}
+                <div className="clean-card__header" style={{ marginBottom: '16px' }}>
                   <div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
                       <span className="clean-badge clean-badge--navy">
-                        {activeTask.category || 'Operasional Toko'}
+                        {activeTask.category || 'Operasional'}
                       </span>
                       <span className="clean-badge clean-badge--mint">
-                        <Icon name="shield" size={13} /> Escrow {activeTask.escrowRef}
+                        <Icon name="shield" size={12} /> Escrow {activeTask.escrowRef}
                       </span>
                     </div>
-                    <h2 className="clean-card-title" style={{ fontSize: '20px', marginTop: '4px' }}>
+                    <h2 className="clean-card-title" style={{ fontSize: '19px', margin: '0 0 6px' }}>
                       {activeTask.title}
                     </h2>
-                    <p className="clean-card-subtitle">
+                    <p className="clean-card-subtitle" style={{ margin: 0 }}>
                       Klien: <strong>{activeTask.clientName}</strong> • <Icon name="pin" size={12} /> {activeTask.distance} • Estimasi tiba 6 menit
                     </p>
                   </div>
+
                   <div style={{ textAlign: 'right' }}>
-                    <span className="text-muted" style={{ fontSize: '12px', display: 'block' }}>Honor Bersih Anda</span>
-                    <strong className="text-pink" style={{ fontSize: '24px', fontWeight: 800 }}>
+                    <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600, display: 'block' }}>
+                      Honor Bersih Anda
+                    </span>
+                    <strong className="text-pink" style={{ fontSize: '22px', fontWeight: 800 }}>
                       Rp{activeTask.netHonor?.toLocaleString('id-ID')}
                     </strong>
                   </div>
                 </div>
 
-                {/* Stepper 5 Tahap Transparan */}
-                <div className="clean-stepper-row" style={{ marginTop: '16px', marginBottom: '20px' }}>
+                {/* Stepper 5 Tahap */}
+                <div className="clean-stepper-row" style={{ margin: '18px 0 22px' }}>
                   {[
                     { step: 1, title: 'Dana Ditahan', desc: `Rp${activeTask.grossHonor?.toLocaleString('id-ID')}` },
                     { step: 2, title: 'Menuju Lokasi', desc: 'Check-in saat tiba' },
@@ -151,11 +152,11 @@ function PekerjaanSayaView({
                   })}
                 </div>
 
-                {/* Baris Tombol Aksi Kerja */}
+                {/* Footer Baris Aksi */}
                 <div className="clean-active-task-actions" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
                   <div className="clean-active-task-honor">
-                    <span className="text-muted">Kode Tugas:</span>
-                    <strong className="text-navy">{activeTask.code || activeTask.id}</strong>
+                    <span className="text-muted" style={{ fontSize: '12.5px' }}>Kode:</span>
+                    <strong className="text-navy" style={{ fontSize: '13px' }}>#{activeTask.code || activeTask.id}</strong>
                   </div>
 
                   <div className="clean-active-task-btn-group">
@@ -171,15 +172,6 @@ function PekerjaanSayaView({
                       </a>
                     )}
 
-                    <button
-                      className="clean-btn-pill clean-btn-pill--sos"
-                      onClick={onTriggerSos}
-                      type="button"
-                    >
-                      <Icon name="alert" size={14} />
-                      <span>SOS</span>
-                    </button>
-
                     {currentStep === 1 && (
                       <button
                         className="clean-btn-pill clean-btn-pill--primary"
@@ -187,7 +179,7 @@ function PekerjaanSayaView({
                         type="button"
                       >
                         <Icon name="pin" size={14} />
-                        <span>Saya Sudah Tiba (Check-in)</span>
+                        <span>Check-in di Lokasi</span>
                       </button>
                     )}
 
@@ -203,63 +195,57 @@ function PekerjaanSayaView({
                     )}
 
                     {currentStep === 3 && (
-                      <span className="clean-badge clean-badge--navy" style={{ padding: '8px 16px', fontSize: '13px' }}>
-                        <Icon name="clock" size={14} /> Menunggu Review Klien
+                      <span className="clean-badge clean-badge--navy" style={{ padding: '8px 14px', fontSize: '12.5px' }}>
+                        <Icon name="clock" size={13} /> Menunggu Review Klien
                       </span>
                     )}
                   </div>
                 </div>
               </section>
 
-              {/* Rincian Petunjuk Kerja & Alamat Klien */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-                <section className="clean-card">
-                  <div className="clean-card__header">
-                    <div>
-                      <span className="clean-section-eyebrow">LOKASI &amp; KONTAK</span>
-                      <h3 className="clean-card-title">Alamat UMKM Klien</h3>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13.5px', color: '#475569' }}>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+              {/* Rincian Petunjuk Kerja & Alamat Klien (Clean 2-Column Grid) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '18px' }}>
+                <section className="clean-card" style={{ padding: '20px 24px' }}>
+                  <span className="clean-section-eyebrow" style={{ marginBottom: '6px' }}>LOKASI &amp; KONTAK</span>
+                  <h3 className="clean-card-title" style={{ fontSize: '15px', marginBottom: '12px' }}>Alamat UMKM Klien</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', color: '#475569' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                       <Icon name="pin" size={16} />
                       <div>
                         <strong>{activeTask.clientName}</strong>
-                        <p style={{ margin: '4px 0 0', color: '#64748b' }}>
-                          Jl. Tebet Barat Raya No. 42, RT 05 / RW 03, Jakarta Selatan (Patokan sebelah Apotek K-24)
+                        <p style={{ margin: '3px 0 0', color: '#64748b', fontSize: '12.5px', lineHeight: 1.45 }}>
+                          Jl. Tebet Barat Raya No. 42, RT 05 / RW 03, Jakarta Selatan (Sebelah Apotek K-24)
                         </p>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <Icon name="phone" size={16} />
-                      <span>{activeTask.clientPhone || '0812-9876-5432'} (PIC: Bpk. Haryanto)</span>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid #f8fafc' }}>
+                      <Icon name="phone" size={15} />
+                      <span style={{ fontSize: '12.5px' }}>{activeTask.clientPhone || '0812-9876-5432'} (PIC: Bpk. Haryanto)</span>
                     </div>
                   </div>
                 </section>
 
-                <section className="clean-card">
-                  <div className="clean-card__header">
-                    <div>
-                      <span className="clean-section-eyebrow">STANDAR OPERASIONAL</span>
-                      <h3 className="clean-card-title">SOP Checklist Pengerjaan</h3>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', color: '#475569' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <section className="clean-card" style={{ padding: '20px 24px' }}>
+                  <span className="clean-section-eyebrow" style={{ marginBottom: '6px' }}>STANDAR OPERASIONAL</span>
+                  <h3 className="clean-card-title" style={{ fontSize: '15px', marginBottom: '12px' }}>SOP Pengerjaan</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px', color: '#475569' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ color: 'var(--mint)', fontWeight: 800 }}>✓</span>
-                      <span>Datang tepat waktu dan tunjukkan kartu identitas Relink Mitra</span>
+                      <span>Hadir tepat waktu dan check-in saat tiba di lokasi</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ color: 'var(--mint)', fontWeight: 800 }}>✓</span>
-                      <span>Ambil foto kondisi sebelum memulai pengerjaan</span>
+                      <span>Ambil foto kondisi sebelum dan sesudah pekerjaan</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ color: 'var(--mint)', fontWeight: 800 }}>✓</span>
-                      <span>Foto hasil kerja akhir dan minta paraf/konfirmasi penanggung jawab</span>
+                      <span>Konfirmasi hasil kerja ke penanggung jawab toko</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ color: 'var(--mint)', fontWeight: 800 }}>✓</span>
-                      <span>Upload bukti hasil kerja langsung lewat tombol Serahkan Bukti</span>
+                      <span>Kirim bukti lewat tombol Serahkan Bukti Hasil</span>
                     </div>
                   </div>
                 </section>
@@ -269,24 +255,24 @@ function PekerjaanSayaView({
             <div className="clean-card" style={{ padding: '48px 24px', textAlign: 'center' }}>
               <div
                 style={{
-                  width: '64px',
-                  height: '64px',
+                  width: '56px',
+                  height: '56px',
                   borderRadius: '50%',
-                  background: 'rgba(15, 27, 61, 0.05)',
+                  background: 'rgba(15, 27, 61, 0.04)',
                   color: 'var(--navy)',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginBottom: '16px',
+                  marginBottom: '14px',
                 }}
               >
-                <Icon name="briefcase" size={28} />
+                <Icon name="briefcase" size={24} />
               </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--navy)', margin: '0 0 8px' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--navy)', margin: '0 0 6px' }}>
                 Belum Ada Pekerjaan yang Sedang Berjalan
               </h3>
-              <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '440px', margin: '0 auto 20px' }}>
-                Anda sedang tidak memiliki tugas aktif saat ini. Buka radar peluang tugas untuk mengambil pekerjaan terdekat dengan jaminan escrow.
+              <p style={{ color: '#64748b', fontSize: '13.5px', maxWidth: '420px', margin: '0 auto 18px' }}>
+                Ambil tugas mikro terdekat di sekitarmu dengan jaminan pembayaran aman lewat rekening escrow resmi.
               </p>
               <button
                 className="clean-btn-pill clean-btn-pill--primary"
@@ -302,74 +288,71 @@ function PekerjaanSayaView({
 
       {/* TAB 2: JADWAL & AGENDA KERJA */}
       {activeTab === 'agenda' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <section className="clean-card">
-            <div className="clean-card__header">
-              <div>
-                <span className="clean-section-eyebrow">AGENDA PENUGASAN</span>
-                <h3 className="clean-card-title">Jadwal Tugas Mendatang</h3>
-              </div>
-              <span className="clean-badge clean-badge--navy">{upcomingSchedule.length} Agenda</span>
+        <section className="clean-card">
+          <div className="clean-card__header" style={{ marginBottom: '16px' }}>
+            <div>
+              <span className="clean-section-eyebrow">AGENDA PENUGASAN</span>
+              <h3 className="clean-card-title" style={{ fontSize: '16px' }}>Jadwal Tugas Mendatang</h3>
             </div>
+            <span className="clean-badge clean-badge--navy">{upcomingSchedule.length} Agenda</span>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {upcomingSchedule.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '14px 16px',
-                    borderRadius: '14px',
-                    background: '#f8fafc',
-                    border: '1px solid #edf2f7',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div
-                      style={{
-                        padding: '8px 12px',
-                        background: '#e9eff6',
-                        borderRadius: '10px',
-                        color: 'var(--navy)',
-                        fontWeight: 700,
-                        fontSize: '12px',
-                        textAlign: 'center',
-                      }}
-                    >
-                      {item.time}
-                    </div>
-                    <div>
-                      <strong style={{ fontSize: '14px', color: 'var(--navy)', display: 'block' }}>
-                        {item.title}
-                      </strong>
-                      <span style={{ fontSize: '12.5px', color: '#64748b' }}>
-                        {item.client} • {item.distance}
-                      </span>
-                    </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {upcomingSchedule.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #edf2f7',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
+                    style={{
+                      padding: '6px 10px',
+                      background: '#e9eff6',
+                      borderRadius: '8px',
+                      color: 'var(--navy)',
+                      fontWeight: 700,
+                      fontSize: '11.5px',
+                    }}
+                  >
+                    {item.time}
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span className="clean-badge clean-badge--mint">Terkonfirmasi</span>
+                  <div>
+                    <strong style={{ fontSize: '13.5px', color: 'var(--navy)', display: 'block' }}>
+                      {item.title}
+                    </strong>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      {item.client} • {item.distance}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
+                <span className="clean-badge clean-badge--mint" style={{ fontSize: '11px', padding: '3px 8px' }}>
+                  Terkonfirmasi
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* TAB 3: RIWAYAT PEKERJAAN SELESAI */}
       {activeTab === 'riwayat' && (
         <section className="clean-card">
-          <div className="clean-card__header">
+          <div className="clean-card__header" style={{ marginBottom: '16px' }}>
             <div>
               <span className="clean-section-eyebrow">RIWAYAT PENYELESAIAN</span>
-              <h3 className="clean-card-title">Pekerjaan yang Telah Selesai</h3>
+              <h3 className="clean-card-title" style={{ fontSize: '16px' }}>Pekerjaan yang Telah Selesai</h3>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {completedHistory.map((item) => (
               <div
                 key={item.id}
@@ -377,27 +360,29 @@ function PekerjaanSayaView({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '16px',
-                  borderRadius: '14px',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
                   background: '#f8fafc',
                   border: '1px solid #edf2f7',
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
-                    <span className="clean-badge clean-badge--mint">{item.status}</span>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '3px' }}>
+                    <span className="clean-badge clean-badge--mint" style={{ fontSize: '11px', padding: '2px 7px' }}>
+                      {item.status}
+                    </span>
                     <small style={{ color: '#94a3b8' }}>{item.date}</small>
                   </div>
-                  <strong style={{ fontSize: '14.5px', color: 'var(--navy)', display: 'block' }}>
+                  <strong style={{ fontSize: '14px', color: 'var(--navy)', display: 'block' }}>
                     {item.title}
                   </strong>
-                  <span style={{ fontSize: '13px', color: '#64748b' }}>
+                  <span style={{ fontSize: '12.5px', color: '#64748b' }}>
                     {item.client} • Durasi: {item.duration} • Rating: ⭐ {item.rating.toFixed(1)}
                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <span className="text-muted" style={{ fontSize: '12px', display: 'block' }}>Honor Cair</span>
-                  <strong className="text-pink" style={{ fontSize: '16px' }}>
+                  <span className="text-muted" style={{ fontSize: '11px', display: 'block' }}>Honor Cair</span>
+                  <strong className="text-pink" style={{ fontSize: '15px' }}>
                     Rp{item.honor.toLocaleString('id-ID')}
                   </strong>
                 </div>
