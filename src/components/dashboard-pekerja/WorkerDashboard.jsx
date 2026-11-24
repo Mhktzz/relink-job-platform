@@ -430,16 +430,15 @@ function WorkerDashboard() {
           </div>
 
           <div className="topbar-actions">
-            {/* Toggle Status Siap Kerja Instan di Topbar */}
+            {/* Toggle Status Online / Offline di Topbar */}
             <button
               className={`topbar-radar-toggle-pill ${isAvailableNow ? 'topbar-radar-toggle-pill--active' : ''}`}
-              aria-label={isAvailableNow ? 'Nonaktifkan status siap kerja' : 'Aktifkan status siap kerja'}
+              aria-label={isAvailableNow ? 'Ubah status ke Offline' : 'Ubah status ke Online'}
               onClick={() => setIsAvailableNow(!isAvailableNow)}
-              title={isAvailableNow ? 'Radar Aktif: Menerima Order Instan' : 'Radar Nonaktif: Istirahat'}
+              title={isAvailableNow ? 'Status: Online' : 'Status: Offline'}
               type="button"
             >
-              <span className={`radar-indicator-dot ${isAvailableNow ? 'radar-indicator-dot--active' : ''}`} />
-              <span>{isAvailableNow ? 'Siap Kerja Instan' : 'Offline'}</span>
+              <span>{isAvailableNow ? 'Online' : 'Offline'}</span>
             </button>
 
             <button
