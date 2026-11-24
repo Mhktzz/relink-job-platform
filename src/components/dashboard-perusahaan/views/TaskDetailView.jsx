@@ -288,7 +288,10 @@ function TaskDetailView({
           {stages.map((stage, idx) => {
             const state = getStageState(stage.key)
             return (
-              <div key={stage.key} className={`stepper-node ${state}`}>
+              <div
+                key={stage.key}
+                className={`stepper-node ${state} ${idx === stages.length - 1 ? 'stepper-node--last' : ''}`}
+              >
                 <div className="stepper-indicator">
                   <div className="stepper-dot">
                     {state === 'is-done' ? (
