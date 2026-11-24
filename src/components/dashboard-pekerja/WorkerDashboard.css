@@ -3911,3 +3911,366 @@
   }
 }
 
+
+/* ==========================================================================
+   MINIMALIST CLEAN SAAS - PELUANG TUGAS VIEW (SESUAI STYLE BERANDA)
+   ========================================================================== */
+.clean-peluang-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.clean-peluang-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.clean-peluang-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: var(--white);
+  border: 1px solid rgba(15, 27, 61, 0.1);
+  box-shadow: 0 1px 3px rgba(15, 27, 61, 0.02);
+  cursor: pointer;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.clean-peluang-tab-btn:hover {
+  background: #f8fafc;
+  color: var(--navy);
+  border-color: rgba(15, 27, 61, 0.2);
+  transform: translateY(-1px);
+}
+
+.clean-peluang-tab-btn--active {
+  background: var(--navy) !important;
+  color: var(--white) !important;
+  border-color: var(--navy) !important;
+  box-shadow: 0 4px 12px rgba(15, 27, 61, 0.18);
+}
+
+.clean-peluang-search-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.clean-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1px solid rgba(15, 27, 61, 0.1);
+  border-radius: 999px;
+  padding: 8px 16px;
+  box-shadow: 0 1px 3px rgba(15, 27, 61, 0.02);
+  width: 270px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.clean-search-input-wrap:focus-within {
+  border-color: rgba(15, 27, 61, 0.3);
+  box-shadow: 0 0 0 3px rgba(15, 27, 61, 0.05);
+}
+
+.clean-search-input-wrap svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.clean-search-input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  color: var(--navy);
+  width: 100%;
+}
+
+.clean-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.clean-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  border: 1px solid rgba(15, 27, 61, 0.1);
+  border-radius: 999px;
+  padding: 8px 14px;
+  box-shadow: 0 1px 3px rgba(15, 27, 61, 0.02);
+}
+
+.clean-select-wrap svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.clean-select-dropdown {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+/* Banner Proteksi Tier 1 */
+.clean-tier1-protection-banner {
+  padding: 16px 22px;
+  border-color: rgba(61, 224, 176, 0.25);
+  background: linear-gradient(135deg, #ffffff 0%, #f4fdfa 100%);
+}
+
+.clean-tier1-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.clean-tier1-banner-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(61, 224, 176, 0.16);
+  color: #0b805d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.clean-tier1-banner-text h4 {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 2px 0;
+}
+
+.clean-tier1-banner-text p {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Grid Kartu Peluang Tugas */
+.clean-jobs-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.clean-job-card {
+  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.clean-job-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 27, 61, 0.06);
+}
+
+.clean-job-card--locked {
+  background: #fafbfe;
+  opacity: 0.85;
+}
+
+.clean-job-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.clean-job-card__badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.clean-job-card__title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 6px 0;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.clean-job-card__desc {
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  margin: 0 0 14px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.clean-job-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: #8c9cb8;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.clean-job-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.clean-job-meta-item strong {
+  color: var(--navy);
+}
+
+.clean-job-checklist-preview {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(15, 27, 61, 0.04);
+  margin-bottom: 16px;
+}
+
+.clean-job-checklist-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.clean-job-checklist-text {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+.clean-job-divider {
+  height: 1px;
+  background: rgba(15, 27, 61, 0.06);
+  margin: 0 0 16px 0;
+  margin-top: auto;
+}
+
+.clean-job-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.clean-job-honor-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.clean-job-honor-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8c9cb8;
+}
+
+.clean-job-honor-val {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--pink);
+  line-height: 1.15;
+  margin: 1px 0 2px 0;
+}
+
+.clean-job-honor-gross {
+  font-size: 10.5px;
+  color: #8c9cb8;
+}
+
+.clean-btn-pill--disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-color: transparent;
+  cursor: not-allowed;
+}
+
+.clean-empty-state-card {
+  text-align: center;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.clean-empty-state-card svg {
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.clean-empty-state-card h4 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.clean-empty-state-card p {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 0;
+  max-width: 440px;
+}
+
+/* Responsif Peluang Tugas */
+@media (max-width: 1024px) {
+  .clean-jobs-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .clean-peluang-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .clean-peluang-search-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .clean-search-input-wrap {
+    width: 100%;
+  }
+}

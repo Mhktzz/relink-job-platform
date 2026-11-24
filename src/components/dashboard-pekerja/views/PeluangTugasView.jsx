@@ -9,203 +9,215 @@ function PeluangTugasView({ availableJobs = [], onOpenAcceptModal, searchQueryGl
   const effectiveQuery = searchQuery || searchQueryGlobal
 
   const filteredJobs = availableJobs.filter((job) => {
-    if (activeTab === 'tier1' && !job.tag.includes('Tier 1')) return false
-    if (activeTab === 'tandem' && !job.tag.includes('Tandem')) return false
-    if (activeTab === 'teknis' && job.category !== 'Teknis & Perangkat') return false
+    const jobTag = job.tag || ''
+    const jobCategory = job.category || ''
+
+    if (activeTab === 'tier1' && !jobTag.includes('Tier 1')) return false
+    if (activeTab === 'tandem' && !jobTag.includes('Tandem')) return false
+    if (activeTab === 'teknis' && jobCategory !== 'Teknis & Perangkat') return false
 
     const distNum = parseFloat(job.distance) || 0
     if (maxDistance === '1km' && distNum > 1.0) return false
     if (maxDistance === '3km' && distNum > 3.0) return false
 
-    const q = effectiveQuery.toLowerCase()
+    const q = effectiveQuery.toLowerCase().trim()
+    if (!q) return true
+
     return (
-      job.title.toLowerCase().includes(q) ||
-      job.clientName.toLowerCase().includes(q) ||
-      job.description.toLowerCase().includes(q) ||
-      job.category.toLowerCase().includes(q)
+      (job.title && job.title.toLowerCase().includes(q)) ||
+      (job.clientName && job.clientName.toLowerCase().includes(q)) ||
+      (job.description && job.description.toLowerCase().includes(q)) ||
+      (job.category && job.category.toLowerCase().includes(q))
     )
   })
 
   return (
-    <main className="dashboard-content-flow">
-      {/* 1. Header Section */}
-      <div className="content-heading-bar">
-        <div>
-          <h1>Radar Peluang Tugas Mikro Terdekat</h1>
-          <p>
-            Ambil pekerjaan langsung di radius 1–5 km. Honor bersih transparan tanpa potongan tersembunyi dan dijamin aman di rekening Escrow Relink.
+    <main className="clean-dash-wrapper">
+      {/* 1. HEADER (Konsisten dengan Gaya Beranda) */}
+      <header className="clean-dash-header">
+        <div className="clean-dash-header__intro">
+          <span className="clean-dash-eyebrow">RADAR TUGAS LAPANGAN</span>
+          <h1 className="clean-dash-title">Peluang Tugas Mikro Terdekat</h1>
+          <p className="clean-dash-subtitle">
+            Pekerjaan instan terverifikasi escrow dalam radius 1–5 km. Honor transparan dan dijamin aman di rekening penampung resmi.
           </p>
         </div>
-        <div className="escrow-header-actions">
-          <span className="escrow-verified-pill">
-            <Icon name="shield" size={14} /> 100% Terlindungi Escrow
+        <div className="clean-dash-header__actions">
+          <span className="clean-badge clean-badge--mint" style={{ padding: '8px 16px', fontSize: '12px' }}>
+            <Icon name="shield" size={14} />
+            <span>100% Terlindungi Escrow</span>
           </span>
         </div>
-      </div>
+      </header>
 
-      {/* 2. Filter Toolbar (Menggunakan style escrow-filter-tabs & topbar-search dari Dashboard Perusahaan) */}
-      <div className="escrow-ledger-header" style={{ marginBottom: '24px' }}>
-        <div className="escrow-filter-tabs">
-          <button
-            className={`escrow-tab-btn${activeTab === 'all' ? ' escrow-tab-btn--active' : ''}`}
-            onClick={() => setActiveTab('all')}
-            type="button"
-          >
-            Semua Tugas ({availableJobs.length})
-          </button>
-          <button
-            className={`escrow-tab-btn${activeTab === 'tier1' ? ' escrow-tab-btn--active' : ''}`}
-            onClick={() => setActiveTab('tier1')}
-            type="button"
-          >
-            Khusus Pemula (Tier 1)
-          </button>
-          <button
-            className={`escrow-tab-btn${activeTab === 'tandem' ? ' escrow-tab-btn--active' : ''}`}
-            onClick={() => setActiveTab('tandem')}
-            type="button"
-          >
-            Undangan Tim Tandem
-          </button>
-          <button
-            className={`escrow-tab-btn${activeTab === 'teknis' ? ' escrow-tab-btn--active' : ''}`}
-            onClick={() => setActiveTab('teknis')}
-            type="button"
-          >
-            Teknis &amp; Servis
-          </button>
+      {/* 2. FILTER & PENCARIAN TUGAS (TOOLBAR CLEAN) */}
+      <section className="clean-peluang-toolbar">
+        {/* Tab Kategori */}
+        <div className="clean-peluang-tabs">
+          {[
+            { id: 'all', label: `Semua Tugas (${availableJobs.length})` },
+            { id: 'tier1', label: 'Khusus Pemula (Tier 1)' },
+            { id: 'tandem', label: 'Tim Tandem' },
+            { id: 'teknis', label: 'Teknis & Servis' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              className={`clean-peluang-tab-btn ${activeTab === tab.id ? 'clean-peluang-tab-btn--active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+              type="button"
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        <div className="escrow-search-wrapper">
-          <div className="escrow-search-input-wrap">
-            <Icon name="search" size={15} />
+        {/* Input Pencarian & Jarak Radius */}
+        <div className="clean-peluang-search-group">
+          <div className="clean-search-input-wrap">
+            <Icon name="search" size={14} />
             <input
-              className="escrow-search-input"
+              className="clean-search-input"
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari tugas, nama toko UMKM..."
+              placeholder="Cari tugas, kategori, atau nama toko..."
               type="text"
               value={searchQuery}
             />
           </div>
 
-          <select
-            className="job-distance-select"
-            onChange={(e) => setMaxDistance(e.target.value)}
-            value={maxDistance}
-          >
-            <option value="all">Semua Jarak (Radius 1–5 km)</option>
-            <option value="1km">&lt; 1 km (Sangat Dekat)</option>
-            <option value="3km">&lt; 3 km (Jalan / Motor Cepat)</option>
-          </select>
-        </div>
-      </div>
-
-      {/* 3. Banner Edukasi Anti-Bias Cold-Start (Design System: Card Soft Blue / Mint Glow) */}
-      <div className="escrow-lifecycle-card" style={{ marginBottom: '28px', padding: '22px 28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="metric-icon-bubble metric-icon-bubble--mint" style={{ width: '44px', height: '44px' }}>
-            <Icon name="shield" size={20} />
+          <div className="clean-select-wrap">
+            <Icon name="pin" size={13} />
+            <select
+              aria-label="Filter radius jarak tugas"
+              className="clean-select-dropdown"
+              onChange={(e) => setMaxDistance(e.target.value)}
+              value={maxDistance}
+            >
+              <option value="all">Semua Jarak (1–5 km)</option>
+              <option value="1km">&lt; 1 km (Sangat Dekat)</option>
+              <option value="3km">&lt; 3 km (Jalan / Motor Cepat)</option>
+            </select>
           </div>
-          <div>
-            <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: 'var(--navy)' }}>
-              Proteksi Peluang Kerja Adil untuk Mitra Pemula (Tier 1)
-            </h4>
-            <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-muted)', lineHeight: '1.45' }}>
-              Di Relink, tugas bertanda <em>&quot;Khusus Pemula (Tier 1)&quot;</em> diproteksi dari persaingan mitra senior agar Anda cepat mendapat order pertama dan membangun reputasi nyata tanpa syarat ijazah formal.
+        </div>
+      </section>
+
+      {/* 3. BANNER EDUKASI PROTEKSI TIER 1 (CLEAN CARD) */}
+      <section className="clean-card clean-tier1-protection-banner">
+        <div className="clean-tier1-banner-inner">
+          <div className="clean-tier1-banner-icon">
+            <Icon name="shield" size={18} />
+          </div>
+          <div className="clean-tier1-banner-text">
+            <h4>Proteksi Peluang Kerja Adil untuk Mitra Pemula (Tier 1)</h4>
+            <p>
+              Di Relink, tugas bertanda <strong>&quot;Khusus Pemula (Tier 1)&quot;</strong> diproteksi dari persaingan mitra senior agar Anda cepat mendapat order pertama dan membangun reputasi nyata tanpa syarat ijazah formal.
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 4. Grid Kartu Peluang Tugas */}
+      {/* 4. GRID KARTU PELUANG TUGAS (CLEAN CARDS) */}
       {filteredJobs.length === 0 ? (
-        <div className="worker-empty-jobs-card">
-          <Icon name="search" size={36} className="text-muted" />
+        <div className="clean-card clean-empty-state-card">
+          <Icon name="search" size={32} />
           <h4>Tidak ada tugas yang sesuai filter saat ini</h4>
-          <p>Coba ubah kata kunci pencarian atau perluas radius jarak pencarian radar.</p>
+          <p>Coba ubah kata kunci pencarian atau pilih kategori dan radius jarak yang lebih luas.</p>
         </div>
       ) : (
-        <div className="worker-jobs-full-grid">
-          {filteredJobs.map((job) => (
-            <div key={job.id} className={`worker-job-card worker-job-card--detailed ${job.locked ? 'worker-job-card--locked' : ''}`}>
-              <div className="job-card-top">
-                <div className="job-tag-group">
-                  <span className="task-tag-chip task-tag-chip--pink">{job.category}</span>
-                  <span className={`task-tag-chip ${job.locked ? 'task-tag-chip--locked' : 'task-tag-chip--mint'}`}>
-                    {job.tag}
+        <section className="clean-jobs-cards-grid">
+          {filteredJobs.map((job) => {
+            const gross = job.grossHonor || 50000
+            const net = job.netHonor || Math.round(gross * 0.92)
+            const commission = gross - net
+
+            return (
+              <article
+                key={job.id}
+                className={`clean-card clean-job-card ${job.locked ? 'clean-job-card--locked' : ''}`}
+              >
+                {/* Header Kartu: Tag Kategori, Tier & Jarak */}
+                <div className="clean-job-card__header">
+                  <div className="clean-job-card__badges">
+                    <span className="clean-badge clean-badge--navy">{job.category}</span>
+                    <span className={`clean-badge ${job.locked ? 'clean-badge--navy' : 'clean-badge--mint'}`}>
+                      {job.tag}
+                    </span>
+                    {job.urgent && (
+                      <span className="clean-badge clean-badge--pink">Urgent</span>
+                    )}
+                  </div>
+                  <span className="clean-badge clean-badge--navy" style={{ fontWeight: 600 }}>
+                    <Icon name="pin" size={12} /> {job.distance}
                   </span>
-                  {job.urgent && (
-                    <span className="task-tag-chip task-tag-chip--urgent">Urgent</span>
+                </div>
+
+                {/* Judul & Deskripsi Tugas */}
+                <h3 className="clean-job-card__title">{job.title}</h3>
+                <p className="clean-job-card__desc">{job.description}</p>
+
+                {/* Info Metadata: Klien & Durasi */}
+                <div className="clean-job-card__meta">
+                  <div className="clean-job-meta-item">
+                    <Icon name="home" size={13} />
+                    <span>Klien: <strong>{job.clientName}</strong></span>
+                  </div>
+                  <div className="clean-job-meta-item">
+                    <Icon name="clock" size={13} />
+                    <span>Estimasi: {job.duration}</span>
+                  </div>
+                  {job.leadWorker && (
+                    <div className="clean-job-meta-item text-mint font-bold">
+                      <Icon name="users" size={13} />
+                      <span>Lead Tim: {job.leadWorker}</span>
+                    </div>
                   )}
                 </div>
-                <span className="job-distance-pill">
-                  <Icon name="pin" size={12} /> {job.distance}
-                </span>
-              </div>
 
-              <h3 className="job-card-title">{job.title}</h3>
-              <p className="job-card-desc">{job.description}</p>
-
-              <div className="job-card-meta-list">
-                <div className="meta-item">
-                  <Icon name="home" size={14} />
-                  <span>Klien: <strong>{job.clientName}</strong></span>
+                {/* Kotak Ringkasan SOP Checklist */}
+                <div className="clean-job-checklist-preview">
+                  <span className="clean-job-checklist-label">Kriteria Hasil yang Diharapkan (SOP):</span>
+                  <p className="clean-job-checklist-text">{job.checklistSummary}</p>
                 </div>
-                <div className="meta-item">
-                  <Icon name="clock" size={14} />
-                  <span>Estimasi: {job.duration}</span>
-                </div>
-                {job.leadWorker && (
-                  <div className="meta-item meta-item--lead">
-                    <Icon name="users" size={14} className="text-mint" />
-                    <span>Lead Tim: <strong>{job.leadWorker}</strong></span>
-                  </div>
-                )}
-              </div>
 
-              <div className="job-card-checklist-box">
-                <small className="checklist-heading">Kriteria Hasil yang Diharapkan (SOP):</small>
-                <div className="checklist-summary-text">{job.checklistSummary}</div>
-              </div>
+                {/* Divider Halus */}
+                <div className="clean-job-divider" />
 
-              <div className="job-card-divider" />
-
-              <div className="job-card-footer">
-                <div className="honor-details-group">
-                  <div className="honor-net-row">
-                    <span className="honor-label">Penghasilan Bersih:</span>
-                    <strong className="honor-value text-pink">
-                      Rp{job.netHonor.toLocaleString('id-ID')}
+                {/* Footer Kartu: Rincian Honor & Tombol Aksi */}
+                <div className="clean-job-card__footer">
+                  <div className="clean-job-honor-block">
+                    <span className="clean-job-honor-label">Honor Bersih Diterima:</span>
+                    <strong className="clean-job-honor-val">
+                      Rp{net.toLocaleString('id-ID')}
                     </strong>
+                    <small className="clean-job-honor-gross">
+                      Bruto Rp{gross.toLocaleString('id-ID')} • Komisi 8% Rp{commission.toLocaleString('id-ID')}
+                    </small>
                   </div>
-                  <small className="honor-gross-note">
-                    Honor Bruto Rp{job.grossHonor.toLocaleString('id-ID')} &bull; Komisi 8% Rp{(job.grossHonor - job.netHonor).toLocaleString('id-ID')}
-                  </small>
+
+                  {job.locked ? (
+                    <button
+                      className="clean-btn-pill clean-btn-pill--disabled"
+                      disabled
+                      title="Selesaikan tugas dasar untuk membuka akses Tier 2"
+                      type="button"
+                    >
+                      <Icon name="lock" size={14} />
+                      <span>Buka di Tier 2</span>
+                    </button>
+                  ) : (
+                    <button
+                      className="clean-btn-pill clean-btn-pill--pink"
+                      onClick={() => onOpenAcceptModal(job)}
+                      type="button"
+                    >
+                      <Icon name="check" size={14} />
+                      <span>Ambil Tugas Ini</span>
+                    </button>
+                  )}
                 </div>
-                {job.locked ? (
-                  <button
-                    className="btn-take-job btn-take-job--locked btn-take-job--full"
-                    disabled
-                    title="Selesaikan tugas dasar untuk membuka akses Tier 2"
-                    type="button"
-                  >
-                    <Icon name="lock" size={16} />
-                    <span>Buka di Tier 2</span>
-                  </button>
-                ) : (
-                  <button
-                    className="btn-take-job btn-take-job--full"
-                    onClick={() => onOpenAcceptModal(job)}
-                    type="button"
-                  >
-                    <Icon name="bolt" size={16} />
-                    <span>Ambil Tugas Ini</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+              </article>
+            )
+          })}
+        </section>
       )}
     </main>
   )
