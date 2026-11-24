@@ -33,14 +33,6 @@ function KanbanView({
               value={searchQuery}
             />
           </div>
-          <button
-            className="btn-create-pill"
-            onClick={() => setCurrentMenu('new_task')}
-            type="button"
-          >
-            <Icon name="plus" size={14} />
-            <span>Posting Tugas Baru</span>
-          </button>
         </div>
       </div>
 
