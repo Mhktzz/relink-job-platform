@@ -197,6 +197,56 @@
   outline: none;
 }
 
+/* Efek Error & Animasi Getar Form Kosong */
+@keyframes authShakeField {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-7px);
+  }
+  40%, 80% {
+    transform: translateX(7px);
+  }
+}
+
+.auth-field.is-shaking {
+  animation: authShakeField 0.4s ease-in-out;
+}
+
+.auth-field.has-error input {
+  border-color: #ef4444 !important;
+  background-color: #fff8f8 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.auth-field.has-error input:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.22) !important;
+}
+
+.auth-field-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #dc2626;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-top: 3px;
+  animation: authFadeInError 0.18s ease-out;
+}
+
+@keyframes authFadeInError {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .auth-password-input-wrap {
   position: relative;
   display: flex;

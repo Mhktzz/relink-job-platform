@@ -40,6 +40,21 @@ function AuthPage({ mode, role }) {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
 
+  // State Validasi Form Kosong & Animasi Getar
+  const [errors, setErrors] = useState({});
+  const [shakingFields, setShakingFields] = useState({});
+
+  function handleFieldChange(fieldName, value, setter) {
+    setter(value);
+    if (errors[fieldName]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  }
+
   const isSignup = mode === "signup";
   const isResetMode = mode === "reset-password";
   const isWorker = role === "pekerja";
@@ -119,6 +134,55 @@ function AuthPage({ mode, role }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
+
+    // Validasi Form Kosong dengan Indikator & Animasi Getar
+    const newErrors = {};
+    const newShakes = {};
+
+    if (isSignup) {
+      if (!name.trim()) {
+        newErrors.name = "Belum terisi";
+        newShakes.name = true;
+      }
+      if (!isWorker && !business.trim()) {
+        newErrors.business = "Belum terisi";
+        newShakes.business = true;
+      }
+      if (!phone.trim()) {
+        newErrors.phone = "Belum terisi";
+        newShakes.phone = true;
+      }
+      if (!email.trim()) {
+        newErrors.email = "Belum terisi";
+        newShakes.email = true;
+      }
+      if (!password) {
+        newErrors.password = "Belum terisi";
+        newShakes.password = true;
+      }
+      if (!passwordConfirm) {
+        newErrors.passwordConfirm = "Belum terisi";
+        newShakes.passwordConfirm = true;
+      }
+    } else {
+      if (!email.trim()) {
+        newErrors.email = "Belum terisi";
+        newShakes.email = true;
+      }
+      if (!password) {
+        newErrors.password = "Belum terisi";
+        newShakes.password = true;
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShakingFields(newShakes);
+      setTimeout(() => {
+        setShakingFields({});
+      }, 500);
+      return;
+    }
 
     setIsLoading(true);
 
@@ -307,8 +371,9 @@ function AuthPage({ mode, role }) {
   async function handleForgotPasswordSubmit(e) {
     e.preventDefault();
     if (!resetEmail.trim()) {
-      setMessage("Silakan masukkan email Anda.");
-      setMessageType("error");
+      setErrors({ resetEmail: "Belum terisi" });
+      setShakingFields({ resetEmail: true });
+      setTimeout(() => setShakingFields({}), 500);
       return;
     }
     setIsLoading(true);
@@ -343,6 +408,23 @@ function AuthPage({ mode, role }) {
   // Handler Simpan Kata Sandi Baru (Reset Password)
   async function handleResetPasswordSubmit(e) {
     e.preventDefault();
+    const newErrors = {};
+    const newShakes = {};
+    if (!password) {
+      newErrors.password = "Belum terisi";
+      newShakes.password = true;
+    }
+    if (!passwordConfirm) {
+      newErrors.passwordConfirm = "Belum terisi";
+      newShakes.passwordConfirm = true;
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShakingFields(newShakes);
+      setTimeout(() => setShakingFields({}), 500);
+      return;
+    }
+
     if (!isPasswordCriteriaMet) {
       setMessage("Kata sandi baru harus memenuhi semua kriteria: minimal 8 karakter, huruf besar & kecil, angka, dan simbol (@, #, !).");
       setMessageType("error");
@@ -399,17 +481,15 @@ function AuthPage({ mode, role }) {
                   Masukkan kata sandi baru untuk mengamankan akun bisnis Relink Anda.
                 </p>
 
-                <form className="auth-form" onSubmit={handleResetPasswordSubmit}>
-                  <label className="auth-field">
+                <form className="auth-form" noValidate onSubmit={handleResetPasswordSubmit}>
+                  <label className={`auth-field${errors.password ? " has-error" : ""}${shakingFields.password ? " is-shaking" : ""}`}>
                     <span>Kata Sandi Baru</span>
                     <div className="auth-password-input-wrap">
                       <input
                         autoComplete="new-password"
-                        minLength={8}
                         name="new-password"
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => handleFieldChange("password", e.target.value, setPassword)}
                         placeholder="Minimal 8 karakter"
-                        required
                         type={showPassword ? "text" : "password"}
                         value={password}
                       />
@@ -423,19 +503,23 @@ function AuthPage({ mode, role }) {
                         <Icon name={showPassword ? "eye-off" : "eye"} size={18} />
                       </button>
                     </div>
+                    {errors.password && (
+                      <span className="auth-field-error" role="alert">
+                        <Icon name="alert" size={13} />
+                        <span>Belum terisi</span>
+                      </span>
+                    )}
                     {renderPasswordCriteria()}
                   </label>
 
-                  <label className="auth-field">
+                  <label className={`auth-field${errors.passwordConfirm ? " has-error" : ""}${shakingFields.passwordConfirm ? " is-shaking" : ""}`}>
                     <span>Konfirmasi Kata Sandi Baru</span>
                     <div className="auth-password-input-wrap">
                       <input
                         autoComplete="new-password"
-                        minLength={6}
                         name="confirm-new-password"
-                        onChange={(e) => setPasswordConfirm(e.target.value)}
+                        onChange={(e) => handleFieldChange("passwordConfirm", e.target.value, setPasswordConfirm)}
                         placeholder="Ulangi kata sandi baru"
-                        required
                         type={showPasswordConfirm ? "text" : "password"}
                         value={passwordConfirm}
                       />
@@ -456,6 +540,12 @@ function AuthPage({ mode, role }) {
                         />
                       </button>
                     </div>
+                    {errors.passwordConfirm && (
+                      <span className="auth-field-error" role="alert">
+                        <Icon name="alert" size={13} />
+                        <span>Belum terisi</span>
+                      </span>
+                    )}
                   </label>
 
                   {message && (
@@ -498,18 +588,23 @@ function AuthPage({ mode, role }) {
                   Masukkan email akun terdaftar Anda. Kami akan mengirimkan tautan pemulihan kata sandi ke kotak masuk Anda.
                 </p>
 
-                <form className="auth-form" onSubmit={handleForgotPasswordSubmit}>
-                  <label className="auth-field">
+                <form className="auth-form" noValidate onSubmit={handleForgotPasswordSubmit}>
+                  <label className={`auth-field${errors.resetEmail ? " has-error" : ""}${shakingFields.resetEmail ? " is-shaking" : ""}`}>
                     <span>Email Akun Terdaftar</span>
                     <input
                       autoComplete="email"
                       name="reset-email"
-                      onChange={(e) => setResetEmail(e.target.value)}
+                      onChange={(e) => handleFieldChange("resetEmail", e.target.value, setResetEmail)}
                       placeholder="nama@emailbisnis.com"
-                      required
                       type="email"
                       value={resetEmail}
                     />
+                    {errors.resetEmail && (
+                      <span className="auth-field-error" role="alert">
+                        <Icon name="alert" size={13} />
+                        <span>Belum terisi</span>
+                      </span>
+                    )}
                   </label>
 
                   {message && (
