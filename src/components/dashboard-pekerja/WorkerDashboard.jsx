@@ -638,7 +638,7 @@ function WorkerDashboard() {
               onClick={() => setCurrentMenu('beranda')}
               type="button"
             >
-              <img alt="Relink" className="topbar-brand-icon" src={relinkDarkLogo} />
+              <img alt="Relink" className="topbar-brand-icon" src={relinkIcon} />
               <span className="topbar-brand-name">Mitra</span>
             </button>
           </div>

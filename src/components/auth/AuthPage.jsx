@@ -11,7 +11,7 @@ function AuthPage({ mode, role }) {
     try {
       const searchParams = new URLSearchParams(window.location.search);
       if (searchParams.get("idle_timeout") === "true") {
-        return "Sesi Anda telah berakhir otomatis karena tidak ada aktivitas selama lebih dari 10 menit demi keamanan akun.";
+        return "Sesi Anda telah berakhir otomatis karena tidak ada aktivitas selama lebih dari 1 jam demi keamanan akun.";
       }
       return "";
     } catch {

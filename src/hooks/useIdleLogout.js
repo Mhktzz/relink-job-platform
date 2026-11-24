@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 
-// Durasi idle timeout: 10 menit (600.000 ms)
-export const IDLE_TIMEOUT_MS = 10 * 60 * 1000
+// Durasi idle timeout: 1 jam (3.600.000 ms)
+export const IDLE_TIMEOUT_MS = 60 * 60 * 1000
 
 /**
- * Hook untuk otomatis logout ketika pengguna idle / meninggalkan website lebih dari 10 menit
+ * Hook untuk otomatis logout ketika pengguna idle / meninggalkan website lebih dari 1 jam
  * @param {boolean} isLoggedIn - Apakah pengguna sedang memiliki sesi login aktif
  * @param {'pekerja' | 'umkm' | null} role - Peran akun aktif untuk pengalihan login yang tepat
  */

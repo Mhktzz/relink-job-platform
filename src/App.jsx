@@ -30,7 +30,7 @@ function App() {
   const isWorkerRole = userSession?.role === 'mitra' || userSession?.role === 'pekerja'
   const isClientRole = userSession?.role === 'klien' || userSession?.role === 'umkm'
 
-  // Fitur Idle Auto-Logout (10 menit tanpa aktivitas pada sesi login aktif)
+  // Fitur Idle Auto-Logout (1 jam tanpa aktivitas pada sesi login aktif)
   const isLoggedIn = Boolean(userSession && (isWorkerRole || isClientRole))
   const activeRole = isWorkerRole ? 'pekerja' : isClientRole ? 'umkm' : null
   useIdleLogout(isLoggedIn, activeRole)

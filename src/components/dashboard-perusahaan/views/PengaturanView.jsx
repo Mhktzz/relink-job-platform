@@ -616,8 +616,8 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
 
           <div className="pengaturan-toggle-row">
             <div className="pengaturan-toggle-label">
-              <strong>Proteksi Idle Auto-Logout (10 Menit)</strong>
-              <span>Sesi dashboard akan otomatis logout jika ditinggalkan lebih dari 10 menit demi melindungi dana escrow dan data usaha.</span>
+              <strong>Proteksi Idle Auto-Logout (1 Jam)</strong>
+              <span>Sesi dashboard akan otomatis logout jika ditinggalkan lebih dari 1 jam demi melindungi dana escrow dan data usaha.</span>
             </div>
             <div className="pengaturan-verified-badge">
               <Icon name="shield" size={13} />
