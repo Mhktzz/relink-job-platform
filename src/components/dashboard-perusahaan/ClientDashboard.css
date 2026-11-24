@@ -5582,6 +5582,39 @@
   border-color: #fca5a5;
 }
 
+.kanban-worker-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.kanban-worker-status-badge svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.kanban-worker-status-badge--ready {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.kanban-worker-status-badge--ready svg {
+  color: #10b981;
+}
+
 .btn-kanban-stage-move {
   appearance: none;
   -webkit-appearance: none;

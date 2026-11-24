@@ -142,17 +142,10 @@ function KanbanView({
                     </div>
                   </div>
 
-                  {onMoveStatus && (
-                    <button
-                      className="btn-kanban-stage-move"
-                      onClick={() => onMoveStatus(task.id, 'Proof Review')}
-                      title="Geser status ke Tunggu Review"
-                      type="button"
-                    >
-                      <span>Ajukan ke Review</span>
-                      <Icon name="arrow" size={10} />
-                    </button>
-                  )}
+                  <div className="kanban-worker-status-badge">
+                    <Icon name="clock" size={11} />
+                    <span>Dikerjakan oleh {task.workerName || 'Mitra'} (Menunggu bukti kerja)</span>
+                  </div>
                 </article>
               ))
             )}

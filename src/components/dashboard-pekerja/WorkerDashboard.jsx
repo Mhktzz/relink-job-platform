@@ -189,6 +189,62 @@ function WorkerDashboard() {
         if (isMounted) {
           setAvailableJobs(Array.from(combinedMap.values()))
         }
+
+        // Deteksi persetujuan review dari klien jika tugas aktif sedang dalam tahap review (step 3)
+        if (activeTask && activeTask.currentStepIndex === 3) {
+          const matched = [...localTasks, ...dbTasks].find(
+            (t) =>
+              t &&
+              (t.id === activeTask.id ||
+                t.task_code === activeTask.id ||
+                t.code === activeTask.code ||
+                t.id === activeTask.code)
+          )
+          if (
+            matched &&
+            (matched.status === 'completed' ||
+              matched.column === 'overdue' ||
+              matched.statusBadge === 'Completed')
+          ) {
+            const earnedNet = activeTask.netHonor || 180000
+            const gross = activeTask.grossHonor || 200000
+            const fee = gross - earnedNet
+
+            setWalletData((prev) => ({
+              ...prev,
+              availableBalance: prev.availableBalance + earnedNet,
+              heldEscrowBalance: Math.max(0, prev.heldEscrowBalance - earnedNet),
+              monthlyTotalEarnings: prev.monthlyTotalEarnings + earnedNet,
+              transactions: [
+                {
+                  id: `TRX-${Math.floor(100 + Math.random() * 900)}`,
+                  date: 'Hari ini',
+                  title: `Honor Tugas ${activeTask.code} — ${activeTask.title}`,
+                  client: activeTask.clientName,
+                  grossAmount: gross,
+                  fee: fee,
+                  netAmount: earnedNet,
+                  type: 'income',
+                  status: 'Selesai & Masuk Saldo',
+                },
+                ...prev.transactions,
+              ],
+            }))
+
+            setWorkerProfile((prev) => ({
+              ...prev,
+              completedTasksCount: prev.completedTasksCount + 1,
+            }))
+
+            setActiveTask((prev) => ({
+              ...prev,
+              currentStepIndex: 4, // Dana Cair
+              status: 'completed',
+            }))
+
+            showToast(`Hasil kerja disetujui klien! Dana honor Rp${earnedNet.toLocaleString('id-ID')} telah cair ke Saldo Dompet.`)
+          }
+        }
       } catch (e) {
         console.warn('Gagal sinkron tugas pekerja:', e)
       }
@@ -307,50 +363,60 @@ function WorkerDashboard() {
   }
 
   // Handler: Serah Terima Digital & Pengajuan Pencairan Bukti
-  function handleSubmitProof(completedChecklist) {
+  // Handler: Serah Terima Digital & Pengajuan Pencairan Bukti (Ajukan ke Review)
+  function handleSubmitProof(completedChecklist, workNotes, proofData) {
     setIsProcessing(true)
     setTimeout(() => {
-      const earnedNet = activeTask.netHonor
-      const gross = activeTask.grossHonor
-      const fee = gross - earnedNet
-
-      setWalletData((prev) => ({
-        ...prev,
-        availableBalance: prev.availableBalance + earnedNet,
-        heldEscrowBalance: Math.max(0, prev.heldEscrowBalance - earnedNet),
-        monthlyTotalEarnings: prev.monthlyTotalEarnings + earnedNet,
-        transactions: [
-          {
-            id: `TRX-${Math.floor(100 + Math.random() * 900)}`,
-            date: 'Hari ini',
-            title: `Honor Tugas ${activeTask.code} — ${activeTask.title}`,
-            client: activeTask.clientName,
-            grossAmount: gross,
-            fee: fee,
-            netAmount: earnedNet,
-            type: 'income',
-            status: 'Selesai & Masuk Saldo',
-          },
-          ...prev.transactions,
-        ],
-      }))
-
-      setWorkerProfile((prev) => ({
-        ...prev,
-        completedTasksCount: prev.completedTasksCount + 1,
-      }))
+      const updatedProof = proofData || {
+        note: workNotes || 'Pekerjaan selesai rapi dan sudah diperiksa bersama UMKM.',
+        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
+        gpsLocation: '-6.1754, 106.8272 (Verified)',
+      }
 
       setActiveTask((prev) => ({
         ...prev,
-        currentStepIndex: 4, // Dana Cair
-        status: 'completed',
+        currentStepIndex: 3, // Tahap 4: Review Bukti (Menunggu Review Klien)
+        status: 'review',
+        statusBadge: 'Proof Review',
+        proofSubmitted: true,
+        proofData: updatedProof,
         checklist: completedChecklist,
       }))
 
+      // Perbarui status tugas di relink_tasks agar otomatis pindah ke kolom Tunggu Review pada dashboard perusahaan
+      try {
+        const saved = localStorage.getItem('relink_tasks')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          const updated = parsed.map((item) => {
+            if (
+              item.id === activeTask.id ||
+              item.task_code === activeTask.id ||
+              item.code === activeTask.code ||
+              item.id === activeTask.code
+            ) {
+              return {
+                ...item,
+                status: 'review',
+                statusBadge: 'Proof Review',
+                column: 'due_week',
+                proofSubmitted: true,
+                proofData: updatedProof,
+              }
+            }
+            return item
+          })
+          localStorage.setItem('relink_tasks', JSON.stringify(updated))
+          window.dispatchEvent(new CustomEvent('relink_tasks_updated', { detail: updated }))
+        }
+      } catch (e) {
+        console.warn('Gagal sinkron pengajuan review:', e)
+      }
+
       setIsProcessing(false)
       setShowProofModal(false)
-      showToast(`Bukti kerja tugas ${activeTask.code} berhasil diserahkan! Dana honor Rp${earnedNet.toLocaleString('id-ID')} langsung cair ke Saldo Dompet Anda.`)
-    }, 900)
+      showToast(`Bukti kerja tugas #${activeTask.code} berhasil dikirim! Tugas telah diajukan ke review klien.`)
+    }, 800)
   }
 
   // Handler: Tarik Dana Dompet

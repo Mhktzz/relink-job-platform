@@ -232,6 +232,15 @@ function ClientDashboard() {
 
   // Handler: Geser Status Papan Tugas Dinamis (misal di Kanban)
   async function handleMoveTaskStatus(taskId, newStatus) {
+    if (newStatus === 'Proof Review') {
+      const currentTask = tasks.find((t) => t.id === taskId || t.task_code === taskId)
+      if (!currentTask?.proofSubmitted && !currentTask?.proofData) {
+        setActionSuccessMsg('Tugas tidak dapat dipindahkan: Mitra pekerja harus mengirimkan bukti kerja terlebih dahulu.')
+        setTimeout(() => setActionSuccessMsg(''), 4000)
+        return
+      }
+    }
+
     const columnMapping = {
       Open: 'current',
       'In Progress': 'current',
@@ -454,13 +463,20 @@ function ClientDashboard() {
       return
     }
 
-    setTasks((prev) =>
-      prev.map((t) =>
+    setTasks((prev) => {
+      const updatedList = prev.map((t) =>
         t.id === taskToApprove.id
           ? { ...t, column: 'overdue', statusBadge: 'Completed', status: 'completed' }
           : t,
-      ),
-    )
+      )
+      try {
+        localStorage.setItem('relink_tasks', JSON.stringify(updatedList))
+        window.dispatchEvent(new CustomEvent('relink_tasks_updated', { detail: updatedList }))
+      } catch (e) {
+        console.warn('Gagal sinkron tasks completed:', e)
+      }
+      return updatedList
+    })
 
     // Perbarui juga status transaksi escrow yang terikat menjadi released
     setEscrowTransactions((prev) =>

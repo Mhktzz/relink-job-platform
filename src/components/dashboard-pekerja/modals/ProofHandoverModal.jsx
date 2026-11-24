@@ -8,17 +8,52 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
       done: item.done !== undefined ? item.done : true,
     }))
   )
-  const photoUploaded = true
+  const [uploadedFile, setUploadedFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState('')
   const [clientSignatureAccepted, setClientSignatureAccepted] = useState(false)
   const [workNotes, setWorkNotes] = useState('Pekerjaan telah selesai rapi dan sudah diuji coba bersama pemilik toko.')
 
   const allChecklistDone = checklist.every((item) => item.done)
-  const canSubmit = allChecklistDone && photoUploaded && clientSignatureAccepted
+  const canSubmit = allChecklistDone && Boolean(uploadedFile) && clientSignatureAccepted
 
   function toggleChecklist(id) {
     setChecklist((prev) =>
       prev.map((item) => (item.id === id ? { ...item, done: !item.done } : item))
     )
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadedFile(file)
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setPreviewUrl(ev.target.result)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setPreviewUrl('')
+    }
+  }
+
+  function handleRemoveFile() {
+    setUploadedFile(null)
+    setPreviewUrl('')
+  }
+
+  function handleSubmit() {
+    if (!canSubmit || isProcessing) return
+    if (onSubmitProof) {
+      onSubmitProof(checklist, workNotes, {
+        file: uploadedFile,
+        fileName: uploadedFile?.name,
+        photoUrl: previewUrl,
+        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
+        gpsLocation: '-6.1754, 106.8272 (Verified)',
+        note: workNotes,
+      })
+    }
   }
 
   return (
@@ -31,7 +66,7 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
             </div>
             <div>
               <h3>Serah Terima Digital (Proof-of-Work)</h3>
-              <small>Unggah bukti kerja &amp; checklist untuk pencairan otomatis dana escrow</small>
+              <small>Unggah bukti kerja &amp; checklist sebelum mengajukan ke review klien</small>
             </div>
           </div>
           <button
@@ -50,7 +85,7 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
             <div className="proof-task-info-header">
               <span className="task-tag-chip task-tag-chip--pink">{activeTask?.category}</span>
               <span className="escrow-badge">
-                <Icon name="shield" size={12} /> Escrow #{activeTask?.escrowRef}
+                <Icon name="shield" size={12} /> Escrow #{activeTask?.escrowRef || '8841'}
               </span>
             </div>
             <h4>{activeTask?.title}</h4>
@@ -82,31 +117,105 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
             </div>
           </div>
 
-          {/* 2. Foto Bukti Hasil Kerja Ber-watermark */}
+          {/* 2. Foto / File Bukti Hasil Kerja */}
           <div className="proof-section-box">
             <div className="proof-section-title">
               <Icon name="image" size={16} className="text-mint" />
-              <strong>2. Foto Bukti Hasil Pekerjaan (Terverifikasi GPS)</strong>
+              <strong>2. Foto / Berkas Bukti Pekerjaan (Wajib Diunggah)</strong>
             </div>
-            <div className="proof-photo-preview-box">
-              <div className="proof-photo-mock">
-                <div className="proof-watermark-stamp">
-                  <span>GPS: -6.1754, 106.8272 &bull; Jakarta Pusat</span>
-                  <span>Waktu: 20 Nov 2026, 15:42 WIB &bull; Relink Cam</span>
+
+            <input
+              accept="image/*,.pdf,.zip"
+              id="proof-file-input"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+              type="file"
+            />
+
+            {!uploadedFile ? (
+              <div
+                className="proof-upload-dropzone"
+                onClick={() => document.getElementById('proof-file-input')?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    document.getElementById('proof-file-input')?.click()
+                  }
+                }}
+              >
+                <div className="proof-upload-icon-circle">
+                  <Icon name="upload" size={24} />
                 </div>
-                <div className="proof-photo-center-badge">
-                  <Icon name="check-circle" size={24} />
-                  <span>Foto Hasil Kerja Berhasil Direkam</span>
+                <strong>Unggah Foto atau Berkas Bukti Pekerjaan</strong>
+                <p className="text-muted text-small">
+                  Pilih foto hasil kerja dari galeri/kamera atau berkas bukti kerja (JPG, PNG, PDF maks. 10MB)
+                </p>
+                <button
+                  className="btn-browse-file"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    document.getElementById('proof-file-input')?.click()
+                  }}
+                  type="button"
+                >
+                  <Icon name="image" size={14} />
+                  <span>Pilih File Bukti</span>
+                </button>
+              </div>
+            ) : (
+              <div className="proof-uploaded-container">
+                <div className="proof-photo-mock proof-photo-mock--active">
+                  {previewUrl ? (
+                    <img
+                      alt="Pratinjau Bukti Kerja"
+                      className="proof-photo-img-preview"
+                      src={previewUrl}
+                    />
+                  ) : (
+                    <div className="proof-file-doc-preview">
+                      <Icon name="file-text" size={32} />
+                      <span className="proof-file-name">{uploadedFile.name}</span>
+                    </div>
+                  )}
+                  <div className="proof-watermark-stamp">
+                    <span>GPS: -6.1754, 106.8272 &bull; Jakarta Timur</span>
+                    <span>Waktu: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB</span>
+                  </div>
+                  <div className="proof-photo-center-badge">
+                    <Icon name="check-circle" size={18} />
+                    <span>File Bukti Siap Dilampirkan</span>
+                  </div>
+                </div>
+
+                <div className="proof-file-meta-row">
+                  <div className="proof-file-info">
+                    <span className="proof-file-filename">{uploadedFile.name}</span>
+                    <span className="proof-file-filesize">
+                      ({(uploadedFile.size / 1024).toFixed(1)} KB) &bull; Terverifikasi
+                    </span>
+                  </div>
+                  <div className="proof-file-actions">
+                    <button
+                      className="btn-retake-photo"
+                      onClick={() => document.getElementById('proof-file-input')?.click()}
+                      type="button"
+                    >
+                      <Icon name="refresh" size={13} />
+                      <span>Ganti File</span>
+                    </button>
+                    <button
+                      className="btn-remove-file"
+                      onClick={handleRemoveFile}
+                      type="button"
+                    >
+                      <Icon name="trash" size={13} />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <button
-                className="btn-retake-photo"
-                onClick={() => alert('Fitur kamera aplikasi: Foto hasil kerja telah diperbarui dengan cap waktu valid.')}
-                type="button"
-              >
-                <Icon name="image" size={14} /> Ambil Ulang Foto
-              </button>
-            </div>
+            )}
           </div>
 
           {/* 3. Catatan Penyelesaian */}
@@ -137,6 +246,14 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
               </span>
             </label>
           </div>
+
+          {/* Peringatan jika belum upload file bukti */}
+          {!uploadedFile && (
+            <div className="proof-warning-banner">
+              <Icon name="alert" size={16} />
+              <span>Wajib melampirkan foto/file bukti pekerjaan terlebih dahulu sebelum mengajukan ke review.</span>
+            </div>
+          )}
         </div>
 
         <div className="modal-footer-actions">
@@ -151,15 +268,17 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
           <button
             className="btn-modal-confirm btn-modal-confirm--submit-proof"
             disabled={!canSubmit || isProcessing}
-            onClick={() => onSubmitProof(checklist, workNotes)}
+            onClick={handleSubmit}
+            title={!uploadedFile ? 'Harap unggah bukti pekerjaan terlebih dahulu' : 'Ajukan tugas ke review klien'}
             type="button"
           >
             {isProcessing ? (
-              <span>Mengirim Bukti...</span>
+              <span>Mengajukan ke Review...</span>
             ) : (
               <>
                 <Icon name="check" size={16} />
-                <span>Kirim Bukti &amp; Ajukan Pencairan Dana</span>
+                <span>Ajukan ke Review</span>
+                <Icon name="arrow" size={12} />
               </>
             )}
           </button>
