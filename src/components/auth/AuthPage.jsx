@@ -7,8 +7,25 @@ import { supabase } from "../../lib/supabaseClient.js";
 import "./AuthPage.css";
 
 function AuthPage({ mode, role }) {
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("info"); // 'info' | 'error' | 'success'
+  const [message, setMessage] = useState(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("idle_timeout") === "true") {
+        return "Sesi Anda telah berakhir otomatis karena tidak ada aktivitas selama lebih dari 10 menit demi keamanan akun.";
+      }
+      return "";
+    } catch {
+      return "";
+    }
+  });
+  const [messageType, setMessageType] = useState(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      return searchParams.get("idle_timeout") === "true" ? "error" : "info";
+    } catch {
+      return "info";
+    }
+  }); // 'info' | 'error' | 'success'
   const [isLoading, setIsLoading] = useState(false);
 
   // Form Fields State

@@ -1,6 +1,16 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
 
+function CardDots() {
+  return (
+    <button className="clean-card-dots-btn" type="button" aria-label="Menu opsi">
+      <span className="clean-dot" />
+      <span className="clean-dot" />
+      <span className="clean-dot" />
+    </button>
+  )
+}
+
 function WorkerBerandaView({
   workerProfile = {},
   activeTask = null,
@@ -17,33 +27,33 @@ function WorkerBerandaView({
   upcomingSchedule = [],
   onOpenQuizModal = () => {},
 }) {
-  // 14 hari data jam kerja (ala contoh gambar referensi)
+  // 14 hari data jam kerja harian
   const dailyWorkload = [
-    { date: '11/11', day: 'Sen', hours: 2.5, earnings: 55000 },
-    { date: '12/11', day: 'Sel', hours: 3.0, earnings: 70000 },
-    { date: '13/11', day: 'Rab', hours: 2.0, earnings: 45000 },
-    { date: '14/11', day: 'Kam', hours: 4.0, earnings: 90000 },
-    { date: '15/11', day: 'Jum', hours: 3.5, earnings: 80000 },
-    { date: '16/11', day: 'Sab', hours: 5.0, earnings: 115000 },
-    { date: '17/11', day: 'Min', hours: 6.0, earnings: 135000 },
-    { date: '18/11', day: 'Sen', hours: 4.5, earnings: 100000 },
-    { date: '19/11', day: 'Sel', hours: 3.0, earnings: 68000 },
-    { date: '20/11', day: 'Rab', hours: 7.0, earnings: 155000 }, // Peak / Active bar
-    { date: '21/11', day: 'Kam', hours: 4.0, earnings: 92000 },
-    { date: '22/11', day: 'Jum', hours: 5.5, earnings: 124000 },
-    { date: '23/11', day: 'Sab', hours: 6.5, earnings: 145000 },
-    { date: '24/11', day: 'Min', hours: 4.0, earnings: 90000 },
+    { date: '11/7', day: 'Sen', hours: 2.5, earnings: 55000 },
+    { date: '12/7', day: 'Sel', hours: 3.0, earnings: 70000 },
+    { date: '13/7', day: 'Rab', hours: 2.0, earnings: 45000 },
+    { date: '14/7', day: 'Kam', hours: 4.0, earnings: 90000 },
+    { date: '15/7', day: 'Jum', hours: 3.5, earnings: 80000 },
+    { date: '16/7', day: 'Sab', hours: 5.0, earnings: 115000 },
+    { date: '17/7', day: 'Min', hours: 6.0, earnings: 135000 },
+    { date: '18/7', day: 'Sen', hours: 4.5, earnings: 100000 },
+    { date: '19/7', day: 'Sel', hours: 3.0, earnings: 68000 },
+    { date: '20/7', day: 'Rab', hours: 7.5, earnings: 165000 }, // Peak / Highlight Bar
+    { date: '21/7', day: 'Kam', hours: 4.0, earnings: 92000 },
+    { date: '22/7', day: 'Jum', hours: 5.5, earnings: 124000 },
+    { date: '23/7', day: 'Sab', hours: 6.5, earnings: 145000 },
+    { date: '24/7', day: 'Min', hours: 4.0, earnings: 90000 },
   ]
 
-  const [hoveredBarIndex, setHoveredBarIndex] = useState(9) // Default: 20/11 (active bar)
+  const [hoveredBarIndex, setHoveredBarIndex] = useState(9) // Default: 20/7 (active peak bar)
 
   const currentStep = activeTask?.currentStepIndex || 0
   const totalHours = dailyWorkload.reduce((sum, d) => sum + d.hours, 0)
   const activeDay = dailyWorkload[hoveredBarIndex] || dailyWorkload[9]
 
-  // Formatter nilai angka
+  // Nilai metrik
   const activeTasksCount = activeTask ? 1 : 0
-  const availableCount = availableJobs.length || 4
+  const availableCount = availableJobs.length || 5
   const ratingValue = workerProfile.rating ? Number(workerProfile.rating).toFixed(1) : '5.0'
   const availableBalance = walletData.availableBalance || 145000
   const heldEscrow = walletData.heldEscrowBalance || (activeTask ? activeTask.netHonor || 78200 : 0)
@@ -51,11 +61,11 @@ function WorkerBerandaView({
 
   return (
     <main className="clean-dash-wrapper">
-      {/* 1. HEADER (Ala Contoh Gambar Referensi) */}
+      {/* 1. HEADER (Ala Contoh Gambar Referensi SaaS) */}
       <header className="clean-dash-header">
         <div className="clean-dash-header__intro">
           <span className="clean-dash-eyebrow">RINGKASAN HARI INI</span>
-          <h1 className="clean-dash-title">{workerProfile.name || 'Dimas'}, ini ringkasan tugasmu</h1>
+          <h1 className="clean-dash-title">{workerProfile.name || 'Dimas Prasetyo'}, ini ringkasan tugasmu</h1>
           <p className="clean-dash-subtitle">
             Aktivitas tugas hari ini dan performa tokomu 30 hari terakhir. Radar: {isAvailableNow ? 'Aktif (1–5 km)' : 'Nonaktif'}.
           </p>
@@ -86,10 +96,10 @@ function WorkerBerandaView({
         <article className="clean-stat-card">
           <div className="clean-stat-card__top">
             <div className="clean-stat-card__label-group">
-              <Icon name="briefcase" size={14} />
+              <Icon name="briefcase" size={13} />
               <span>TUGAS AKTIF</span>
             </div>
-            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+            <CardDots />
           </div>
           <div className="clean-stat-card__value">
             {activeTasksCount < 10 ? `0${activeTasksCount}` : activeTasksCount}
@@ -103,10 +113,10 @@ function WorkerBerandaView({
         <article className="clean-stat-card">
           <div className="clean-stat-card__top">
             <div className="clean-stat-card__label-group">
-              <Icon name="pin" size={14} />
+              <Icon name="pin" size={13} />
               <span>RADAR ORDER</span>
             </div>
-            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+            <CardDots />
           </div>
           <div className="clean-stat-card__value">
             {availableCount < 10 ? `0${availableCount}` : availableCount}
@@ -120,16 +130,16 @@ function WorkerBerandaView({
         <article className="clean-stat-card">
           <div className="clean-stat-card__top">
             <div className="clean-stat-card__label-group">
-              <Icon name="star" size={14} />
+              <Icon name="star" size={13} />
               <span>RATING MITRA</span>
             </div>
-            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+            <CardDots />
           </div>
           <div className="clean-stat-card__value">
             {ratingValue}
           </div>
           <div className="clean-stat-card__subtext">
-            Tier 1 &bull; {workerProfile.completedTasksCount || 2} ulasan selesai
+            Tier 1 • {workerProfile.completedTasksCount || 2} ulasan selesai
           </div>
         </article>
 
@@ -137,21 +147,21 @@ function WorkerBerandaView({
         <article className="clean-stat-card">
           <div className="clean-stat-card__top">
             <div className="clean-stat-card__label-group">
-              <Icon name="shield" size={14} />
+              <Icon name="shield" size={13} />
               <span>KEPATUHAN K3</span>
             </div>
-            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+            <CardDots />
           </div>
           <div className="clean-stat-card__value">
             100%
           </div>
           <div className="clean-stat-card__subtext">
-            0 sengketa &bull; SOP Terverifikasi
+            0 sengketa • SOP Terverifikasi
           </div>
         </article>
       </section>
 
-      {/* 3. ROW 2: EYEBROW + 3 KARTU KEUANGAN / ESCROW (LAST 30 DAYS: COLLECTED / SEEN / OUTSTANDING) */}
+      {/* 3. ROW 2: EYEBROW + 3 KARTU KEUANGAN (LAST 30 DAYS: COLLECTED / SEEN / OUTSTANDING) */}
       <div className="clean-section-eyebrow-row">
         <span className="clean-section-eyebrow">30 HARI TERAKHIR</span>
       </div>
@@ -161,10 +171,10 @@ function WorkerBerandaView({
         <article className="clean-fin-card">
           <div className="clean-fin-card__top">
             <div className="clean-fin-card__label-group">
-              <Icon name="wallet" size={15} />
+              <Icon name="wallet" size={14} />
               <span>SALDO SIAP CAIR</span>
             </div>
-            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+            <CardDots />
           </div>
           <div className="clean-fin-card__body">
             <strong className="clean-fin-card__amount">
@@ -183,10 +193,10 @@ function WorkerBerandaView({
         <article className="clean-fin-card">
           <div className="clean-fin-card__top">
             <div className="clean-fin-card__label-group">
-              <Icon name="check" size={15} />
+              <Icon name="check" size={14} />
               <span>DANA DI ESCROW</span>
             </div>
-            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+            <CardDots />
           </div>
           <div className="clean-fin-card__body">
             <strong className="clean-fin-card__amount clean-fin-card__amount--pink">
@@ -197,7 +207,7 @@ function WorkerBerandaView({
             </span>
           </div>
           <div className="clean-fin-card__subtext">
-            {activeTask ? `${activeTask.title} &bull; cair setelah konfirmasi` : 'Rekening penampungan resmi Relink'}
+            {activeTask ? `${activeTask.title} • cair setelah konfirmasi` : 'Rekening penampungan resmi Relink'}
           </div>
         </article>
 
@@ -205,10 +215,10 @@ function WorkerBerandaView({
         <article className="clean-fin-card">
           <div className="clean-fin-card__top">
             <div className="clean-fin-card__label-group">
-              <Icon name="clock" size={15} />
+              <Icon name="clock" size={14} />
               <span>TOTAL PENDAPATAN</span>
             </div>
-            <span className="clean-stat-card__dots">&bull;&bull;&bull;</span>
+            <CardDots />
           </div>
           <div className="clean-fin-card__body">
             <strong className="clean-fin-card__amount">
@@ -224,40 +234,41 @@ function WorkerBerandaView({
         </article>
       </section>
 
-      {/* 4. ROW 3: ULTRA-CLEAN PILL BAR CHART (COLLECTED PER DAY ALA REFERENSI) */}
-      <div className="clean-section-eyebrow-row">
-        <span className="clean-section-eyebrow">STATISTIK JAM KERJA HARIAN</span>
-        <span className="clean-section-eyebrow-stat">
-          Total {totalHours.toFixed(1)} jam dalam 14 hari terakhir
-        </span>
-      </div>
-
+      {/* 4. ROW 3: ULTRA-CLEAN PILL BAR CHART (COLLECTED PER DAY ALA REFERENSI GAMBAR) */}
       <section className="clean-chart-card">
+        <div className="clean-chart-card__header">
+          <span className="clean-chart-eyebrow">STATISTIK JAM KERJA HARIAN</span>
+          <span className="clean-chart-header-stat">
+            {activeDay
+              ? `${activeDay.day}, ${activeDay.date} • ${activeDay.hours} Jam (Rp${activeDay.earnings.toLocaleString('id-ID')})`
+              : `Total ${totalHours.toFixed(1)} jam dalam periode ini`}
+          </span>
+        </div>
+
         <div className="clean-chart-inner">
           <svg
             className="clean-chart-svg"
-            preserveAspectRatio="none"
-            viewBox="0 0 840 220"
+            preserveAspectRatio="xMidYMid meet"
+            viewBox="0 0 880 240"
           >
             {/* Garis Grid Horizontal Lembut */}
-            <line stroke="#f1f5f9" strokeDasharray="3 3" x1="50" x2="820" y1="35" y2="35" />
-            <line stroke="#f1f5f9" strokeDasharray="3 3" x1="50" x2="820" y1="75" y2="75" />
-            <line stroke="#f1f5f9" strokeDasharray="3 3" x1="50" x2="820" y1="115" y2="115" />
-            <line stroke="#f1f5f9" strokeDasharray="3 3" x1="50" x2="820" y1="155" y2="155" />
+            <line stroke="#f1f5f9" strokeDasharray="4 4" x1="55" x2="860" y1="45" y2="45" />
+            <line stroke="#f1f5f9" strokeDasharray="4 4" x1="55" x2="860" y1="85" y2="85" />
+            <line stroke="#f1f5f9" strokeDasharray="4 4" x1="55" x2="860" y1="125" y2="125" />
+            <line stroke="#f1f5f9" strokeDasharray="4 4" x1="55" x2="860" y1="165" y2="165" />
 
             {/* Label Sumbu Y */}
-            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="42" y="39">8 Jam</text>
-            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="42" y="79">6 Jam</text>
-            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="42" y="119">4 Jam</text>
-            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="42" y="159">0</text>
+            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="45" y="49">8 Jam</text>
+            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="45" y="89">6 Jam</text>
+            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="45" y="129">4 Jam</text>
+            <text fill="#94a3b8" fontSize="11" textAnchor="end" x="45" y="169">0</text>
 
-            {/* Pill Bar Chart Bars (14 Bars) */}
+            {/* Batang Pill Vertikal (14 Hari) */}
             {dailyWorkload.map((item, idx) => {
-              // Bar width: 26, spacing: 54
-              const xPos = 65 + idx * 54
+              const xPos = 70 + idx * 56
               const maxHours = 8
-              const barHeight = Math.max(18, (item.hours / maxHours) * 125)
-              const yPos = 160 - barHeight
+              const barHeight = Math.max(16, (item.hours / maxHours) * 120)
+              const yPos = 168 - barHeight
               const isSelected = hoveredBarIndex === idx
 
               return (
@@ -268,78 +279,43 @@ function WorkerBerandaView({
                   onMouseEnter={() => setHoveredBarIndex(idx)}
                   style={{ cursor: 'pointer' }}
                 >
-                  {/* Invisible hit area */}
-                  <rect fill="transparent" height="175" width="48" x={xPos - 11} y="15" />
+                  {/* Area sentuh transparan */}
+                  <rect fill="transparent" height="180" width="50" x={xPos - 12} y="15" />
 
-                  {/* Rounded Pill Bar */}
+                  {/* Batang bentuk pill vertikal */}
                   <rect
-                    fill={isSelected ? '#0f1b3d' : '#e2e8f0'}
+                    fill={isSelected ? '#0f1b3d' : '#e8edf3'}
                     height={barHeight}
-                    rx="12"
+                    rx="11"
                     style={{
-                      transition: 'all 220ms ease',
+                      transition: 'all 200ms ease',
                     }}
-                    width="24"
+                    width="22"
                     x={xPos}
                     y={yPos}
                   />
 
-                  {/* Label Tanggal / Hari */}
+                  {/* Label Tanggal Sumbu X */}
                   <text
                     fill={isSelected ? '#0f1b3d' : '#94a3b8'}
                     fontSize="11"
                     fontWeight={isSelected ? '700' : '500'}
                     textAnchor="middle"
-                    x={xPos + 12}
-                    y="186"
+                    x={xPos + 11}
+                    y="198"
                   >
                     {item.date}
                   </text>
                 </g>
               )
             })}
-
-            {/* Active Floating Tooltip Bubble */}
-            {activeDay && (
-              (() => {
-                const activeX = 65 + hoveredBarIndex * 54 + 12
-                const tooltipWidth = 140
-                const bubbleX = Math.min(Math.max(activeX - tooltipWidth / 2, 50), 680)
-
-                return (
-                  <g
-                    className="clean-chart-tooltip"
-                    style={{ pointerEvents: 'none', transition: 'all 180ms ease' }}
-                    transform={`translate(${bubbleX}, 6)`}
-                  >
-                    <rect
-                      fill="#0f1b3d"
-                      height="24"
-                      rx="12"
-                      style={{ filter: 'drop-shadow(0 2px 6px rgba(15, 27, 61, 0.2))' }}
-                      width={tooltipWidth}
-                    />
-                    <text
-                      fill="#ffffff"
-                      fontSize="11"
-                      fontWeight="700"
-                      textAnchor="middle"
-                      x={tooltipWidth / 2}
-                      y="16"
-                    >
-                      {activeDay.day}, {activeDay.date}: {activeDay.hours} Jam (Rp{activeDay.earnings.toLocaleString('id-ID')})
-                    </text>
-                  </g>
-                )
-              })()
-            )}
           </svg>
         </div>
       </section>
 
-      {/* 5. ROW 4: ALUR TUGAS AKTIF & TABEL AKTIVITAS TERKINI (CLEAN & TIDAK KERAMAIAN) */}
+      {/* 5. ROW 4: ALUR TUGAS AKTIF & AGENDA PERLU TINDAKAN */}
       <div className="clean-bottom-sections-grid">
-        {/* Left Column: Alur Tugas Aktif (Escrow Lifecycle) */}
+        {/* Kolom Kiri: Alur Transaksi Escrow Interaktif */}
         {activeTask ? (
           <section className="clean-card clean-active-task-card" id="active-task-section">
             <div className="clean-card__header">
@@ -347,7 +323,7 @@ function WorkerBerandaView({
                 <span className="clean-section-eyebrow">TUGAS SEDANG BERJALAN</span>
                 <h3 className="clean-card-title">{activeTask.title}</h3>
                 <p className="clean-card-subtitle">
-                  {activeTask.clientName} &bull; <Icon name="pin" size={12} /> {activeTask.distance} &bull; Estimasi tiba 6 menit
+                  {activeTask.clientName} • <Icon name="pin" size={12} /> {activeTask.distance} • Estimasi tiba 6 menit
                 </p>
               </div>
               <span className="clean-badge clean-badge--mint">
@@ -355,7 +331,7 @@ function WorkerBerandaView({
               </span>
             </div>
 
-            {/* 5-Step Progress Tracker */}
+            {/* Stepper 5 Tahap Transparan */}
             <div className="clean-stepper-row">
               {[
                 { step: 1, title: 'Dana Ditahan', desc: `Rp${activeTask.grossHonor.toLocaleString('id-ID')}` },
@@ -384,7 +360,7 @@ function WorkerBerandaView({
               })}
             </div>
 
-            {/* Action Bar */}
+            {/* Baris Tombol Aksi */}
             <div className="clean-active-task-actions">
               <div className="clean-active-task-honor">
                 <span className="text-muted">Honor Bersih:</span>
@@ -462,7 +438,7 @@ function WorkerBerandaView({
           </section>
         )}
 
-        {/* Right Column: Perlu Tindakan & Pelatihan */}
+        {/* Kolom Kanan: Agenda Perlu Tindakan */}
         <section className="clean-card clean-action-items-card">
           <div className="clean-card__header">
             <div>
@@ -497,7 +473,7 @@ function WorkerBerandaView({
         </section>
       </div>
 
-      {/* 6. TABEL PELUANG TUGAS & AKTIVITAS TERKINI (CLEAN DATA TABLE) */}
+      {/* 6. TABEL PELUANG TUGAS SEKITAR */}
       <section className="clean-card clean-table-card">
         <div className="clean-card__header">
           <div>
@@ -562,7 +538,7 @@ function WorkerBerandaView({
                   <td><strong>{job.code}</strong></td>
                   <td>
                     <strong className="text-navy">{job.title}</strong>
-                    <div className="clean-table__meta">{job.category} &bull; {job.tag}</div>
+                    <div className="clean-table__meta">{job.category} • {job.tag}</div>
                   </td>
                   <td>{job.clientName}</td>
                   <td>{job.distance}</td>

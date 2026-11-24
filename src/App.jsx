@@ -11,6 +11,7 @@ import WorkerLandingPage from './components/landing-page/WorkerLandingPage.jsx'
 import AuthPage from './components/auth/AuthPage.jsx'
 import ClientDashboard from './components/dashboard-perusahaan/ClientDashboard.jsx'
 import WorkerDashboard from './components/dashboard-pekerja/WorkerDashboard.jsx'
+import { useIdleLogout } from './hooks/useIdleLogout.js'
 import './App.css'
 
 function App() {
@@ -28,6 +29,11 @@ function App() {
   })()
   const isWorkerRole = userSession?.role === 'mitra' || userSession?.role === 'pekerja'
   const isClientRole = userSession?.role === 'klien' || userSession?.role === 'umkm'
+
+  // Fitur Idle Auto-Logout (10 menit tanpa aktivitas pada sesi login aktif)
+  const isLoggedIn = Boolean(userSession && (isWorkerRole || isClientRole))
+  const activeRole = isWorkerRole ? 'pekerja' : isClientRole ? 'umkm' : null
+  useIdleLogout(isLoggedIn, activeRole)
 
   const workerDashboardDirect =
     pathname === '/dashboard-pekerja' || pathname === '/mitra' || pathname === '/pekerja/dashboard'
