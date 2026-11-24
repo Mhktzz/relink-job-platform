@@ -236,6 +236,39 @@
   animation: authFadeInError 0.18s ease-out;
 }
 
+.auth-field-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #059669;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-top: 3px;
+  animation: authFadeInError 0.18s ease-out;
+}
+
+.auth-field-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #d97706;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-top: 3px;
+  animation: authFadeInError 0.18s ease-out;
+}
+
+.auth-field.is-matched input {
+  border-color: #10b981 !important;
+  background-color: #f0fdf4 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12) !important;
+}
+
+.auth-field.is-matched input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
+}
+
 @keyframes authFadeInError {
   from {
     opacity: 0;

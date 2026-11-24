@@ -81,6 +81,10 @@ function AuthPage({ mode, role }) {
     passwordCriteria.number &&
     passwordCriteria.symbol;
 
+  // Status Pencocokan Kata Sandi Real-Time
+  const isPasswordMatched = Boolean(password && passwordConfirm && password === passwordConfirm);
+  const isPasswordMismatch = Boolean(password && passwordConfirm && password !== passwordConfirm);
+
   // Render Indikator Kriteria Kata Sandi
   const renderPasswordCriteria = () => (
     <div className="auth-password-criteria" aria-label="Ketentuan kata sandi">
@@ -512,7 +516,7 @@ function AuthPage({ mode, role }) {
                     {renderPasswordCriteria()}
                   </label>
 
-                  <label className={`auth-field${errors.passwordConfirm ? " has-error" : ""}${shakingFields.passwordConfirm ? " is-shaking" : ""}`}>
+                  <label className={`auth-field${errors.passwordConfirm ? " has-error" : ""}${shakingFields.passwordConfirm ? " is-shaking" : ""}${isPasswordMatched ? " is-matched" : ""}`}>
                     <span>Konfirmasi Kata Sandi Baru</span>
                     <div className="auth-password-input-wrap">
                       <input
@@ -544,6 +548,18 @@ function AuthPage({ mode, role }) {
                       <span className="auth-field-error" role="alert">
                         <Icon name="alert" size={13} />
                         <span>Belum terisi</span>
+                      </span>
+                    )}
+                    {!errors.passwordConfirm && isPasswordMatched && (
+                      <span className="auth-field-success" role="status">
+                        <Icon name="check" size={13} />
+                        <span>password sudah sesuai</span>
+                      </span>
+                    )}
+                    {!errors.passwordConfirm && isPasswordMismatch && (
+                      <span className="auth-field-warning" role="status">
+                        <Icon name="alert" size={13} />
+                        <span>Kata sandi belum cocok</span>
                       </span>
                     )}
                   </label>
@@ -811,7 +827,7 @@ function AuthPage({ mode, role }) {
                   </label>
 
                   {isSignup && (
-                    <label className={`auth-field${errors.passwordConfirm ? " has-error" : ""}${shakingFields.passwordConfirm ? " is-shaking" : ""}`}>
+                    <label className={`auth-field${errors.passwordConfirm ? " has-error" : ""}${shakingFields.passwordConfirm ? " is-shaking" : ""}${isPasswordMatched ? " is-matched" : ""}`}>
                       <span>Konfirmasi Kata Sandi</span>
                       <div className="auth-password-input-wrap">
                         <input
@@ -844,6 +860,18 @@ function AuthPage({ mode, role }) {
                         <span className="auth-field-error" role="alert">
                           <Icon name="alert" size={13} />
                           <span>Belum terisi</span>
+                        </span>
+                      )}
+                      {!errors.passwordConfirm && isPasswordMatched && (
+                        <span className="auth-field-success" role="status">
+                          <Icon name="check" size={13} />
+                          <span>password sudah sesuai</span>
+                        </span>
+                      )}
+                      {!errors.passwordConfirm && isPasswordMismatch && (
+                        <span className="auth-field-warning" role="status">
+                          <Icon name="alert" size={13} />
+                          <span>Kata sandi belum cocok</span>
                         </span>
                       )}
                     </label>
