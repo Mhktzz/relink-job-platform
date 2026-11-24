@@ -27,11 +27,33 @@ import '../dashboard-perusahaan/ClientDashboard.css'
 import './WorkerDashboard.css'
 
 function WorkerDashboard() {
-  const [currentMenu, setCurrentMenu] = useState('beranda') // 'beranda' | 'peluang' | 'jenjang' | 'dompet' | 'keamanan'
+  const [currentMenu, setCurrentMenu] = useState(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search)
+      const menuFromUrl = urlParams.get('menu')
+      if (menuFromUrl) return menuFromUrl
+      const saved = sessionStorage.getItem('relink_worker_menu')
+      return saved || 'beranda'
+    } catch {
+      return 'beranda'
+    }
+  }) // 'beranda' | 'peluang' | 'jenjang' | 'dompet' | 'keamanan'
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [actionSuccessMsg, setActionSuccessMsg] = useState('')
+
+  // Sinkronisasi menu aktif ke sessionStorage & URL query agar saat refresh tetap di halaman tersebut
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('relink_worker_menu', currentMenu)
+      const url = new URL(window.location)
+      if (url.searchParams.get('menu') !== currentMenu) {
+        url.searchParams.set('menu', currentMenu)
+        window.history.replaceState({}, '', url)
+      }
+    } catch {}
+  }, [currentMenu])
 
   // State Profil Pekerja (dari Supabase / localStorage)
   const [workerProfile, setWorkerProfile] = useState(() => {

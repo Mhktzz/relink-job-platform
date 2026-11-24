@@ -36,9 +36,31 @@ import DeleteTaskModal from './modals/DeleteTaskModal.jsx'
 import './ClientDashboard.css'
 
 function ClientDashboard() {
-  const [currentMenu, setCurrentMenu] = useState('beranda') // 'beranda' | 'kanban' | 'data_tugas' | 'radar' | 'new_task' | 'escrow' | 'bantuan' | 'task_detail'
+  const [currentMenu, setCurrentMenu] = useState(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search)
+      const menuFromUrl = urlParams.get('menu')
+      if (menuFromUrl) return menuFromUrl
+      const saved = sessionStorage.getItem('relink_client_menu')
+      return saved || 'beranda'
+    } catch {
+      return 'beranda'
+    }
+  }) // 'beranda' | 'kanban' | 'data_tugas' | 'radar' | 'new_task' | 'escrow' | 'bantuan' | 'task_detail'
   const [previousMenu, setPreviousMenu] = useState('kanban')
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true)
+
+  // Sinkronisasi menu aktif ke sessionStorage & URL query agar saat refresh tetap di halaman tersebut
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('relink_client_menu', currentMenu)
+      const url = new URL(window.location)
+      if (url.searchParams.get('menu') !== currentMenu) {
+        url.searchParams.set('menu', currentMenu)
+        window.history.replaceState({}, '', url)
+      }
+    } catch {}
+  }, [currentMenu])
 
   // Inisialisasi tasks dari localStorage agar aksi hapus/edit bertahan saat refresh
   const [tasks, setTasks] = useState(() => {
