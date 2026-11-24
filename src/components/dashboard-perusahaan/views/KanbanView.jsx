@@ -173,13 +173,6 @@ function KanbanView({
             </button>
           </div>
 
-          <div className="column-draft-badge-row">
-            <span className="column-draft-badge">
-              <Icon name="shield" size={12} />
-              <span>Tempat Mitra Submit Draft</span>
-            </span>
-          </div>
-
           <p className="column-sub-note">
             Ketika pekerja selesai mengunggah bukti kerja (foto lapangan ber-GPS &amp; checklist SOP selesai), kartu tugas otomatis berpindah ke kolom ini.
           </p>
