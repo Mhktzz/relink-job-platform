@@ -677,70 +677,90 @@ function AuthPage({ mode, role }) {
                   </a>
                 </nav>
 
-                <form className="auth-form" onSubmit={handleSubmit}>
+                <form className="auth-form" noValidate onSubmit={handleSubmit}>
                   {isSignup && (
-                    <label className="auth-field">
+                    <label className={`auth-field${errors.name ? " has-error" : ""}${shakingFields.name ? " is-shaking" : ""}`}>
                       <span>
                         {isWorker ? "Nama Lengkap" : "Nama Pemilik Usaha"}
                       </span>
                       <input
                         autoComplete="name"
                         name="name"
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) => handleFieldChange("name", e.target.value, setName)}
                         placeholder={
                           isWorker ? "Nama sesuai KTP" : "Contoh: Ibu Rina Wati"
                         }
-                        required
                         type="text"
                         value={name}
                       />
+                      {errors.name && (
+                        <span className="auth-field-error" role="alert">
+                          <Icon name="alert" size={13} />
+                          <span>Belum terisi</span>
+                        </span>
+                      )}
                     </label>
                   )}
 
                   {isSignup && !isWorker && (
-                    <label className="auth-field">
+                    <label className={`auth-field${errors.business ? " has-error" : ""}${shakingFields.business ? " is-shaking" : ""}`}>
                       <span>Nama Toko / Perusahaan</span>
                       <input
                         autoComplete="organization"
                         name="business"
-                        onChange={(e) => setBusiness(e.target.value)}
+                        onChange={(e) => handleFieldChange("business", e.target.value, setBusiness)}
                         placeholder="Contoh: Toko Kue Bu Rina"
-                        required
                         type="text"
                         value={business}
                       />
+                      {errors.business && (
+                        <span className="auth-field-error" role="alert">
+                          <Icon name="alert" size={13} />
+                          <span>Belum terisi</span>
+                        </span>
+                      )}
                     </label>
                   )}
 
                   {isSignup && (
-                    <label className="auth-field">
+                    <label className={`auth-field${errors.phone ? " has-error" : ""}${shakingFields.phone ? " is-shaking" : ""}`}>
                       <span>Nomor WhatsApp / HP Aktif</span>
                       <input
                         autoComplete="tel"
                         name="phone"
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => handleFieldChange("phone", e.target.value, setPhone)}
                         placeholder="Contoh: 081234567890"
-                        required
                         type="tel"
                         value={phone}
                       />
+                      {errors.phone && (
+                        <span className="auth-field-error" role="alert">
+                          <Icon name="alert" size={13} />
+                          <span>Belum terisi</span>
+                        </span>
+                      )}
                     </label>
                   )}
 
-                  <label className="auth-field">
+                  <label className={`auth-field${errors.email ? " has-error" : ""}${shakingFields.email ? " is-shaking" : ""}`}>
                     <span>Email Akun</span>
                     <input
                       autoComplete="email"
                       name="email"
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => handleFieldChange("email", e.target.value, setEmail)}
                       placeholder="nama@emailbisnis.com"
-                      required
                       type="email"
                       value={email}
                     />
+                    {errors.email && (
+                      <span className="auth-field-error" role="alert">
+                        <Icon name="alert" size={13} />
+                        <span>Belum terisi</span>
+                      </span>
+                    )}
                   </label>
 
-                  <label className="auth-field">
+                  <label className={`auth-field${errors.password ? " has-error" : ""}${shakingFields.password ? " is-shaking" : ""}`}>
                     <div className="auth-field-header-row">
                       <span>Kata Sandi</span>
                       {!isSignup && (
@@ -750,6 +770,7 @@ function AuthPage({ mode, role }) {
                             setIsForgotPassword(true);
                             setResetEmail(email);
                             setMessage("");
+                            setErrors({});
                           }}
                           tabIndex={-1}
                           type="button"
@@ -763,11 +784,10 @@ function AuthPage({ mode, role }) {
                         autoComplete={isSignup ? "new-password" : "current-password"}
                         minLength={isSignup ? 8 : 6}
                         name="password"
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => handleFieldChange("password", e.target.value, setPassword)}
                         placeholder={
                           isSignup ? "Minimal 8 karakter" : "Masukkan kata sandi"
                         }
-                        required
                         type={showPassword ? "text" : "password"}
                         value={password}
                       />
@@ -781,20 +801,25 @@ function AuthPage({ mode, role }) {
                         <Icon name={showPassword ? "eye-off" : "eye"} size={18} />
                       </button>
                     </div>
+                    {errors.password && (
+                      <span className="auth-field-error" role="alert">
+                        <Icon name="alert" size={13} />
+                        <span>Belum terisi</span>
+                      </span>
+                    )}
                     {isSignup && renderPasswordCriteria()}
                   </label>
 
                   {isSignup && (
-                    <label className="auth-field">
+                    <label className={`auth-field${errors.passwordConfirm ? " has-error" : ""}${shakingFields.passwordConfirm ? " is-shaking" : ""}`}>
                       <span>Konfirmasi Kata Sandi</span>
                       <div className="auth-password-input-wrap">
                         <input
                           autoComplete="new-password"
                           minLength={6}
                           name="password-confirm"
-                          onChange={(e) => setPasswordConfirm(e.target.value)}
+                          onChange={(e) => handleFieldChange("passwordConfirm", e.target.value, setPasswordConfirm)}
                           placeholder="Ulangi kata sandi Anda"
-                          required
                           type={showPasswordConfirm ? "text" : "password"}
                           value={passwordConfirm}
                         />
@@ -815,6 +840,12 @@ function AuthPage({ mode, role }) {
                           />
                         </button>
                       </div>
+                      {errors.passwordConfirm && (
+                        <span className="auth-field-error" role="alert">
+                          <Icon name="alert" size={13} />
+                          <span>Belum terisi</span>
+                        </span>
+                      )}
                     </label>
                   )}
 
