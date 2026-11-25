@@ -19,6 +19,7 @@ function DanaEscrowView({
   setSelectedEscrow,
   setShowEscrowModal,
   handleReleaseEscrow,
+  isReleasingEscrow = false,
 }) {
   return (
     <main className="dashboard-content-flow escrow-dashboard-flow">
@@ -297,9 +298,10 @@ function DanaEscrowView({
                             className="btn-escrow-quick-release"
                             onClick={() => handleReleaseEscrow(tx)}
                             title="Cairkan dana sekarang"
+                            disabled={isReleasingEscrow}
                             type="button"
                           >
-                            Lepas Dana
+                            {isReleasingEscrow ? 'Memproses...' : 'Lepas Dana'}
                           </button>
                         )}
                       </div>

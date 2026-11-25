@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
+import { WorkerVerificationBanner } from '../WorkerVerification.jsx'
 
 function CardDots() {
   return (
@@ -19,16 +20,16 @@ function WorkerBerandaView({
   setCurrentMenu = () => {},
   onOpenAcceptModal = () => {},
   onOpenProofModal = () => {},
-  onCheckInArrived = () => {},
   availableJobs = [],
   onOpenWithdrawModal = () => {},
-  onTriggerSos = () => {},
   actionItems = [],
-  upcomingSchedule = [],
   onOpenQuizModal = () => {},
+  verificationComplete = false,
+  verificationLoaded = false,
+  onCompleteProfile = () => {},
 }) {
   // 14 hari data jam kerja harian
-  const dailyWorkload = [
+  const dailyWorkload = workerProfile.isDemoAccount ? [
     { date: '11/7', day: 'Sen', hours: 2.5, earnings: 55000 },
     { date: '12/7', day: 'Sel', hours: 3.0, earnings: 70000 },
     { date: '13/7', day: 'Rab', hours: 2.0, earnings: 45000 },
@@ -43,7 +44,7 @@ function WorkerBerandaView({
     { date: '22/7', day: 'Jum', hours: 5.5, earnings: 124000 },
     { date: '23/7', day: 'Sab', hours: 6.5, earnings: 145000 },
     { date: '24/7', day: 'Min', hours: 4.0, earnings: 90000 },
-  ]
+  ] : []
 
   const [hoveredBarIndex, setHoveredBarIndex] = useState(9) // Default: 20/7 (active peak bar)
 
@@ -53,10 +54,10 @@ function WorkerBerandaView({
 
   // Nilai metrik
   const activeTasksCount = activeTask ? 1 : 0
-  const availableCount = availableJobs.length || 5
-  const ratingValue = workerProfile.rating ? Number(workerProfile.rating).toFixed(1) : '5.0'
-  const availableBalance = walletData.availableBalance || 145000
-  const heldEscrow = walletData.heldEscrowBalance || (activeTask ? activeTask.netHonor || 78200 : 0)
+  const availableCount = availableJobs.length
+  const ratingValue = workerProfile.rating ? Number(workerProfile.rating).toFixed(1) : '-'
+  const availableBalance = walletData.availableBalance || 0
+  const heldEscrow = walletData.heldEscrowBalance || 0
   const totalMonthlyEarnings = availableBalance + heldEscrow
 
   return (
@@ -144,7 +145,7 @@ function WorkerBerandaView({
             {ratingValue}
           </div>
           <div className="clean-stat-card__subtext">
-            Tier 1 • {workerProfile.completedTasksCount || 2} ulasan selesai
+            {workerProfile.tier || 'Tier 1'} • {workerProfile.completedTasksCount || 0} ulasan selesai
           </div>
         </article>
 
@@ -158,10 +159,10 @@ function WorkerBerandaView({
             <CardDots />
           </div>
           <div className="clean-stat-card__value">
-            100%
+            {workerProfile.isDemoAccount ? '100%' : '-'}
           </div>
           <div className="clean-stat-card__subtext">
-            0 sengketa • SOP Terverifikasi
+            {workerProfile.isDemoAccount ? '0 sengketa • SOP Terverifikasi' : 'Belum ada data aktivitas'}
           </div>
         </article>
       </section>
@@ -185,9 +186,9 @@ function WorkerBerandaView({
             <strong className="clean-fin-card__amount">
               Rp{availableBalance.toLocaleString('id-ID')}
             </strong>
-            <span className="clean-badge clean-badge--mint">
-              +Rp98.000
-            </span>
+            {workerProfile.isDemoAccount && (
+              <span className="clean-badge clean-badge--mint">+Rp98.000</span>
+            )}
           </div>
           <div className="clean-fin-card__subtext">
             Bebas biaya admin transfer ke e-wallet &amp; bank
@@ -246,7 +247,9 @@ function WorkerBerandaView({
           <span className="clean-chart-header-stat">
             {activeDay
               ? `${activeDay.day}, ${activeDay.date} • ${activeDay.hours} Jam (Rp${activeDay.earnings.toLocaleString('id-ID')})`
-              : `Total ${totalHours.toFixed(1)} jam dalam periode ini`}
+              : workerProfile.isDemoAccount
+                ? `Total ${totalHours.toFixed(1)} jam dalam periode ini`
+                : 'Belum ada aktivitas kerja'}
           </span>
         </div>
 
@@ -435,11 +438,25 @@ function WorkerBerandaView({
                 )}
               </li>
             ))}
+            {actionItems.length === 0 && (
+              <li className="clean-action-item">
+                <div className="clean-action-item__content">
+                  <strong>Belum ada agenda</strong>
+                  <p>Tindakan yang perlu dilakukan akan muncul di sini.</p>
+                </div>
+              </li>
+            )}
           </ul>
         </section>
       </div>
 
       {/* 6. TABEL PELUANG TUGAS SEKITAR */}
+      {verificationLoaded && (
+        <WorkerVerificationBanner
+          isComplete={verificationComplete}
+          onAction={verificationComplete ? () => setCurrentMenu('peluang') : onCompleteProfile}
+        />
+      )}
       <section className="clean-card clean-table-card">
         <div className="clean-card__header">
           <div>
@@ -499,7 +516,7 @@ function WorkerBerandaView({
                 </tr>
               )}
 
-              {availableJobs.slice(0, 4).map((job) => (
+              {verificationComplete && availableJobs.slice(0, 4).map((job) => (
                 <tr key={job.id}>
                   <td><strong>{job.code}</strong></td>
                   <td>
@@ -537,6 +554,16 @@ function WorkerBerandaView({
                   </td>
                 </tr>
               ))}
+              {!verificationComplete && !activeTask && (
+                <tr>
+                  <td colSpan="7">Lengkapi data diri terlebih dahulu untuk membuka peluang tugas Tier 1.</td>
+                </tr>
+              )}
+              {verificationComplete && !activeTask && availableJobs.length === 0 && (
+                <tr>
+                  <td colSpan="7">Belum ada tugas. Peluang baru akan muncul di sini.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -4,6 +4,7 @@ import Icon from '../../common/Icon.jsx'
 function BerandaView({
   tasks = [],
   totalHeldEscrow = 0,
+  isDemoAccount = false,
   setCurrentMenu,
   setSelectedProofTask,
   setShowProofModal,
@@ -131,7 +132,7 @@ function BerandaView({
     )
 
     // Data historis operasional toko yang proporsional dan realistis
-    const history = [
+    const history = isDemoAccount ? [
       { month: 'Jul', honor: 190000, hemat: 72000, x: 40 },
       { month: 'Agu', honor: 250000, hemat: 95000, x: 90 },
       { month: 'Sep', honor: 210000, hemat: 80000, x: 140 },
@@ -144,6 +145,13 @@ function BerandaView({
         isCurrent: true,
       },
       { month: 'Des', honor: 220000, hemat: 84000, x: 290 },
+    ] : [
+      { month: 'Jul', honor: 0, hemat: 0, x: 40 },
+      { month: 'Agu', honor: 0, hemat: 0, x: 90 },
+      { month: 'Sep', honor: 0, hemat: 0, x: 140 },
+      { month: 'Okt', honor: 0, hemat: 0, x: 190 },
+      { month: 'Nov', honor: liveNovHonor, hemat: liveNovHemat, x: 240, isCurrent: true },
+      { month: 'Des', honor: 0, hemat: 0, x: 290 },
     ]
 
     // Skala tinggi dinamis agar proporsional terhadap anggaran toko
@@ -161,7 +169,7 @@ function BerandaView({
         hematH,
       }
     })
-  }, [tasks])
+  }, [isDemoAccount, tasks])
 
   const activeMonthData = monthlyData[hoveredMonthIndex] || monthlyData[4]
 

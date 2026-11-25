@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import relinkIcon from '../../assets/main-relink-1.svg'
-import relinkDarkLogo from '../../assets/main-relink-dark.svg'
 import Icon from '../common/Icon.jsx'
 import { supabase } from '../../lib/supabaseClient.js'
 import {
   fetchTasksFromDb,
+  updateTaskInDb,
   isTaskActive,
   getDeletedTaskIds,
 } from '../../lib/databaseService.js'
@@ -28,11 +28,30 @@ import AmbilTugasModal from './modals/AmbilTugasModal.jsx'
 import ProofHandoverModal from './modals/ProofHandoverModal.jsx'
 import TarikDanaModal from './modals/TarikDanaModal.jsx'
 import KuisAssessmentModal from './modals/KuisAssessmentModal.jsx'
+import OnboardingScreen from '../common/OnboardingScreen.jsx'
+import WorkerVerificationView, { WorkerVerificationBanner } from './WorkerVerification.jsx'
+import {
+  completeOnboarding,
+  getStoredUser,
+  hasPendingOnboarding,
+  isDemoUser,
+} from '../../lib/userSession.js'
 
 import '../dashboard-perusahaan/ClientDashboard.css'
 import './WorkerDashboard.css'
 
 function WorkerDashboard() {
+  const storedUser = getStoredUser()
+  const demoAccount = isDemoUser(storedUser)
+  const isEmptyDemoWorker = storedUser?.id === 'w-1'
+  const useDemoData = demoAccount && !isEmptyDemoWorker
+  const walletStorageKey = `relink_worker_wallet_${storedUser?.id || 'guest'}`
+  const activeTaskStorageKey = `relink_worker_active_task_${storedUser?.id || 'guest'}`
+  const [showOnboarding, setShowOnboarding] = useState(() => hasPendingOnboarding(storedUser))
+  const [verificationComplete, setVerificationComplete] = useState(false)
+  const [verificationLoaded, setVerificationLoaded] = useState(isEmptyDemoWorker)
+  const [verificationLookupError, setVerificationLookupError] = useState('')
+  const [isVerificationSubmitting, setIsVerificationSubmitting] = useState(false)
   const [currentMenu, setCurrentMenu] = useState(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search)
@@ -64,30 +83,100 @@ function WorkerDashboard() {
   // State Profil Pekerja (dari Supabase / localStorage)
   const [workerProfile, setWorkerProfile] = useState(() => {
     try {
-      const saved = localStorage.getItem('relink_user')
-      if (saved) {
-        const parsed = JSON.parse(saved)
+      if (storedUser) {
         return {
           ...initialWorkerProfile,
-          id: parsed.id || initialWorkerProfile.id,
-          name: parsed.full_name || parsed.name || initialWorkerProfile.name,
-          email: parsed.email || initialWorkerProfile.email,
-          tier: parsed.tier || initialWorkerProfile.tier,
+          id: storedUser.id || initialWorkerProfile.id,
+          name: storedUser.full_name || storedUser.name || initialWorkerProfile.name,
+          email: storedUser.email || initialWorkerProfile.email,
+          tier: storedUser.tier || initialWorkerProfile.tier,
+          rating: useDemoData ? initialWorkerProfile.rating : null,
+          completedTasksCount: useDemoData ? initialWorkerProfile.completedTasksCount : 0,
+          trustScore: useDemoData ? initialWorkerProfile.trustScore : 0,
+          tierLabel: useDemoData ? initialWorkerProfile.tierLabel : 'Tier 1 — Basic',
+          isRisingStar: useDemoData && initialWorkerProfile.isRisingStar,
+          verifiedStatus: useDemoData
+            ? initialWorkerProfile.verifiedStatus
+            : { ktp: false, assessment: false, portfolioVideo: false, vouchingCount: 0 },
+          isDemoAccount: useDemoData,
         }
       }
-      return initialWorkerProfile
+      return useDemoData ? initialWorkerProfile : { ...initialWorkerProfile, isDemoAccount: false }
     } catch {
       return initialWorkerProfile
     }
   })
 
   // State Tugas Aktif & Peluang Tugas
-  const [activeTask, setActiveTask] = useState(initialActiveTask)
-  const [availableJobs, setAvailableJobs] = useState(initialAvailableJobs)
-  const [walletData, setWalletData] = useState(initialWalletData)
-  const actionItems = initialActionItems
-  const upcomingSchedule = initialUpcomingSchedule
+  const [activeTask, setActiveTask] = useState(() => {
+    try {
+      const savedTask = localStorage.getItem(activeTaskStorageKey)
+      if (savedTask) {
+        const parsedTask = JSON.parse(savedTask)
+        if (parsedTask && typeof parsedTask === 'object' && (parsedTask.id || parsedTask.code)) {
+          return parsedTask
+        }
+      }
+    } catch (error) {
+      console.warn('Gagal memuat tugas aktif mitra:', error)
+    }
+
+    return useDemoData ? initialActiveTask : null
+  })
+  const [availableJobs, setAvailableJobs] = useState(useDemoData ? initialAvailableJobs : [])
+  const [walletData, setWalletData] = useState(() => {
+    const emptyWallet = {
+      availableBalance: 0,
+      heldEscrowBalance: 0,
+      monthlyTotalEarnings: 0,
+      totalWithdrawn: 0,
+      transactions: [],
+    }
+
+    try {
+      const savedWallet = localStorage.getItem(walletStorageKey)
+      if (savedWallet) {
+        const parsedWallet = JSON.parse(savedWallet)
+        if (parsedWallet && Array.isArray(parsedWallet.transactions)) {
+          return { ...emptyWallet, ...parsedWallet }
+        }
+      }
+    } catch (error) {
+      console.warn('Gagal memuat data dompet mitra:', error)
+    }
+
+    return useDemoData ? initialWalletData : emptyWallet
+  })
+  const processedIncomeRef = useRef(
+    new Set(
+      walletData.transactions
+        .filter((transaction) => transaction.type === 'income')
+        .map((transaction) => transaction.id)
+    )
+  )
+  const actionItems = useDemoData ? initialActionItems : []
+  const upcomingSchedule = useDemoData ? initialUpcomingSchedule : []
   const [isAvailableNow, setIsAvailableNow] = useState(true)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(walletStorageKey, JSON.stringify(walletData))
+    } catch (error) {
+      console.warn('Gagal menyimpan data dompet mitra:', error)
+    }
+  }, [walletData, walletStorageKey])
+
+  useEffect(() => {
+    try {
+      if (activeTask && activeTask.status !== 'completed') {
+        localStorage.setItem(activeTaskStorageKey, JSON.stringify(activeTask))
+      } else {
+        localStorage.removeItem(activeTaskStorageKey)
+      }
+    } catch (error) {
+      console.warn('Gagal menyimpan tugas aktif mitra:', error)
+    }
+  }, [activeTask, activeTaskStorageKey])
 
   // State Modals
   const [taskToAccept, setTaskToAccept] = useState(null)
@@ -95,6 +184,57 @@ function WorkerDashboard() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showQuizModal, setShowQuizModal] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (isEmptyDemoWorker) {
+      return () => {
+        isMounted = false
+      }
+    }
+
+    async function loadVerificationStatus() {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) throw sessionError
+
+        const user = sessionData.session?.user
+        if (!user || user.id !== storedUser?.id) {
+          if (isMounted) {
+            setVerificationLookupError('Sesi login tidak tersedia. Silakan masuk kembali untuk mengirim data verifikasi.')
+          }
+          return
+        }
+
+        const { data, error } = await supabase
+          .from('worker_verifications')
+          .select('user_id, full_name')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (error) throw error
+        if (isMounted) {
+          setVerificationComplete(Boolean(data))
+          if (data?.full_name) {
+            setWorkerProfile((prev) => ({ ...prev, name: data.full_name }))
+          }
+        }
+      } catch (error) {
+        console.error('Gagal memuat status verifikasi mitra:', error)
+        if (isMounted) {
+          setVerificationLookupError('Status verifikasi belum dapat dimuat. Coba muat ulang halaman.')
+        }
+      } finally {
+        if (isMounted) setVerificationLoaded(true)
+      }
+    }
+
+    loadVerificationStatus()
+    return () => {
+      isMounted = false
+    }
+  }, [isEmptyDemoWorker, storedUser?.id])
 
   // Sinkronisasi data autentikasi dari Supabase
   useEffect(() => {
@@ -117,20 +257,22 @@ function WorkerDashboard() {
     const netHonor = Math.round(budget * 0.92) // Potongan komisi platform 8% transparan
     const rawId = task.id || task.task_code || `TSK-${Math.floor(100 + Math.random() * 900)}`
     const code = task.code || (String(rawId).startsWith('#') ? rawId : `#${rawId}`)
+    const requiredTier = task.tier_requirement || task.tierRequirement || task.tier || 'Tier 1'
+    const locked = requiredTier === 'Tier 2' || requiredTier === 'Tier 3'
 
     return {
       id: rawId,
       code: code,
       title: task.title || 'Tugas Baru UMKM Sekitar',
       category: task.category || 'Operasional Toko',
-      tag: task.tier === 'Tier 2' ? 'Buka di Tier 2' : 'Instan (Tier 1)',
-      locked: task.tier === 'Tier 2' || task.tier === 'Tier 3',
+      tag: locked ? `Buka di ${requiredTier}` : `Instan (${requiredTier})`,
+      locked,
       clientName: task.business_name || task.clientName || 'Toko UMKM Terdaftar',
       distance: task.distance || '0.9 km',
       duration: task.duration || 'Sekitar 2–3 jam',
       grossHonor: budget,
       netHonor: netHonor,
-      tierRequired: task.tier || 'Tier 1',
+      tierRequired: requiredTier,
       priority: task.priority || 'Normal',
       urgent: task.priority === 'Urgent' || task.priority === 'High',
       checklistSummary: `${(task.acceptanceChecklist || task.checklist || []).length} butir SOP checklist`,
@@ -146,10 +288,16 @@ function WorkerDashboard() {
   useEffect(() => {
     let isMounted = true
 
+    if (isEmptyDemoWorker) {
+      return () => {
+        isMounted = false
+      }
+    }
+
     async function loadTasks() {
       try {
         const deletedIds = getDeletedTaskIds()
-        const dbTasks = await fetchTasksFromDb()
+        const dbTasks = await fetchTasksFromDb({ includeMockData: useDemoData })
 
         let localTasks = []
         try {
@@ -157,7 +305,11 @@ function WorkerDashboard() {
           if (saved) {
             const parsed = JSON.parse(saved)
             if (Array.isArray(parsed)) {
-              localTasks = parsed.filter((t) => isTaskActive(t, deletedIds))
+              localTasks = parsed.filter(
+                (task) =>
+                  isTaskActive(task, deletedIds) &&
+                  (useDemoData || Boolean(task.client_id))
+              )
             }
           }
         } catch {}
@@ -181,71 +333,102 @@ function WorkerDashboard() {
         })
 
         // 2. Tambahkan tugas default jika belum diambil
-        initialAvailableJobs.forEach((job) => {
-          if (!combinedMap.has(job.id) && job.id !== activeTask?.id) {
-            combinedMap.set(job.id, job)
-          }
-        })
+        if (useDemoData) {
+          initialAvailableJobs.forEach((job) => {
+            if (!combinedMap.has(job.id) && job.id !== activeTask?.id) {
+              combinedMap.set(job.id, job)
+            }
+          })
+        }
 
         if (isMounted) {
           setAvailableJobs(Array.from(combinedMap.values()))
         }
 
-        // Deteksi persetujuan review dari klien jika tugas aktif sedang dalam tahap review (step 3)
-        if (activeTask && activeTask.currentStepIndex === 3) {
-          const matched = [...localTasks, ...dbTasks].find(
-            (t) =>
-              t &&
-              (t.id === activeTask.id ||
-                t.task_code === activeTask.id ||
-                t.code === activeTask.code ||
-                t.id === activeTask.code)
-          )
-          if (
-            matched &&
-            (matched.status === 'completed' ||
-              matched.column === 'overdue' ||
-              matched.statusBadge === 'Completed')
-          ) {
-            const earnedNet = activeTask.netHonor || 180000
-            const gross = activeTask.grossHonor || 200000
-            const fee = gross - earnedNet
+        const allTasks = [...localTasks, ...dbTasks]
+        const activeTaskIdentifiers = activeTask
+          ? [activeTask.id, activeTask.db_id, activeTask.task_code, activeTask.code]
+              .filter(Boolean)
+              .map((value) => String(value).replace(/^#/, ''))
+          : []
+        const completedTasks = allTasks.filter((task) => {
+          if (!task) return false
 
-            setWalletData((prev) => ({
+          const taskIdentifiers = [task.id, task.db_id, task.task_code, task.code]
+            .filter(Boolean)
+            .map((value) => String(value).replace(/^#/, ''))
+          const belongsToWorker =
+            String(task.workerId || task.worker_id || '') === String(workerProfile.id) ||
+            taskIdentifiers.some((identifier) => activeTaskIdentifiers.includes(identifier))
+          const isCompleted =
+            task.status === 'completed' ||
+            task.column === 'overdue' ||
+            task.statusBadge === 'Completed'
+
+          return belongsToWorker && isCompleted
+        })
+
+        completedTasks.forEach((task) => {
+          const taskReference = task.task_code || task.id || task.code
+          if (!taskReference) return
+
+          const incomeId = `income-${String(taskReference).replace(/^#/, '')}`
+          if (processedIncomeRef.current.has(incomeId)) return
+
+          processedIncomeRef.current.add(incomeId)
+          const isActiveTask = activeTaskIdentifiers.some((identifier) =>
+            [task.id, task.db_id, task.task_code, task.code]
+              .filter(Boolean)
+              .map((value) => String(value).replace(/^#/, ''))
+              .includes(identifier)
+          )
+          const gross =
+            Number(task.budget || task.grossHonor) ||
+            Number(isActiveTask ? activeTask?.grossHonor : 0) ||
+            0
+          const earnedNet =
+            Number(task.netHonor) ||
+            Number(isActiveTask ? activeTask?.netHonor : 0) ||
+            Math.round(gross * 0.92)
+          const fee = Math.max(0, gross - earnedNet)
+          const title = task.title || activeTask?.title || 'Pekerjaan selesai'
+          const client = task.clientName || task.business_name || activeTask?.clientName || 'UMKM'
+
+          setWalletData((prev) => {
+            if (prev.transactions.some((transaction) => transaction.id === incomeId)) {
+              return prev
+            }
+
+            return {
               ...prev,
               availableBalance: prev.availableBalance + earnedNet,
               heldEscrowBalance: Math.max(0, prev.heldEscrowBalance - earnedNet),
               monthlyTotalEarnings: prev.monthlyTotalEarnings + earnedNet,
               transactions: [
                 {
-                  id: `TRX-${Math.floor(100 + Math.random() * 900)}`,
-                  date: 'Hari ini',
-                  title: `Honor Tugas ${activeTask.code} — ${activeTask.title}`,
-                  client: activeTask.clientName,
+                  id: incomeId,
+                  date: new Date().toLocaleDateString('id-ID'),
+                  title: `Honor Tugas ${task.code || taskReference} — ${title}`,
+                  client,
                   grossAmount: gross,
-                  fee: fee,
+                  fee,
                   netAmount: earnedNet,
                   type: 'income',
                   status: 'Selesai & Masuk Saldo',
                 },
                 ...prev.transactions,
               ],
-            }))
+            }
+          })
 
-            setWorkerProfile((prev) => ({
-              ...prev,
-              completedTasksCount: prev.completedTasksCount + 1,
-            }))
+          setWorkerProfile((prev) => ({
+            ...prev,
+            completedTasksCount: prev.completedTasksCount + 1,
+          }))
+          showToast(`Pekerjaan selesai! Dana Rp${earnedNet.toLocaleString('id-ID')} sudah masuk ke saldo siap dicairkan.`)
 
-            setActiveTask((prev) => ({
-              ...prev,
-              currentStepIndex: 4, // Dana Cair
-              status: 'completed',
-            }))
-
-            showToast(`Hasil kerja disetujui klien! Dana honor Rp${earnedNet.toLocaleString('id-ID')} telah cair ke Saldo Dompet.`)
-          }
-        }
+          if (isActiveTask) setActiveTask(null)
+        })
       } catch (e) {
         console.warn('Gagal sinkron tugas pekerja:', e)
       }
@@ -275,7 +458,7 @@ function WorkerDashboard() {
       window.removeEventListener('relink_tasks_updated', handleSyncEvent)
       supabase.removeChannel(channel)
     }
-  }, [activeTask])
+  }, [activeTask, isEmptyDemoWorker, useDemoData, workerProfile.id])
 
   // Handler Toast Notifikasi
   function showToast(msg) {
@@ -283,9 +466,111 @@ function WorkerDashboard() {
     setTimeout(() => setActionSuccessMsg(''), 5000)
   }
 
+  function navigateToMenu(menu) {
+    if (menu === 'peluang' && verificationLoaded && !verificationComplete) {
+      setCurrentMenu('verifikasi')
+      return
+    }
+    setCurrentMenu(menu)
+  }
+
+  async function handleWorkerVerificationSubmit(form) {
+    setIsVerificationSubmitting(true)
+    try {
+      if (isEmptyDemoWorker) {
+        setVerificationComplete(true)
+        setCurrentMenu('peluang')
+        return
+      }
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) throw sessionError
+      const user = sessionData.session?.user
+      if (!user || user.id !== storedUser?.id) {
+        throw new Error('Sesi login tidak tersedia. Silakan masuk kembali sebelum mengirim data.')
+      }
+
+      const { error: profileError } = await supabase.from('profiles').upsert(
+        {
+          id: user.id,
+          user_id: user.id,
+          full_name: form.fullName,
+          role: 'mitra',
+          tier: 'Tier 1',
+          is_verified: false,
+        },
+        { onConflict: 'id' }
+      )
+      if (profileError) throw profileError
+
+      const { error } = await supabase.from('worker_verifications').upsert(
+        {
+          user_id: user.id,
+          full_name: form.fullName,
+          domicile: form.domicile,
+          marital_status: form.maritalStatus,
+          nik: form.nik,
+          mother_name: form.motherName,
+          verification_status: 'submitted',
+        },
+        { onConflict: 'user_id' }
+      )
+
+      if (error) {
+        console.error('Gagal menyimpan data verifikasi mitra:', error)
+        throw new Error(`Data belum berhasil dikirim: ${error.message}`)
+      }
+
+      setWorkerProfile((prev) => ({ ...prev, name: form.fullName }))
+      setVerificationComplete(true)
+      showToast('Data diri berhasil dikirim. Peluang tugas Tier 1 sudah bisa dicari.')
+      setCurrentMenu('peluang')
+    } finally {
+      setIsVerificationSubmitting(false)
+    }
+  }
+
+  function handleOpenAcceptModal(job) {
+    if (!verificationComplete) {
+      setCurrentMenu('verifikasi')
+      return
+    }
+    setTaskToAccept(job)
+  }
+
   // Handler: Ambil Tugas Baru
-  function handleConfirmAcceptTask(task) {
+  async function handleConfirmAcceptTask(task) {
     setIsProcessing(true)
+    if (!useDemoData) {
+      let sessionData
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        if (error) throw error
+        sessionData = data
+      } catch (error) {
+        setIsProcessing(false)
+        showToast(`Sesi Supabase gagal diperiksa: ${error.message}`)
+        return
+      }
+
+      if (sessionData.session?.user.id !== workerProfile.id) {
+        setIsProcessing(false)
+        showToast('Sesi login tidak aktif. Silakan masuk kembali sebelum mengambil tugas.')
+        return
+      }
+
+      const result = await updateTaskInDb(task.id, {
+        status: 'in_progress',
+        workerId: workerProfile.id,
+        workerName: workerProfile.name,
+      })
+      if (!result.success) {
+        setIsProcessing(false)
+        showToast(`Tugas belum berhasil diambil: ${result.error || 'gagal menyimpan penugasan.'}`)
+        return
+      }
+    }
+
     setTimeout(() => {
       setAvailableJobs((prev) => prev.filter((j) => j.id !== task.id))
 
@@ -331,6 +616,7 @@ function WorkerDashboard() {
               return {
                 ...item,
                 workerName: workerProfile.name || 'Dimas Prasetyo',
+                worker_id: workerProfile.id,
                 status: 'in_progress',
                 statusBadge: 'In Progress',
                 column: 'current',
@@ -464,11 +750,6 @@ function WorkerDashboard() {
     showToast('Lolos Micro-Assessment 100%! Lencana Rising Star aktif di radar UMKM sekitar.')
   }
 
-  // Handler: Trigger SOS Darurat
-  function handleTriggerSos() {
-    showToast('SINYAL DARURAT DIAKTIFKAN: Titik koordinat GPS Anda telah dibagikan ke Tim Siaga Relink.')
-  }
-
   // Handler: Keluar Akun (Logout)
   async function handleLogout() {
     try {
@@ -482,6 +763,20 @@ function WorkerDashboard() {
 
   return (
     <div className="admin-clean-app worker-dashboard">
+      {showOnboarding && (
+        <OnboardingScreen
+          onFinish={async () => {
+            try {
+              await completeOnboarding(storedUser)
+              setShowOnboarding(false)
+            } catch (error) {
+              console.error('Gagal menyimpan penyelesaian onboarding mitra:', error)
+              showToast(error.message || 'Status onboarding gagal disimpan.')
+            }
+          }}
+          role="pekerja"
+        />
+      )}
       {/* 1. SIDEBAR NAVY DENGAN PENGELOMPOKAN MENU (KONSISTEN DENGAN DASHBOARD PERUSAHAAN) */}
       <aside
         className={`admin-navy-sidebar${isSidebarExpanded ? ' admin-navy-sidebar--expanded' : ' admin-navy-sidebar--collapsed'}`}
@@ -526,7 +821,7 @@ function WorkerDashboard() {
 
             <button
               className={`sidebar-nav-item${currentMenu === 'peluang' ? ' sidebar-nav-item--active' : ''}`}
-              onClick={() => setCurrentMenu('peluang')}
+              onClick={() => navigateToMenu('peluang')}
               title="Radar & Bursa Peluang Tugas"
               type="button"
             >
@@ -589,17 +884,17 @@ function WorkerDashboard() {
             >
               <Icon name="chat" size={18} />
               {isSidebarExpanded && <span>Chat</span>}
-              {isSidebarExpanded && <span className="nav-counter-pill">2</span>}
+              {isSidebarExpanded && useDemoData && <span className="nav-counter-pill">2</span>}
             </button>
 
             <button
               className={`sidebar-nav-item${currentMenu === 'keamanan' ? ' sidebar-nav-item--active' : ''}`}
               onClick={() => setCurrentMenu('keamanan')}
-              title="Pusat Keamanan, SOP & Siaga SOS"
+              title="Pusat Keamanan & SOP"
               type="button"
             >
               <Icon name="shield" size={18} />
-              {isSidebarExpanded && <span>Keamanan &amp; SOS</span>}
+              {isSidebarExpanded && <span>Keamanan &amp; SOP</span>}
             </button>
           </div>
 
@@ -666,7 +961,7 @@ function WorkerDashboard() {
               type="button"
             >
               <Icon name="bell" size={18} />
-              <span className="topbar-notif-dot" />
+              {useDemoData && <span className="topbar-notif-dot" />}
             </button>
 
             <button
@@ -713,12 +1008,12 @@ function WorkerDashboard() {
                     className="dropdown-item"
                     onClick={() => {
                       setShowUserDropdown(false)
-                      setCurrentMenu('jenjang')
+                      setCurrentMenu('verifikasi')
                     }}
                     type="button"
                   >
-                    <Icon name="star" size={16} />
-                    <span>Jenjang &amp; Verifikasi</span>
+                    <Icon name="shield" size={16} />
+                    <span>Data Diri &amp; Verifikasi</span>
                   </button>
                   <button
                     className="dropdown-item"
@@ -761,38 +1056,77 @@ function WorkerDashboard() {
             availableJobs={availableJobs}
             isAvailableNow={isAvailableNow}
             onCheckInArrived={handleCheckInArrived}
-            onOpenAcceptModal={(job) => setTaskToAccept(job)}
+            onOpenAcceptModal={handleOpenAcceptModal}
             onOpenProofModal={() => setShowProofModal(true)}
             onOpenQuizModal={() => setShowQuizModal(true)}
             onOpenWithdrawModal={() => setShowWithdrawModal(true)}
-            onTriggerSos={handleTriggerSos}
-            setCurrentMenu={setCurrentMenu}
+            setCurrentMenu={navigateToMenu}
             setIsAvailableNow={setIsAvailableNow}
+            upcomingSchedule={upcomingSchedule}
+            walletData={walletData}
+            workerProfile={workerProfile}
+            verificationComplete={verificationComplete}
+            verificationLoaded={verificationLoaded}
+            onCompleteProfile={() => setCurrentMenu('verifikasi')}
+          />
+        )}
+
+        {currentMenu === 'pekerjaan-saya' && (
+          <PekerjaanSayaView
+            activeTask={activeTask}
+            onCheckInArrived={handleCheckInArrived}
+            onOpenProofModal={() => setShowProofModal(true)}
+            setCurrentMenu={navigateToMenu}
             upcomingSchedule={upcomingSchedule}
             walletData={walletData}
             workerProfile={workerProfile}
           />
         )}
 
-        {currentMenu === 'pekerjaan-saya' && (
-          <PekerjaanSayaView
-            actionItems={actionItems}
-            activeTask={activeTask}
-            onCheckInArrived={handleCheckInArrived}
-            onOpenProofModal={() => setShowProofModal(true)}
-            onTriggerSos={handleTriggerSos}
-            setCurrentMenu={setCurrentMenu}
-            upcomingSchedule={upcomingSchedule}
-            workerProfile={workerProfile}
-          />
+        {currentMenu === 'peluang' && (
+          !verificationLoaded ? (
+            <main className="clean-dash-wrapper">
+              <p role="status">Memeriksa status data verifikasi...</p>
+            </main>
+          ) : !verificationComplete ? (
+            <WorkerVerificationView
+              isDemoAccount={isEmptyDemoWorker}
+              isSubmitting={isVerificationSubmitting}
+              lookupError={verificationLookupError}
+              onBack={() => setCurrentMenu('beranda')}
+              onSubmit={handleWorkerVerificationSubmit}
+              workerName={workerProfile.name}
+            />
+          ) : (
+            <PeluangTugasView
+              availableJobs={availableJobs}
+              initialTab="tier1"
+              onOpenAcceptModal={handleOpenAcceptModal}
+              searchQueryGlobal={searchQuery}
+              verificationComplete={verificationComplete}
+              onVerificationAction={() => navigateToMenu('peluang')}
+            />
+          )
         )}
 
-        {currentMenu === 'peluang' && (
-          <PeluangTugasView
-            availableJobs={availableJobs}
-            onOpenAcceptModal={(job) => setTaskToAccept(job)}
-            searchQueryGlobal={searchQuery}
-          />
+        {currentMenu === 'verifikasi' && (
+          verificationComplete ? (
+            <main className="clean-dash-wrapper">
+              <WorkerVerificationBanner
+                isComplete
+                onAction={() => navigateToMenu('peluang')}
+              />
+            </main>
+          ) : (
+            <WorkerVerificationView
+              isDemoAccount={isEmptyDemoWorker}
+              isSubmitting={isVerificationSubmitting}
+              lookupError={verificationLookupError}
+              onBack={() => setCurrentMenu('beranda')}
+              onSubmit={handleWorkerVerificationSubmit}
+              workerName={workerProfile.name}
+            />
+          )
         )}
 
         {currentMenu === 'jenjang' && (
@@ -810,7 +1144,7 @@ function WorkerDashboard() {
         )}
 
         {currentMenu === 'keamanan' && (
-          <KeamananSopView onTriggerSos={handleTriggerSos} />
+          <KeamananSopView />
         )}
       </div>
 
@@ -846,7 +1180,7 @@ function WorkerDashboard() {
         <button
           className={`bottom-nav-item${currentMenu === 'peluang' ? ' bottom-nav-item--active' : ''}`}
           onClick={() => {
-            setCurrentMenu('peluang')
+            navigateToMenu('peluang')
             window.scrollTo({ top: 0, behavior: 'smooth' })
           }}
           type="button"

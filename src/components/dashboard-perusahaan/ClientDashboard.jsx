@@ -34,9 +34,16 @@ import DisputeModal from './modals/DisputeModal.jsx'
 import TaskDetailView from './views/TaskDetailView.jsx'
 import EditTaskModal from './modals/EditTaskModal.jsx'
 import DeleteTaskModal from './modals/DeleteTaskModal.jsx'
+import OnboardingScreen from '../common/OnboardingScreen.jsx'
+import { completeOnboarding, getStoredUser, hasPendingOnboarding, isDemoUser } from '../../lib/userSession.js'
+import { fetchUserSettings, saveUserSettings } from '../../lib/userSettingsService.js'
 import './ClientDashboard.css'
 
 function ClientDashboard() {
+  const storedUser = getStoredUser()
+  const demoAccount = isDemoUser(storedUser)
+  const [showOnboarding, setShowOnboarding] = useState(() => hasPendingOnboarding(storedUser))
+
   const [currentMenu, setCurrentMenu] = useState(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search)
@@ -71,10 +78,16 @@ function ClientDashboard() {
       if (saved !== null) {
         const parsed = JSON.parse(saved)
         if (Array.isArray(parsed)) {
-          return parsed.filter((t) => isTaskActive(t, deletedIds))
+          return parsed.filter(
+            (task) =>
+              isTaskActive(task, deletedIds) &&
+              (demoAccount || String(task.client_id) === String(storedUser?.id))
+          )
         }
       }
-      return initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
+      return demoAccount
+        ? initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
+        : []
     } catch {
       return []
     }
@@ -95,6 +108,8 @@ function ClientDashboard() {
   const [signatureApproved, setSignatureApproved] = useState(false)
   const [showProofModal, setShowProofModal] = useState(false)
   const [actionSuccessMsg, setActionSuccessMsg] = useState('')
+  const [releaseSuccess, setReleaseSuccess] = useState(null)
+  const [isReleasingEscrow, setIsReleasingEscrow] = useState(false)
 
   // State Modal Edit & Hapus Tugas Global (Dinamis untuk semua tampilan)
   const [taskToEdit, setTaskToEdit] = useState(null)
@@ -269,7 +284,9 @@ function ClientDashboard() {
   }
 
   // State Rekening Escrow & Proteksi Transaksi (FR-401, FR-404, FR-501)
-  const [escrowTransactions, setEscrowTransactions] = useState(initialEscrowTransactions)
+  const [escrowTransactions, setEscrowTransactions] = useState(
+    demoAccount ? initialEscrowTransactions : []
+  )
   const [escrowFilterTab, setEscrowFilterTab] = useState('all')
   const [escrowSearchQuery, setEscrowSearchQuery] = useState('')
   const [selectedEscrow, setSelectedEscrow] = useState(null)
@@ -288,6 +305,8 @@ function ClientDashboard() {
       return { business_name: 'Toko Kue Bu Rina', full_name: 'Bu Rina', role: 'klien' }
     }
   })
+  const [accountSettings, setAccountSettings] = useState(null)
+  const [settingsLoaded, setSettingsLoaded] = useState(demoAccount)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   // Handler Keluar Akun (Logout)
@@ -302,25 +321,45 @@ function ClientDashboard() {
   }
 
   // Handler Perbarui Profil & Pengaturan UMKM
-  async function handleUpdateProfile(updatedData) {
+  async function handleUpdateProfile(updatedData, settings) {
     const updatedUser = {
       ...currentUser,
       ...updatedData,
     }
+
+    if (demoAccount) {
+      setCurrentUser(updatedUser)
+      setAccountSettings(settings)
+      return
+    }
+
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
+    const authUser = sessionData.session?.user
+    if (!authUser || authUser.id !== currentUser.id) {
+      throw new Error('Sesi login tidak valid. Silakan masuk kembali sebelum menyimpan pengaturan.')
+    }
+
+    const { error: profileError } = await supabase.from('profiles').upsert(
+      {
+        id: authUser.id,
+        user_id: authUser.id,
+        full_name: updatedUser.full_name,
+        business_name: updatedUser.business_name,
+        phone: updatedUser.phone,
+        role: 'klien',
+      },
+      { onConflict: 'id' }
+    )
+    if (profileError) throw profileError
+
+    await saveUserSettings(authUser.id, settings)
     setCurrentUser(updatedUser)
+    setAccountSettings(settings)
     try {
       localStorage.setItem('relink_user', JSON.stringify(updatedUser))
-      if (updatedUser.id) {
-        await supabase
-          .from('profiles')
-          .update({
-            full_name: updatedUser.full_name,
-            business_name: updatedUser.business_name,
-          })
-          .eq('id', updatedUser.id)
-      }
-    } catch (e) {
-      console.warn('Profile sync warning:', e)
+    } catch (error) {
+      console.warn('Profil tersimpan di Supabase, tetapi cache lokal gagal diperbarui:', error)
     }
     setActionSuccessMsg('Profil dan pengaturan toko berhasil diperbarui!')
     setTimeout(() => setActionSuccessMsg(''), 4000)
@@ -331,24 +370,63 @@ function ClientDashboard() {
     let isMounted = true
 
     // Cek session Supabase secara dinamis
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user && isMounted) {
-        const meta = session.user.user_metadata || {}
-        setCurrentUser((prev) => ({
-          ...prev,
-          id: session.user.id,
-          email: session.user.email,
-          business_name: meta.business_name || prev.business_name,
-          full_name: meta.full_name || prev.full_name,
-        }))
+    async function loadAccountData() {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) throw sessionError
+        const authUser = sessionData.session?.user
+
+        if (!authUser || demoAccount) {
+          if (isMounted) setSettingsLoaded(true)
+          return
+        }
+
+        const [{ data: profile, error: profileError }, settings] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('full_name, business_name, phone, role')
+            .eq('id', authUser.id)
+            .maybeSingle(),
+          fetchUserSettings(authUser.id),
+        ])
+        if (profileError) throw profileError
+
+        if (isMounted) {
+          const meta = authUser.user_metadata || {}
+          setCurrentUser((prev) => ({
+            ...prev,
+            id: authUser.id,
+            email: authUser.email,
+            business_name: profile?.business_name || meta.business_name || prev.business_name,
+            full_name: profile?.full_name || meta.full_name || prev.full_name,
+            phone: profile?.phone || meta.phone || prev.phone,
+            role: profile?.role || prev.role,
+          }))
+          setAccountSettings(settings)
+        }
+      } catch (error) {
+        console.error('Gagal memuat profil dan pengaturan dari Supabase:', error)
+        if (isMounted) {
+          setActionSuccessMsg('Pengaturan belum dapat dimuat dari Supabase. Periksa konfigurasi dan tabel database.')
+        }
+      } finally {
+        if (isMounted) setSettingsLoaded(true)
       }
-    })
+    }
+
+    loadAccountData()
 
     async function loadDataFromSupabase() {
       try {
         const [dbTasks, dbEscrow] = await Promise.all([
-          fetchTasksFromDb(),
-          fetchEscrowFromDb(),
+          fetchTasksFromDb({
+            clientId: demoAccount ? null : currentUser?.id,
+            includeMockData: demoAccount,
+          }),
+          fetchEscrowFromDb({
+            clientId: demoAccount ? null : currentUser?.id,
+            includeMockData: demoAccount,
+          }),
         ])
         if (isMounted) {
           if (Array.isArray(dbTasks)) {
@@ -358,9 +436,18 @@ function ClientDashboard() {
 
             if (savedLocal !== null) {
               try {
-                const parsed = JSON.parse(savedLocal).filter((t) => isTaskActive(t, deletedIds))
-                setTasks(parsed)
-                localStorage.setItem('relink_tasks', JSON.stringify(parsed))
+                const parsed = JSON.parse(savedLocal).filter(
+                  (t) =>
+                    isTaskActive(t, deletedIds) &&
+                    (demoAccount || String(t.client_id) === String(currentUser?.id))
+                )
+                const merged = new Map()
+                ;[...activeDbTasks, ...parsed].forEach((task) => {
+                  merged.set(String(task.id || task.task_code), task)
+                })
+                const accountTasks = Array.from(merged.values())
+                setTasks(accountTasks)
+                localStorage.setItem('relink_tasks', JSON.stringify(accountTasks))
               } catch {
                 setTasks(activeDbTasks)
                 localStorage.setItem('relink_tasks', JSON.stringify(activeDbTasks))
@@ -389,10 +476,17 @@ function ClientDashboard() {
           'postgres_changes',
           { event: '*', schema: 'public', table: 'tasks' },
           async () => {
-            const freshTasks = await fetchTasksFromDb()
+            const freshTasks = await fetchTasksFromDb({
+              clientId: demoAccount ? null : currentUser?.id,
+              includeMockData: demoAccount,
+            })
             if (isMounted && Array.isArray(freshTasks)) {
               const deletedIds = getDeletedTaskIds()
-              const active = freshTasks.filter((t) => isTaskActive(t, deletedIds))
+              const active = freshTasks.filter(
+                (t) =>
+                  isTaskActive(t, deletedIds) &&
+                  (demoAccount || String(t.client_id) === String(currentUser?.id))
+              )
               setTasks(active)
               localStorage.setItem('relink_tasks', JSON.stringify(active))
             }
@@ -402,7 +496,10 @@ function ClientDashboard() {
           'postgres_changes',
           { event: '*', schema: 'public', table: 'escrow_transactions' },
           async () => {
-            const freshEscrow = await fetchEscrowFromDb()
+            const freshEscrow = await fetchEscrowFromDb({
+              clientId: demoAccount ? null : currentUser?.id,
+              includeMockData: demoAccount,
+            })
             if (isMounted && freshEscrow?.length > 0) setEscrowTransactions(freshEscrow)
           }
         )
@@ -415,7 +512,7 @@ function ClientDashboard() {
       isMounted = false
       if (realtimeChannel) supabase.removeChannel(realtimeChannel)
     }
-  }, [])
+  }, [currentUser?.id, demoAccount])
 
   // Form State untuk Buat Tugas Baru
   const [newTaskTitle, setNewTaskTitle] = useState('')
@@ -456,80 +553,147 @@ function ClientDashboard() {
     (t) => t.column === 'overdue' || t.statusBadge === 'Completed' || t.status === 'completed'
   )
 
+  function markTaskCompletedLocally(task) {
+    if (!task) return
+
+    const identifiers = [task.id, task.db_id, task.task_code, task.code]
+      .filter(Boolean)
+      .map((value) => String(value).replace(/^#/, ''))
+    const updatedTasks = tasks.map((item) => {
+      const itemIdentifiers = [item.id, item.db_id, item.task_code, item.code]
+        .filter(Boolean)
+        .map((value) => String(value).replace(/^#/, ''))
+      const matches = identifiers.some((identifier) => itemIdentifiers.includes(identifier))
+        || item.title === task.title
+
+      return matches
+        ? { ...item, column: 'overdue', statusBadge: 'Completed', status: 'completed' }
+        : item
+    })
+
+    setTasks(updatedTasks)
+    try {
+      localStorage.setItem('relink_tasks', JSON.stringify(updatedTasks))
+      window.dispatchEvent(new CustomEvent('relink_tasks_updated', { detail: updatedTasks }))
+    } catch (error) {
+      console.warn('Gagal menyinkronkan tugas selesai ke dashboard mitra:', error)
+    }
+  }
+
   // Handler: Approve Bukti Kerja & TTD
-  function handleApproveProof(taskToApprove) {
+  async function handleApproveProof(taskToApprove) {
     if (!signatureApproved) {
       alert('Silakan centang persetujuan tanda tangan digital sebelum mencairkan dana.')
       return
     }
 
-    setTasks((prev) => {
-      const updatedList = prev.map((t) =>
-        t.id === taskToApprove.id
-          ? { ...t, column: 'overdue', statusBadge: 'Completed', status: 'completed' }
-          : t,
-      )
-      try {
-        localStorage.setItem('relink_tasks', JSON.stringify(updatedList))
-        window.dispatchEvent(new CustomEvent('relink_tasks_updated', { detail: updatedList }))
-      } catch (e) {
-        console.warn('Gagal sinkron tasks completed:', e)
-      }
-      return updatedList
-    })
-
-    // Perbarui juga status transaksi escrow yang terikat menjadi released
-    setEscrowTransactions((prev) =>
-      prev.map((item) =>
+    const relatedEscrow = escrowTransactions.find(
+      (item) =>
         item.taskId === taskToApprove.id ||
+        item.taskId === taskToApprove.db_id ||
         item.taskId === taskToApprove.task_code ||
         item.taskTitle === taskToApprove.title
-          ? {
-              ...item,
-              status: 'released',
-              statusLabel: 'Selesai & Dicairkan',
-              statusBadgeColor: 'blue',
-              autoReleaseHoursLeft: null,
-            }
-          : item
-      )
     )
 
-    setShowProofModal(false)
-    setSelectedProofTask(null)
-    setSignatureApproved(false)
-    setActionSuccessMsg(
-      `Dana tugas ${taskToApprove.code || taskToApprove.id} sebesar Rp${(
-        Number(taskToApprove.budget) || 0
-      ).toLocaleString('id-ID')} telah berhasil dicairkan ke saldo Mitra!`
-    )
-    setTimeout(() => setActionSuccessMsg(''), 5000)
+    try {
+      if (!demoAccount) {
+        if (relatedEscrow) {
+          const escrowResult = await updateEscrowStatusInDb(relatedEscrow.id, 'released')
+          if (!escrowResult.success) throw new Error('Status dana escrow gagal diperbarui.')
+        }
+
+        const taskResult = await updateTaskInDb(
+          taskToApprove.db_id || taskToApprove.id || taskToApprove.task_code,
+          { status: 'completed' }
+        )
+        if (!taskResult.success) throw new Error(taskResult.error || 'Status pekerjaan gagal diperbarui.')
+      }
+
+      markTaskCompletedLocally(taskToApprove)
+      setEscrowTransactions((prev) =>
+        prev.map((item) =>
+          item.taskId === taskToApprove.id ||
+          item.taskId === taskToApprove.db_id ||
+          item.taskId === taskToApprove.task_code ||
+          item.taskTitle === taskToApprove.title
+            ? {
+                ...item,
+                status: 'released',
+                statusLabel: 'Selesai & Dicairkan',
+                statusBadgeColor: 'blue',
+                autoReleaseHoursLeft: null,
+              }
+            : item
+        )
+      )
+
+      setShowProofModal(false)
+      setSelectedProofTask(null)
+      setSignatureApproved(false)
+      setReleaseSuccess({
+        taskTitle: taskToApprove.title,
+        workerName: taskToApprove.workerName || relatedEscrow?.workerName || 'Mitra',
+        amount: Number(relatedEscrow?.amount || taskToApprove.budget) || 0,
+      })
+    } catch (error) {
+      console.error('[Relink Escrow] Gagal menyelesaikan pekerjaan:', error)
+      alert(`Pekerjaan belum dapat diselesaikan: ${error.message}`)
+    }
   }
 
   // Handler: Lepas Dana Escrow Langsung
-  function handleReleaseEscrow(escrowItem) {
-    updateEscrowStatusInDb(escrowItem.id, 'released')
-    setEscrowTransactions((prev) =>
-      prev.map((item) =>
-        item.id === escrowItem.id
-          ? {
-              ...item,
-              status: 'released',
-              statusLabel: 'Selesai & Dicairkan',
-              statusBadgeColor: 'blue',
-              autoReleaseHoursLeft: null,
-            }
-          : item,
-      ),
-    )
-    setShowEscrowModal(false)
-    setSelectedEscrow(null)
-    setActionSuccessMsg(
-      `Dana Escrow ${escrowItem.id} sebesar Rp${escrowItem.amount.toLocaleString(
-        'id-ID',
-      )} telah berhasil dicairkan langsung ke saldo Mitra ${escrowItem.workerName}!`,
-    )
-    setTimeout(() => setActionSuccessMsg(''), 5000)
+  async function handleReleaseEscrow(escrowItem) {
+    if (isReleasingEscrow) return
+    setIsReleasingEscrow(true)
+
+    try {
+      const relatedTask = tasks.find((task) =>
+        task.id === escrowItem.taskId ||
+        task.db_id === escrowItem.taskId ||
+        task.task_code === escrowItem.taskId ||
+        task.title === escrowItem.taskTitle
+      )
+
+      if (!demoAccount) {
+        const escrowResult = await updateEscrowStatusInDb(escrowItem.id, 'released')
+        if (!escrowResult.success) throw new Error('Status dana escrow gagal diperbarui.')
+
+        const taskId = relatedTask?.db_id || relatedTask?.id || escrowItem.taskId
+        if (taskId) {
+          const taskResult = await updateTaskInDb(taskId, { status: 'completed' })
+          if (!taskResult.success) throw new Error(taskResult.error || 'Status pekerjaan gagal diperbarui.')
+        }
+      }
+
+      markTaskCompletedLocally(
+        relatedTask || { id: escrowItem.taskId, title: escrowItem.taskTitle }
+      )
+      setEscrowTransactions((prev) =>
+        prev.map((item) =>
+          item.id === escrowItem.id
+            ? {
+                ...item,
+                status: 'released',
+                statusLabel: 'Selesai & Dicairkan',
+                statusBadgeColor: 'blue',
+                autoReleaseHoursLeft: null,
+              }
+            : item
+        )
+      )
+      setShowEscrowModal(false)
+      setSelectedEscrow(null)
+      setReleaseSuccess({
+        taskTitle: escrowItem.taskTitle,
+        workerName: escrowItem.workerName || 'Mitra',
+        amount: Number(escrowItem.amount) || 0,
+      })
+    } catch (error) {
+      console.error('[Relink Escrow] Gagal melepas dana:', error)
+      alert(`Dana belum berhasil dilepas: ${error.message}`)
+    } finally {
+      setIsReleasingEscrow(false)
+    }
   }
 
   // Handler: Ajukan Sengketa / Klaim Garansi 100% Relink
@@ -627,6 +791,7 @@ function ClientDashboard() {
     const createdTask = {
       id: generatedCode,
       task_code: generatedCode,
+      client_id: currentUser?.id,
       code: `#${generatedCode}`,
       statusBadge: 'In Progress',
       title: newTaskTitle,
@@ -696,6 +861,20 @@ function ClientDashboard() {
 
   return (
     <div className="admin-clean-app">
+      {showOnboarding && (
+        <OnboardingScreen
+          onFinish={async () => {
+            try {
+              await completeOnboarding(currentUser)
+              setShowOnboarding(false)
+            } catch (error) {
+              console.error('Gagal menyimpan penyelesaian onboarding UMKM:', error)
+              setActionSuccessMsg(error.message || 'Status onboarding gagal disimpan.')
+            }
+          }}
+          role="umkm"
+        />
+      )}
       {/* 1. SIDEBAR NAVY DENGAN PENGELOMPOKAN MENU */}
       <aside className={`admin-navy-sidebar${isSidebarExpanded ? ' admin-navy-sidebar--expanded' : ' admin-navy-sidebar--collapsed'}`}>
         <button
@@ -952,6 +1131,7 @@ function ClientDashboard() {
         {currentMenu === 'beranda' && (
           <BerandaView
             escrowTransactions={escrowTransactions}
+            isDemoAccount={demoAccount}
             onDeleteTask={setTaskToDelete}
             onEditTask={setTaskToEdit}
             onOpenTaskDetail={(task) => handleOpenTaskDetail(task, 'beranda')}
@@ -1052,6 +1232,7 @@ function ClientDashboard() {
             escrowTransactions={escrowTransactions}
             filteredEscrowTransactions={filteredEscrowTransactions}
             handleReleaseEscrow={handleReleaseEscrow}
+            isReleasingEscrow={isReleasingEscrow}
             heldCount={heldCount}
             releasedCount={releasedCount}
             reviewCount={reviewCount}
@@ -1076,10 +1257,13 @@ function ClientDashboard() {
 
         {currentMenu === 'pengaturan' && (
           <PengaturanView
+            key={`${currentUser.id || 'guest'}-${settingsLoaded ? 'loaded' : 'loading'}`}
             currentUser={currentUser}
+            isDemoAccount={demoAccount}
+            isSettingsLoaded={settingsLoaded}
+            settings={accountSettings}
             onUpdateProfile={handleUpdateProfile}
             setActionSuccessMsg={setActionSuccessMsg}
-            setCurrentMenu={setCurrentMenu}
           />
         )}
       </div>
@@ -1173,9 +1357,61 @@ function ClientDashboard() {
         />
       )}
 
+      {releaseSuccess && (
+        <div className="proof-modal-overlay">
+          <section
+            aria-labelledby="release-success-title"
+            aria-modal="true"
+            className="proof-modal-card"
+            role="alertdialog"
+          >
+            <header className="proof-modal-header">
+              <div>
+                <h2 id="release-success-title">Pekerjaan berhasil diselesaikan</h2>
+                <small>Dana escrow telah dilepas untuk mitra</small>
+              </div>
+              <button
+                aria-label="Tutup notifikasi"
+                className="btn-close-modal"
+                onClick={() => setReleaseSuccess(null)}
+                type="button"
+              >
+                ✕
+              </button>
+            </header>
+            <div className="escrow-modal-body">
+              <div className="escrow-modal-alert escrow-modal-alert--success">
+                <Icon name="check" size={18} />
+                <div>
+                  <strong>Dana berhasil dilepas</strong>
+                  <p>
+                    Pekerjaan <strong>{releaseSuccess.taskTitle}</strong> untuk{' '}
+                    <strong>{releaseSuccess.workerName}</strong> telah ditandai selesai.
+                    Dana escrow sebesar{' '}
+                    <strong>Rp{releaseSuccess.amount.toLocaleString('id-ID')}</strong>{' '}
+                    sudah dilepas.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <footer className="escrow-modal-footer">
+              <button
+                autoFocus
+                className="button button--pink"
+                onClick={() => setReleaseSuccess(null)}
+                type="button"
+              >
+                Selesai
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
+
       {showEscrowModal && selectedEscrow && (
         <EscrowDetailModal
           handleReleaseEscrow={handleReleaseEscrow}
+          isReleasingEscrow={isReleasingEscrow}
           selectedEscrow={selectedEscrow}
           setSelectedEscrow={setSelectedEscrow}
           setShowDisputeModal={setShowDisputeModal}

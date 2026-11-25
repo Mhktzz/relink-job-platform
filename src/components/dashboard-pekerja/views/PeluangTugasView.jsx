@@ -1,8 +1,16 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
+import { WorkerVerificationBanner } from '../WorkerVerification.jsx'
 
-function PeluangTugasView({ availableJobs = [], onOpenAcceptModal, searchQueryGlobal = '' }) {
-  const [activeTab, setActiveTab] = useState('all') // 'all' | 'tier1' | 'tandem' | 'teknis'
+function PeluangTugasView({
+  availableJobs = [],
+  onOpenAcceptModal,
+  searchQueryGlobal = '',
+  initialTab = 'tier1',
+  verificationComplete = false,
+  onVerificationAction,
+}) {
+  const [activeTab, setActiveTab] = useState(initialTab) // 'all' | 'tier1' | 'tandem' | 'teknis'
   const [searchQuery, setSearchQuery] = useState(searchQueryGlobal)
   const [maxDistance, setMaxDistance] = useState('all') // 'all' | '1km' | '3km'
 
@@ -99,6 +107,17 @@ function PeluangTugasView({ availableJobs = [], onOpenAcceptModal, searchQueryGl
           </div>
         </div>
       </section>
+
+      <WorkerVerificationBanner
+        isComplete={verificationComplete}
+        onAction={() => {
+          if (verificationComplete) {
+            setActiveTab('tier1')
+          } else {
+            onVerificationAction?.()
+          }
+        }}
+      />
 
       {/* 3. BANNER EDUKASI PROTEKSI TIER 1 (CLEAN CARD) */}
       <section className="clean-card clean-tier1-protection-banner">

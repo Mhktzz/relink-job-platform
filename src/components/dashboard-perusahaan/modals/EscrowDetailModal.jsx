@@ -6,6 +6,7 @@ function EscrowDetailModal({
   setSelectedEscrow,
   setShowDisputeModal,
   handleReleaseEscrow,
+  isReleasingEscrow = false,
 }) {
   if (!selectedEscrow) return null
 
@@ -139,10 +140,11 @@ function EscrowDetailModal({
               <button
                 className="button button--pink"
                 onClick={() => handleReleaseEscrow(selectedEscrow)}
+                disabled={isReleasingEscrow}
                 type="button"
               >
                 <Icon name="check" size={16} />
-                <span>Setujui & Lepaskan Dana</span>
+                <span>{isReleasingEscrow ? 'Memproses...' : 'Setujui & Lepaskan Dana'}</span>
               </button>
             </div>
           )}

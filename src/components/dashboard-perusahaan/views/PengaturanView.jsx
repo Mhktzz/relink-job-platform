@@ -1,39 +1,58 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
+import { supabase } from '../../../lib/supabaseClient.js'
 import './PengaturanView.css'
 
-function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg, setCurrentMenu }) {
+function PengaturanView({
+  currentUser = {},
+  settings = null,
+  isDemoAccount = false,
+  isSettingsLoaded = true,
+  onUpdateProfile,
+}) {
   const [activeTab, setActiveTab] = useState('profil') // 'profil' | 'operasional' | 'legalitas' | 'escrow' | 'keamanan'
 
   // State Profil Toko & Pemilik
-  const [businessName, setBusinessName] = useState(currentUser.business_name || 'Toko Kue Bu Rina')
-  const [ownerName, setOwnerName] = useState(currentUser.full_name || 'Bu Rina Wati')
-  const [category, setCategory] = useState('Kuliner & Kue Tradisional')
-  const [phone, setPhone] = useState('081234567890')
-  const [email, setEmail] = useState(currentUser.email || 'burina@tokokue.id')
+  const [businessName, setBusinessName] = useState(currentUser.business_name || '')
+  const [ownerName, setOwnerName] = useState(currentUser.full_name || '')
+  const [category, setCategory] = useState(
+    settings?.category ?? (isDemoAccount ? 'Kuliner & Kue Tradisional' : '')
+  )
+  const [phone, setPhone] = useState(currentUser.phone || '')
+  const [email, setEmail] = useState(settings?.contactEmail ?? currentUser.email ?? '')
   const [bio, setBio] = useState(
-    'Toko spesialis kue basah tradisional, jajanan pasar higienis, dan aneka snack box catering untuk kebutuhan kantor & acara lokal.'
+    settings?.bio ?? (isDemoAccount
+      ? 'Toko spesialis kue basah tradisional, jajanan pasar higienis, dan aneka snack box catering untuk kebutuhan kantor & acara lokal.'
+      : '')
   )
 
   // State Operasional & Jangkauan Radar
-  const [address, setAddress] = useState('Jl. Balai Pustaka Timur No. 14B, Rawamangun')
-  const [city, setCity] = useState('Jakarta Timur, DKI Jakarta 13220')
-  const [radarRadius, setRadarRadius] = useState('3') // km
-  const [operatingDays, setOperatingDays] = useState('Senin - Sabtu')
-  const [operatingHours, setOperatingHours] = useState('07:30 - 17:30 WIB')
-  const [locationNote, setLocationNote] = useState('Masuk dari gapura timur, ruko cat hijau tosca sebelah minimarket.')
+  const [address, setAddress] = useState(
+    settings?.address ?? (isDemoAccount ? 'Jl. Balai Pustaka Timur No. 14B, Rawamangun' : '')
+  )
+  const [city, setCity] = useState(
+    settings?.city ?? (isDemoAccount ? 'Jakarta Timur, DKI Jakarta 13220' : '')
+  )
+  const [radarRadius, setRadarRadius] = useState(settings?.radarRadius ?? '3') // km
+  const [operatingDays, setOperatingDays] = useState(settings?.operatingDays ?? (isDemoAccount ? 'Senin - Sabtu' : ''))
+  const [operatingHours, setOperatingHours] = useState(settings?.operatingHours ?? (isDemoAccount ? '07:30 - 17:30 WIB' : ''))
+  const [locationNote, setLocationNote] = useState(settings?.locationNote ?? (
+    isDemoAccount ? 'Masuk dari gapura timur, ruko cat hijau tosca sebelah minimarket.' : ''
+  ))
 
   // State Legalitas Usaha (NIB / FR-207)
-  const [nib, setNib] = useState('1289000341829')
-  const [skuNumber, setSkuNumber] = useState('503/024/SKU/XI/2026')
-  const [taxId, setTaxId] = useState('82.912.441.2-003.000')
+  const [nib, setNib] = useState(settings?.nib ?? (isDemoAccount ? '1289000341829' : ''))
+  const [skuNumber, setSkuNumber] = useState(settings?.skuNumber ?? (isDemoAccount ? '503/024/SKU/XI/2026' : ''))
+  const [taxId, setTaxId] = useState(settings?.taxId ?? (isDemoAccount ? '82.912.441.2-003.000' : ''))
 
   // State Rekening & Preferensi Escrow (FR-401, FR-404)
-  const [bankName, setBankName] = useState('Bank Central Asia (BCA)')
-  const [accountNumber, setAccountNumber] = useState('8820192831')
-  const [accountHolder, setAccountHolder] = useState('Rina Wati')
-  const [autoReleaseHours, setAutoReleaseHours] = useState('24') // 24 atau 48 jam
-  const [whatsappNotif, setWhatsappNotif] = useState(true)
+  const [bankName, setBankName] = useState(settings?.bankName ?? (isDemoAccount ? 'Bank Central Asia (BCA)' : ''))
+  const [accountNumber, setAccountNumber] = useState(settings?.accountNumber ?? '')
+  const [accountHolder, setAccountHolder] = useState(settings?.accountHolder ?? '')
+  const [autoReleaseHours, setAutoReleaseHours] = useState(settings?.autoReleaseHours ?? '24') // 24 atau 48 jam
+  const [whatsappNotif, setWhatsappNotif] = useState(settings?.whatsappNotif ?? true)
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [settingsError, setSettingsError] = useState('')
 
   // State Ubah Kata Sandi
   const [newPassword, setNewPassword] = useState('')
@@ -42,32 +61,52 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
   const [passwordNotice, setPasswordNotice] = useState('')
 
   // Handler Simpan Profil
-  function handleSaveSettings(e) {
+  async function handleSaveSettings(e) {
     if (e) e.preventDefault()
+    setSettingsError('')
 
     const updatedUser = {
       ...currentUser,
       business_name: businessName.trim() || currentUser.business_name,
       full_name: ownerName.trim() || currentUser.full_name,
       phone: phone.trim(),
-      email: email.trim(),
     }
 
-    if (onUpdateProfile) {
-      onUpdateProfile(updatedUser)
-    } else {
-      try {
-        localStorage.setItem('relink_user', JSON.stringify(updatedUser))
-      } catch {}
-      if (setActionSuccessMsg) {
-        setActionSuccessMsg('Pengaturan UMKM berhasil disimpan!')
-        setTimeout(() => setActionSuccessMsg(''), 4000)
-      }
+    if (!onUpdateProfile) {
+      setSettingsError('Fitur simpan Supabase belum tersedia. Muat ulang aplikasi atau hubungi admin.')
+      return
+    }
+
+    setIsSavingSettings(true)
+    try {
+      await onUpdateProfile(updatedUser, {
+        contactEmail: email.trim(),
+        category,
+        bio,
+        address,
+        city,
+        radarRadius,
+        operatingDays,
+        operatingHours,
+        locationNote,
+        nib,
+        skuNumber,
+        taxId,
+        bankName,
+        accountNumber,
+        accountHolder,
+        autoReleaseHours,
+        whatsappNotif,
+      })
+    } catch (error) {
+      console.error('Gagal menyimpan pengaturan UMKM:', error)
+      setSettingsError(error.message || 'Pengaturan gagal disimpan ke Supabase.')
+    } finally {
+      setIsSavingSettings(false)
     }
   }
 
-  // Handler Simpan Kata Sandi Baru
-  function handleSavePassword(e) {
+  async function handleSavePassword(e) {
     e.preventDefault()
     if (!newPassword) {
       setPasswordNotice('Harap masukkan kata sandi baru.')
@@ -82,10 +121,24 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
       return
     }
 
-    setPasswordNotice('Kata sandi baru berhasil diperbarui!')
-    setNewPassword('')
-    setConfirmPassword('')
-    setTimeout(() => setPasswordNotice(''), 4000)
+    if (isDemoAccount) {
+      setPasswordNotice('Akun demo tidak memiliki kata sandi yang dapat diubah.')
+      return
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) throw error
+
+      setPasswordNotice('Kata sandi berhasil diperbarui melalui Supabase Auth.')
+      setNewPassword('')
+      setConfirmPassword('')
+      setTimeout(() => setPasswordNotice(''), 4000)
+    } catch (error) {
+      console.error('Gagal memperbarui kata sandi Supabase Auth:', error)
+      setPasswordNotice(`Kata sandi gagal diperbarui: ${error.message}`)
+      return
+    }
   }
 
   return (
@@ -100,13 +153,19 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
         <div className="pengaturan-header-actions">
           <button
             className="btn-create-task-primary btn-action-primary"
+            disabled={!isSettingsLoaded || isSavingSettings}
             onClick={handleSaveSettings}
             type="button"
           >
             <Icon name="check" size={16} />
-            <span>Simpan Semua Perubahan</span>
+            <span>{!isSettingsLoaded ? 'Memuat...' : isSavingSettings ? 'Menyimpan...' : 'Simpan Semua Perubahan'}</span>
           </button>
         </div>
+        {settingsError && (
+          <div className="auth-message auth-message--error" role="alert">
+            {settingsError}
+          </div>
+        )}
       </div>
 
       {/* 2. Capsule Pill Tabs Bar */}
@@ -234,6 +293,7 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
                   onChange={(e) => setCategory(e.target.value)}
                   value={category}
                 >
+                  <option value="">Pilih kategori usaha</option>
                   <option value="Kuliner & Kue Tradisional">Kuliner &amp; Kue Tradisional</option>
                   <option value="Ritel & Toko Kelontong">Ritel &amp; Toko Kelontong</option>
                   <option value="Jasa Kebersihan & Laundry">Jasa Kebersihan &amp; Laundry</option>
@@ -287,7 +347,7 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
             </div>
 
             <div className="pengaturan-actions-row pengaturan-form-grid--full">
-              <button className="btn-create-task-primary btn-action-primary" type="submit">
+              <button className="btn-create-task-primary btn-action-primary" disabled={isSavingSettings || !isSettingsLoaded} type="submit">
                 <Icon name="check" size={16} />
                 <span>Simpan Perubahan Profil</span>
               </button>
@@ -393,7 +453,7 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
             </div>
 
             <div className="pengaturan-actions-row pengaturan-form-grid--full">
-              <button className="btn-create-task-primary btn-action-primary" type="submit">
+              <button className="btn-create-task-primary btn-action-primary" disabled={isSavingSettings || !isSettingsLoaded} type="submit">
                 <Icon name="check" size={16} />
                 <span>Simpan Pengaturan Operasional</span>
               </button>
@@ -493,7 +553,7 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
             </div>
 
             <div className="pengaturan-actions-row pengaturan-form-grid--full">
-              <button className="btn-create-task-primary btn-action-primary" type="submit">
+              <button className="btn-create-task-primary btn-action-primary" disabled={isSavingSettings || !isSettingsLoaded} type="submit">
                 <Icon name="check" size={16} />
                 <span>Simpan Legalitas Usaha</span>
               </button>
@@ -522,6 +582,7 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
                   onChange={(e) => setBankName(e.target.value)}
                   value={bankName}
                 >
+                  <option value="">Pilih bank</option>
                   <option value="Bank Central Asia (BCA)">Bank Central Asia (BCA)</option>
                   <option value="Bank Mandiri">Bank Mandiri</option>
                   <option value="Bank Rakyat Indonesia (BRI)">Bank Rakyat Indonesia (BRI)</option>
@@ -595,7 +656,7 @@ function PengaturanView({ currentUser = {}, onUpdateProfile, setActionSuccessMsg
             </div>
 
             <div className="pengaturan-actions-row pengaturan-form-grid--full">
-              <button className="btn-create-task-primary btn-action-primary" type="submit">
+              <button className="btn-create-task-primary btn-action-primary" disabled={isSavingSettings || !isSettingsLoaded} type="submit">
                 <Icon name="check" size={16} />
                 <span>Simpan Preferensi Escrow</span>
               </button>

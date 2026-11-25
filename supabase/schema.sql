@@ -25,6 +25,26 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Data verifikasi pribadi mitra; akses dibatasi untuk pemilik akun.
+CREATE TABLE IF NOT EXISTS public.worker_verifications (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  domicile TEXT NOT NULL,
+  marital_status TEXT NOT NULL CHECK (marital_status IN ('belum_menikah', 'menikah', 'cerai_hidup', 'cerai_mati')),
+  nik TEXT NOT NULL CHECK (nik ~ '^[0-9]{16}$'),
+  mother_name TEXT NOT NULL,
+  verification_status TEXT NOT NULL DEFAULT 'submitted' CHECK (verification_status IN ('submitted', 'verified', 'rejected')),
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Preferensi dan pengaturan akun bersifat privat untuk pemilik akun.
+CREATE TABLE IF NOT EXISTS public.user_settings (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ========================================================
 -- 3. TABEL: TASKS (Papan Tugas Operasional UMKM)
 -- ========================================================
@@ -129,6 +149,8 @@ CREATE TABLE IF NOT EXISTS public.nearby_workers (
 -- 8. ROW LEVEL SECURITY (RLS) POLICIES
 -- ========================================================
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.worker_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.escrow_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.proofs_of_work ENABLE ROW LEVEL SECURITY;
@@ -140,10 +162,46 @@ CREATE POLICY "Akses baca publik profiles" ON public.profiles FOR SELECT USING (
 CREATE POLICY "Akses insert profiles" ON public.profiles FOR INSERT WITH CHECK (true);
 CREATE POLICY "Akses update profiles" ON public.profiles FOR UPDATE USING (true);
 
-CREATE POLICY "Akses baca publik tasks" ON public.tasks FOR SELECT USING (true);
-CREATE POLICY "Akses insert tasks" ON public.tasks FOR INSERT WITH CHECK (true);
-CREATE POLICY "Akses update tasks" ON public.tasks FOR UPDATE USING (true);
-CREATE POLICY "Akses delete publik tasks" ON public.tasks FOR DELETE USING (true);
+REVOKE ALL ON TABLE public.worker_verifications FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.worker_verifications TO authenticated;
+CREATE POLICY "Mitra membaca verifikasi sendiri" ON public.worker_verifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Mitra mengirim verifikasi sendiri" ON public.worker_verifications FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Mitra memperbarui verifikasi sendiri" ON public.worker_verifications FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+REVOKE ALL ON TABLE public.user_settings FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.user_settings TO authenticated;
+CREATE POLICY "Pengguna membaca pengaturan sendiri" ON public.user_settings FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Pengguna menyimpan pengaturan sendiri" ON public.user_settings FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Pengguna memperbarui pengaturan sendiri" ON public.user_settings FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+GRANT USAGE ON SCHEMA public TO authenticated;
+REVOKE ALL ON TABLE public.tasks FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.tasks TO authenticated;
+
+CREATE POLICY "Pengguna melihat tugas tersedia dan miliknya"
+  ON public.tasks FOR SELECT TO authenticated
+  USING (
+    client_id = auth.uid()
+    OR worker_id = auth.uid()
+    OR (worker_id IS NULL AND status IN ('open', 'in_progress'))
+  );
+
+CREATE POLICY "UMKM membuat tugas miliknya"
+  ON public.tasks FOR INSERT TO authenticated
+  WITH CHECK (client_id = auth.uid());
+
+CREATE POLICY "UMKM dan mitra memperbarui tugas terkait"
+  ON public.tasks FOR UPDATE TO authenticated
+  USING (
+    client_id = auth.uid()
+    OR worker_id = auth.uid()
+    OR (worker_id IS NULL AND status IN ('open', 'in_progress'))
+  )
+  WITH CHECK (client_id = auth.uid() OR worker_id = auth.uid());
+
+CREATE POLICY "UMKM menghapus tugas miliknya"
+  ON public.tasks FOR DELETE TO authenticated
+  USING (client_id = auth.uid());
 
 CREATE POLICY "Akses baca publik escrow_transactions" ON public.escrow_transactions FOR SELECT USING (true);
 CREATE POLICY "Akses insert escrow_transactions" ON public.escrow_transactions FOR INSERT WITH CHECK (true);

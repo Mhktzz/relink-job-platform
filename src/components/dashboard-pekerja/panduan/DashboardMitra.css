@@ -76,7 +76,6 @@
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 99px; font-weight: 800; font-size: 14px; }
 .btn.main { background: var(--pink); color: #fff; }
 .btn.ghost { background: #fff; border: 1px solid var(--line); box-shadow: 0 2px 8px rgba(11, 20, 55, .06); }
-.btn.sos { background: #ffe9e9; color: #d62839; }
 .btn.sm { height: 38px; width: 100%; font-size: 13px; margin-top: 12px; }
 .btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
 

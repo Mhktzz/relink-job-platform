@@ -217,6 +217,7 @@ function AuthPage({ mode, role }) {
               business_name: !isWorker ? business.trim() : null,
               phone: phone.trim(),
               role: isWorker ? "mitra" : "klien",
+              onboarding_complete: false,
             },
           },
         });
@@ -231,18 +232,27 @@ function AuthPage({ mode, role }) {
         // 3. Simpan Profil ke Tabel Profiles
         const userId = data.user?.id;
         if (userId) {
-          await supabase.from("profiles").upsert([
+          const { error: profileError } = await supabase.from("profiles").upsert([
             {
               id: userId,
+              user_id: userId,
               full_name: name.trim(),
               business_name: !isWorker ? business.trim() : null,
               phone: phone.trim(),
               role: isWorker ? "mitra" : "klien",
               tier: "Tier 1",
-              trust_score: 98,
-              is_verified: true,
+              trust_score: 0,
+              is_verified: false,
             },
           ]);
+
+          if (profileError) {
+            console.error("[Relink Auth] Gagal menyimpan profil pengguna:", profileError);
+            setMessage(`Akun Auth berhasil dibuat, tetapi profil belum tersimpan: ${profileError.message}`);
+            setMessageType("error");
+            setIsLoading(false);
+            return;
+          }
 
           // Simpan session info lokal untuk kemudahan akses
           localStorage.setItem(
@@ -251,10 +261,14 @@ function AuthPage({ mode, role }) {
               id: userId,
               email: email.trim(),
               full_name: name.trim(),
+              phone: phone.trim(),
               business_name: !isWorker ? business.trim() : "Mitra Mandiri",
               role: isWorker ? "mitra" : "klien",
+              is_demo: false,
+              onboarding_complete: false,
             })
           );
+          localStorage.setItem("relink_onboarding_pending", userId);
         }
 
         setMessageType("success");
@@ -282,21 +296,49 @@ function AuthPage({ mode, role }) {
 
         // Ambil data profil dari database
         const userId = data.user?.id;
-        let businessName = "Toko Kue Bu Rina";
-        let fullName = data.user?.user_metadata?.full_name || (isWorker ? "Dimas Prasetyo" : "Pemilik UMKM");
+        let businessName = isWorker ? "Mitra Mandiri" : "Usaha Saya";
+        let fullName = data.user?.user_metadata?.full_name || "";
         let userRole = isWorker ? "mitra" : "klien";
 
         if (userId) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
-            .select("full_name, business_name, role")
+            .select("full_name, business_name, phone, role")
             .eq("id", userId)
-            .single();
+            .maybeSingle();
+
+          if (profileError) {
+            console.error("[Relink Auth] Gagal memuat profil pengguna:", profileError);
+            setMessage(`Login berhasil, tetapi profil belum dapat dimuat: ${profileError.message}`);
+            setMessageType("error");
+            setIsLoading(false);
+            return;
+          }
 
           if (profile) {
             if (profile.business_name) businessName = profile.business_name;
             if (profile.full_name) fullName = profile.full_name;
             if (profile.role) userRole = profile.role;
+          } else {
+            const { error: insertProfileError } = await supabase.from("profiles").upsert({
+              id: userId,
+              user_id: userId,
+              full_name: fullName,
+              business_name: isWorker ? null : businessName,
+              phone: data.user?.user_metadata?.phone || null,
+              role: userRole,
+              onboarding_complete: Boolean(data.user?.user_metadata?.onboarding_complete),
+              tier: "Tier 1",
+              trust_score: 0,
+              is_verified: false,
+            });
+            if (insertProfileError) {
+              console.error("[Relink Auth] Gagal membuat profil pengguna:", insertProfileError);
+              setMessage(`Login berhasil, tetapi profil belum dapat dibuat: ${insertProfileError.message}`);
+              setMessageType("error");
+              setIsLoading(false);
+              return;
+            }
           }
 
           localStorage.setItem(
@@ -305,6 +347,7 @@ function AuthPage({ mode, role }) {
               id: userId,
               email: data.user.email,
               full_name: fullName,
+              phone: profile?.phone || data.user?.user_metadata?.phone || "",
               business_name: userRole === "mitra" ? "Mitra Mandiri" : businessName,
               role: userRole,
             })
@@ -341,6 +384,7 @@ function AuthPage({ mode, role }) {
         full_name: "Bu Rina",
         business_name: "Toko Kue Bu Rina",
         role: "klien",
+        is_demo: true,
       })
     );
     setMessage("Masuk sebagai Toko Kue Bu Rina (Demo)...");
@@ -352,6 +396,7 @@ function AuthPage({ mode, role }) {
 
   // Handler Masuk Cepat Akun Demo Pekerja (Dimas Prasetyo)
   function handleWorkerDemoLogin() {
+    sessionStorage.setItem("relink_worker_menu", "beranda");
     localStorage.setItem(
       "relink_user",
       JSON.stringify({
@@ -362,6 +407,7 @@ function AuthPage({ mode, role }) {
         role: "mitra",
         tier: "Tier 1",
         trust_score: 98,
+        is_demo: true,
       })
     );
     setMessage("Masuk sebagai Dimas Prasetyo (Demo Mitra Tier 1)...");

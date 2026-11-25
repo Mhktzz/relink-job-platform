@@ -108,6 +108,13 @@ function DompetMitraView({ walletData, onOpenWithdrawModal }) {
               </tr>
             </thead>
             <tbody>
+              {(walletData.transactions || []).length === 0 && (
+                <tr>
+                  <td colSpan="7" className="text-muted">
+                    Belum ada transaksi. Dana akan tercatat di sini setelah pekerjaan selesai dan disetujui UMKM.
+                  </td>
+                </tr>
+              )}
               {(walletData.transactions || []).map((trx) => (
                 <tr key={trx.id}>
                   <td>

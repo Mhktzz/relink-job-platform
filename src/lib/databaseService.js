@@ -93,47 +93,61 @@ export function isTaskActive(task, deletedIds = null) {
 }
 
 // 1. Mengambil Daftar Tugas
-export async function fetchTasksFromDb() {
+export async function fetchTasksFromDb({ clientId = null, includeMockData = true } = {}) {
   const deletedIds = getDeletedTaskIds()
 
+  function getLocalTasks() {
+    try {
+      const saved = localStorage.getItem('relink_tasks')
+      if (saved === null) return []
+      const parsed = JSON.parse(saved)
+      if (!Array.isArray(parsed)) return []
+      return parsed.filter(
+        (task) =>
+          isTaskActive(task, deletedIds) &&
+          (includeMockData
+            ? true
+            : clientId
+              ? String(task.client_id) === String(clientId)
+              : Boolean(task.client_id))
+      )
+    } catch {
+      return []
+    }
+  }
+
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('tasks')
       .select('*')
       .order('created_at', { ascending: false })
+    if (clientId) query = query.eq('client_id', clientId)
+    else if (!includeMockData) query = query.not('client_id', 'is', null)
+    const { data, error } = await query
 
     if (error) {
       console.warn('[Relink DB] Gagal mengambil tugas dari Supabase:', error.message)
-      try {
-        const saved = localStorage.getItem('relink_tasks')
-        if (saved !== null) {
-          const parsed = JSON.parse(saved)
-          return Array.isArray(parsed) ? parsed.filter((t) => isTaskActive(t, deletedIds)) : []
-        }
-      } catch {}
-      return initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
+      const localTasks = getLocalTasks()
+      return localTasks.length || !includeMockData
+        ? localTasks
+        : initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
     }
 
     if (!data) return []
 
     // Jika Supabase mengembalikan 0 baris (misal semua tugas telah dihapus oleh pengguna)
     if (data.length === 0) {
-      try {
-        const saved = localStorage.getItem('relink_tasks')
-        if (saved !== null) {
-          const parsed = JSON.parse(saved)
-          return Array.isArray(parsed) ? parsed.filter((t) => isTaskActive(t, deletedIds)) : []
-        }
-      } catch {}
-      return []
+      return getLocalTasks()
     }
 
     // Mapping kolom Supabase ke state TaskBoard
     const mapped = data.map((t) => ({
       id: t.task_code || t.id,
       db_id: t.id,
+      client_id: t.client_id,
       task_code: t.task_code,
       code: t.task_code ? `#${t.task_code}` : `#${t.id.slice(0, 6)}`,
+      status: t.status,
       statusBadge:
         t.status === 'review'
           ? 'Proof Review'
@@ -154,6 +168,7 @@ export async function fetchTasksFromDb() {
             ? 'due_week'
             : 'current',
       workerName: t.worker_name || 'Menunggu Mitra',
+      workerId: t.worker_id,
       budget: Number(t.budget),
       dueDate: t.due_date || 'Hari ini, 17:00 WIB',
       hasProof: Boolean(t.has_proof),
@@ -172,14 +187,10 @@ export async function fetchTasksFromDb() {
     return mapped.filter((t) => isTaskActive(t, deletedIds))
   } catch (err) {
     console.warn('[Relink DB] Gagal mengambil tugas dari Supabase, beralih ke mock data:', err)
-    try {
-      const saved = localStorage.getItem('relink_tasks')
-      if (saved !== null) {
-        const parsed = JSON.parse(saved)
-        return Array.isArray(parsed) ? parsed.filter((t) => isTaskActive(t, deletedIds)) : []
-      }
-    } catch {}
-    return initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
+    const localTasks = getLocalTasks()
+    return localTasks.length || !includeMockData
+      ? localTasks
+      : initialTaskBoard.filter((t) => isTaskActive(t, deletedIds))
   }
 }
 
@@ -266,6 +277,8 @@ export async function updateTaskInDb(taskIdOrCode, updatedFields) {
       }
       payload.status = statusMapping[updatedFields.status] || 'in_progress'
     }
+    if (updatedFields.workerId !== undefined) payload.worker_id = updatedFields.workerId
+    if (updatedFields.workerName !== undefined) payload.worker_name = updatedFields.workerName
 
     let query = supabase.from('tasks').update(payload)
     if (typeof taskIdOrCode === 'string' && UUID_REGEX.test(taskIdOrCode)) {
@@ -349,15 +362,19 @@ export async function deleteTaskFromDb(taskOrId) {
 }
 
 // 3. Mengambil Transaksi Escrow
-export async function fetchEscrowFromDb() {
+export async function fetchEscrowFromDb({ clientId = null, includeMockData = true } = {}) {
+  if (!includeMockData && !clientId) return []
+
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('escrow_transactions')
       .select('*')
       .order('created_at', { ascending: false })
+    if (clientId) query = query.eq('client_id', clientId)
+    const { data, error } = await query
 
     if (error || !data || data.length === 0) {
-      return initialEscrowTransactions
+      return includeMockData ? initialEscrowTransactions : []
     }
 
     return data.map((e, index) => {
@@ -417,7 +434,7 @@ export async function fetchEscrowFromDb() {
     })
   } catch (err) {
     console.warn('[Relink DB] Escrow fallback to mock:', err)
-    return initialEscrowTransactions
+    return includeMockData ? initialEscrowTransactions : []
   }
 }
 

@@ -170,17 +170,6 @@
   box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
 }
 
-.btn-worker-action--sos {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecdd3;
-}
-
-.btn-worker-action--sos:hover {
-  background: #fecdd3;
-  transform: translateY(-2px);
-}
-
 .waiting-client-pill {
   display: inline-flex;
   align-items: center;
@@ -1847,88 +1836,8 @@
 }
 
 /* --------------------------------------------------------------------------
-   9. KEAMANAN, SOP & SIAGA SOS DARURAT (DESIGN.MD)
+   9. KEAMANAN & SOP
    -------------------------------------------------------------------------- */
-.worker-sos-hero-card {
-  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
-  border: 2px solid #fecdd3;
-  border-radius: 40px; /* DESIGN.md: Extra Large 40px */
-  padding: 36px 42px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 32px;
-  margin-bottom: 32px;
-  box-shadow: 0 12px 36px rgba(244, 63, 94, 0.12);
-}
-
-.sos-hero-content {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.sos-icon-pulse-wrap {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: #f43f5e;
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 8px rgba(244, 63, 94, 0.2);
-  animation: pulseSos 1.6s infinite;
-}
-
-@keyframes pulseSos {
-  0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6); }
-  70% { transform: scale(1); box-shadow: 0 0 0 16px rgba(244, 63, 94, 0); }
-  100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
-}
-
-.sos-hero-content h3 {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 800;
-  margin: 0 0 6px 0;
-  color: #9f1239;
-  letter-spacing: -0.02em;
-}
-
-.sos-hero-content p {
-  margin: 0;
-  font-size: 13.5px;
-  color: #881337;
-  max-width: 640px;
-  line-height: 1.55;
-}
-
-.btn-trigger-sos-giant {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  background: #e11d48;
-  color: var(--white);
-  border: 0;
-  padding: 16px 32px;
-  border-radius: 999px;
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 8px 24px rgba(225, 29, 72, 0.35);
-  transition: all 160ms ease;
-}
-
-.btn-trigger-sos-giant:hover {
-  background: #be123c;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(225, 29, 72, 0.45);
-}
-
 .sop-steps-list {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -3020,19 +2929,6 @@
   .sop-steps-list {
     grid-template-columns: 1fr;
   }
-  .worker-sos-hero-card {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 24px;
-  }
-  .sos-hero-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .btn-trigger-sos-giant {
-    width: 100%;
-    justify-content: center;
-  }
   .worker-cs-contact-card {
     flex-direction: column;
     align-items: flex-start;
@@ -3549,16 +3445,6 @@
 
 .clean-btn-pill--whatsapp:hover {
   background: #20ba59;
-  transform: translateY(-1px);
-}
-
-.clean-btn-pill--sos {
-  background: #ef4444;
-  color: var(--white);
-}
-
-.clean-btn-pill--sos:hover {
-  background: #dc2626;
   transform: translateY(-1px);
 }
 

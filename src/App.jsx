@@ -189,6 +189,7 @@ function App() {
         role: 'mitra',
         tier: 'Tier 1',
         trust_score: 98,
+        is_demo: true,
       }
       try {
         localStorage.setItem('relink_user', JSON.stringify(defaultWorker))
@@ -206,6 +207,7 @@ function App() {
         full_name: userSession?.full_name || 'Bu Rina',
         business_name: 'Toko Kue Bu Rina',
         role: 'klien',
+        is_demo: true,
       }
       try {
         localStorage.setItem('relink_user', JSON.stringify(defaultUmkm))
@@ -236,6 +238,7 @@ function App() {
           role: 'mitra',
           tier: 'Tier 1',
           trust_score: 98,
+          is_demo: true,
         }
         try {
           localStorage.setItem('relink_user', JSON.stringify(defaultWorker))
@@ -251,6 +254,7 @@ function App() {
         full_name: userSession?.full_name || 'Bu Rina',
         business_name: 'Toko Kue Bu Rina',
         role: 'klien',
+        is_demo: true,
       }
       try {
         localStorage.setItem('relink_user', JSON.stringify(defaultUmkm))

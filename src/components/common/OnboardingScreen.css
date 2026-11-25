@@ -1,0 +1,166 @@
+.onboarding-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 16, 40, 0.68);
+  backdrop-filter: blur(8px);
+}
+
+.onboarding-dialog {
+  position: relative;
+  width: min(100%, 560px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 48px;
+  border: 1px solid rgba(15, 27, 61, 0.08);
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 16, 40, 0.28);
+  color: #0f1b3d;
+}
+
+.onboarding-skip {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: #5c6c8d;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.onboarding-eyebrow,
+.onboarding-feature__step {
+  color: #ff3d8b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.onboarding-dialog > h1 {
+  margin: 12px 0 8px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 6vw, 40px);
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+
+.onboarding-intro {
+  margin: 0;
+  color: #5c6c8d;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.onboarding-feature {
+  min-height: 228px;
+  margin-top: 28px;
+  padding: 26px;
+  border-radius: 20px;
+  background: #f3f5fa;
+}
+
+.onboarding-feature__icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 20px;
+  place-items: center;
+  border-radius: 16px;
+  background: #ff3d8b;
+  color: #fff;
+}
+
+.onboarding-feature__step {
+  color: #5c6c8d;
+  font-size: 10px;
+}
+
+.onboarding-feature h2 {
+  margin: 8px 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.onboarding-feature p {
+  margin: 0;
+  color: #5c6c8d;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.onboarding-progress {
+  display: flex;
+  gap: 7px;
+  margin: 24px 0;
+}
+
+.onboarding-progress span {
+  width: 26px;
+  height: 5px;
+  border-radius: 99px;
+  background: #e1e6f0;
+}
+
+.onboarding-progress span.is-active {
+  width: 44px;
+  background: #ff3d8b;
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.onboarding-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.onboarding-button--primary {
+  background: #0f1b3d;
+  color: #fff;
+}
+
+.onboarding-button--secondary {
+  background: #f3f5fa;
+  color: #0f1b3d;
+}
+
+@media (max-width: 520px) {
+  .onboarding-backdrop {
+    padding: 14px;
+  }
+
+  .onboarding-dialog {
+    padding: 38px 22px 24px;
+    border-radius: 22px;
+  }
+
+  .onboarding-skip {
+    top: 16px;
+    right: 18px;
+  }
+
+  .onboarding-feature {
+    min-height: 216px;
+    padding: 20px;
+  }
+}

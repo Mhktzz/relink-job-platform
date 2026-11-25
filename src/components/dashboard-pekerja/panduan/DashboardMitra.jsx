@@ -34,7 +34,7 @@ const Info = ({ t }) => <span className="dm-info" title={t} tabIndex={0}>i</span
 /* ---------- Data contoh (ganti dengan data Supabase) ---------- */
 const MENU = [
   { g: 'MENU UTAMA', items: [['home', 'Beranda'], ['briefcase', 'Peluang Tugas', 4], ['star', 'Jenjang & Reputasi', 'Tier 1']] },
-  { g: 'LAYANAN', items: [['briefcase', 'Pekerjaan Saya'], ['wallet', 'Dompet Mitra'], ['chat', 'Chat', 2], ['shield', 'Keamanan & SOS']] },
+  { g: 'LAYANAN', items: [['briefcase', 'Pekerjaan Saya'], ['wallet', 'Dompet Mitra'], ['chat', 'Chat', 2], ['shield', 'Keamanan & SOP']] },
   { g: 'PENGATURAN', items: [['user', 'Profil & Portofolio'], ['help', 'Bantuan & Sengketa'], ['logout', 'Keluar Akun']] },
 ];
 
@@ -131,7 +131,6 @@ function TugasAktif({ step }) {
         <span className="dm-muted">Pendapatan bersih <strong className="pink">{rp(78200)}</strong></span>
         <div className="dm-btns">
           <button className="btn ghost">Chat</button>
-          <button className="btn sos">SOS</button>
           <button className="btn main"><Icon n="pin" s={16} /> Check-in di Lokasi</button>
         </div>
       </div>

@@ -4,38 +4,25 @@ import Icon from '../../common/Icon.jsx'
 function PekerjaanSayaView({
   activeTask = null,
   workerProfile = {},
-  actionItems = [],
   upcomingSchedule = [],
   onCheckInArrived,
   onOpenProofModal,
   setCurrentMenu,
+  walletData = {},
 }) {
   const [activeTab, setActiveTab] = useState('aktif') // 'aktif' | 'agenda' | 'riwayat'
 
   const currentStep = activeTask?.currentStepIndex || 0
-
-  const completedHistory = [
-    {
-      id: 'TASK-HIST-01',
-      title: 'Setting Jaringan WiFi & Mesin Kasir POS Toko',
-      client: 'Kopi Kenangan Senopati',
-      date: '22 Nov 2026',
-      duration: '3.5 Jam',
-      honor: 155000,
-      rating: 5.0,
-      status: 'Selesai & Dana Cair',
-    },
-    {
-      id: 'TASK-HIST-02',
-      title: 'Bantu Stock Opname & Labeling 120 Kardus Kue',
-      client: 'Dapur Cokelat Tebet',
-      date: '19 Nov 2026',
-      duration: '4.0 Jam',
-      honor: 140000,
-      rating: 5.0,
-      status: 'Selesai & Dana Cair',
-    },
-  ]
+  const completedHistory = (walletData.transactions || [])
+    .filter((transaction) => transaction.type === 'income')
+    .map((transaction) => ({
+      id: transaction.id,
+      title: transaction.title,
+      client: transaction.client || 'UMKM',
+      date: transaction.date || 'Tanggal tidak tersedia',
+      honor: Number(transaction.netAmount) || 0,
+      status: transaction.status || 'Selesai & Dana Cair',
+    }))
 
   return (
     <main className="clean-dash-wrapper">
@@ -353,6 +340,11 @@ function PekerjaanSayaView({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {completedHistory.length === 0 && (
+              <p className="text-muted" role="status">
+                Belum ada pekerjaan selesai. Riwayat dan dana masuk akan muncul di sini setelah UMKM menyetujui hasil kerja.
+              </p>
+            )}
             {completedHistory.map((item) => (
               <div
                 key={item.id}
@@ -377,7 +369,7 @@ function PekerjaanSayaView({
                     {item.title}
                   </strong>
                   <span style={{ fontSize: '12.5px', color: '#64748b' }}>
-                    {item.client} • Durasi: {item.duration} • Rating: ⭐ {item.rating.toFixed(1)}
+                    {item.client} • Dana telah masuk ke dompet mitra
                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>

@@ -1,42 +1,17 @@
 import Icon from '../../common/Icon.jsx'
 
-function KeamananSopView({ onTriggerSos }) {
+function KeamananSopView() {
   return (
     <main className="dashboard-content-flow">
-      {/* 1. Header Section */}
       <div className="content-heading-bar">
         <div>
-          <h1>Pusat Keamanan, SOP &amp; Siaga SOS Darurat</h1>
+          <h1>Pusat Keamanan &amp; SOP</h1>
           <p>
-            Keselamatan dan kenyamanan Anda adalah prioritas utama Relink. Akses protokol keselamatan kerja, panduan SOP, dan bantuan darurat 24/7.
+            Pelajari proteksi transaksi, protokol keselamatan kerja, panduan SOP, dan cara menghubungi bantuan Relink.
           </p>
         </div>
       </div>
 
-      {/* 2. Tombol Siaga Darurat SOS (FR-306) */}
-      <section className="worker-sos-hero-card">
-        <div className="sos-hero-content">
-          <div className="sos-icon-pulse-wrap">
-            <Icon name="alert" size={30} />
-          </div>
-          <div>
-            <h3>Tombol Siaga SOS &amp; Berbagi Lokasi Realtime</h3>
-            <p>
-              Gunakan tombol ini saat menghadapi bahaya, kecelakaan kerja, atau situasi darurat di lokasi UMKM. Sistem akan membagikan koordinat GPS terakhir Anda ke Tim Siaga Relink dan nomor kontak darurat keluarga Anda.
-            </p>
-          </div>
-        </div>
-        <button
-          className="btn-trigger-sos-giant"
-          onClick={onTriggerSos}
-          type="button"
-        >
-          <Icon name="alert" size={18} />
-          <span>AKTIFKAN SINYAL SOS DARURAT</span>
-        </button>
-      </section>
-
-      {/* 3. 3 Pilar Perlindungan Mitra di Relink (Summary Metrics Grid) */}
       <div className="summary-metrics-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '32px' }}>
         <div className="metric-box-card">
           <div className="metric-box-card__header">
@@ -84,7 +59,6 @@ function KeamananSopView({ onTriggerSos }) {
         </div>
       </div>
 
-      {/* 4. Standar Operasional Prosedur (SOP) Kerja Lapangan */}
       <section className="recent-orders-card" style={{ padding: '32px', marginBottom: '32px' }}>
         <div className="recent-orders-card__header" style={{ marginBottom: '22px' }}>
           <div>
@@ -136,7 +110,6 @@ function KeamananSopView({ onTriggerSos }) {
         </div>
       </section>
 
-      {/* 5. Kontak CS Bantuan WhatsApp */}
       <section className="worker-cs-contact-card">
         <div className="cs-contact-content">
           <div className="cs-icon-bubble">
