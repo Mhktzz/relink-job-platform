@@ -143,7 +143,9 @@ function PekerjaanSayaView({
                 <div className="clean-active-task-actions" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
                   <div className="clean-active-task-honor">
                     <span className="text-muted" style={{ fontSize: '12.5px' }}>Kode:</span>
-                    <strong className="text-navy" style={{ fontSize: '13px' }}>#{activeTask.code || activeTask.id}</strong>
+                    <strong className="text-navy" style={{ fontSize: '13px' }}>
+                      #{String(activeTask.code || activeTask.id || '').replace(/^#/, '')}
+                    </strong>
                   </div>
 
                   <div className="clean-active-task-btn-group">

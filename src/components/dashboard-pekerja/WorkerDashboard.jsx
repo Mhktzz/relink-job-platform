@@ -47,6 +47,7 @@ function WorkerDashboard() {
   const useDemoData = demoAccount && !isEmptyDemoWorker
   const walletStorageKey = `relink_worker_wallet_${storedUser?.id || 'guest'}`
   const activeTaskStorageKey = `relink_worker_active_task_${storedUser?.id || 'guest'}`
+  const notifStorageKey = `relink_worker_notifications_${storedUser?.id || 'guest'}`
   const [showOnboarding, setShowOnboarding] = useState(() => hasPendingOnboarding(storedUser))
   const [verificationComplete, setVerificationComplete] = useState(false)
   const [verificationLoaded, setVerificationLoaded] = useState(isEmptyDemoWorker)
@@ -65,8 +66,10 @@ function WorkerDashboard() {
   }) // 'beranda' | 'peluang' | 'jenjang' | 'dompet' | 'keamanan'
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [actionSuccessMsg, setActionSuccessMsg] = useState('')
+  const notifRef = useRef(null)
 
   // Sinkronisasi menu aktif ke sessionStorage & URL query agar saat refresh tetap di halaman tersebut
   useEffect(() => {
@@ -157,6 +160,109 @@ function WorkerDashboard() {
   const actionItems = useDemoData ? initialActionItems : []
   const upcomingSchedule = useDemoData ? initialUpcomingSchedule : []
   const [isAvailableNow, setIsAvailableNow] = useState(true)
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem(notifStorageKey)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed)) return parsed
+      }
+    } catch (error) {
+      console.warn('Gagal memuat notifikasi mitra:', error)
+    }
+
+    if (Array.isArray(walletData.transactions) && walletData.transactions.length > 0) {
+      return walletData.transactions.slice(0, 8).map((tx, idx) => ({
+        id: `seed-${tx.id || idx}`,
+        type: tx.type === 'payout' ? 'payout' : 'income',
+        title:
+          tx.type === 'payout'
+            ? 'Saldo Berhasil Dicairkan'
+            : 'Saldo Masuk ke Dompet Mitra',
+        message:
+          tx.type === 'payout'
+            ? `${tx.title} sebesar Rp${Number(tx.netAmount || 0).toLocaleString('id-ID')} telah berhasil diproses.`
+            : `${tx.title} telah di-ACC. Dana Rp${Number(tx.netAmount || 0).toLocaleString('id-ID')} masuk ke saldo siap dicairkan.`,
+        amount: Number(tx.netAmount || 0),
+        createdAt: tx.date || 'Hari ini',
+        timestamp: Date.now() - idx * 60000,
+        read: true,
+        targetMenu: 'dompet',
+      }))
+    }
+
+    return []
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(notifStorageKey, JSON.stringify(notifications))
+    } catch (error) {
+      console.warn('Gagal menyimpan notifikasi mitra:', error)
+    }
+  }, [notifications, notifStorageKey])
+
+  useEffect(() => {
+    function handleOutsideClick(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifDropdown(false)
+      }
+    }
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setShowNotifDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
+  function pushNotification({ id, type, title, message, amount = null, targetMenu = 'dompet' }) {
+    const now = new Date()
+    const timeLabel = `Hari ini, ${now.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })} WIB`
+    const notifId = id || `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+
+    setNotifications((prev) => {
+      if (prev.some((item) => item.id === notifId)) return prev
+      return [
+        {
+          id: notifId,
+          type,
+          title,
+          message,
+          amount,
+          createdAt: timeLabel,
+          timestamp: now.getTime(),
+          read: false,
+          targetMenu,
+        },
+        ...prev,
+      ].slice(0, 30)
+    })
+  }
+
+  function handleNotificationClick(notif) {
+    setNotifications((prev) =>
+      prev.map((item) => (item.id === notif.id ? { ...item, read: true } : item))
+    )
+    setShowNotifDropdown(false)
+    if (notif.targetMenu) {
+      navigateToMenu(notif.targetMenu)
+    }
+  }
+
+  function handleMarkAllNotificationsRead() {
+    setNotifications((prev) => prev.map((item) => ({ ...item, read: true })))
+  }
+
+  const unreadNotifCount = notifications.filter((item) => !item.read).length
 
   useEffect(() => {
     try {
@@ -169,7 +275,18 @@ function WorkerDashboard() {
   useEffect(() => {
     try {
       if (activeTask && activeTask.status !== 'completed') {
-        localStorage.setItem(activeTaskStorageKey, JSON.stringify(activeTask))
+        try {
+          localStorage.setItem(activeTaskStorageKey, JSON.stringify(activeTask))
+        } catch {
+          // Fallback jika photoUrl terlalu besar untuk localStorage: simpan status tanpa data URL foto
+          const slimTask = {
+            ...activeTask,
+            proofData: activeTask.proofData
+              ? { ...activeTask.proofData, photoUrl: '' }
+              : activeTask.proofData,
+          }
+          localStorage.setItem(activeTaskStorageKey, JSON.stringify(slimTask))
+        }
       } else {
         localStorage.removeItem(activeTaskStorageKey)
       }
@@ -262,6 +379,8 @@ function WorkerDashboard() {
 
     return {
       id: rawId,
+      db_id: task.db_id || null,
+      task_code: task.task_code || String(rawId).replace(/^#/, ''),
       code: code,
       title: task.title || 'Tugas Baru UMKM Sekitar',
       category: task.category || 'Operasional Toko',
@@ -345,12 +464,84 @@ function WorkerDashboard() {
           setAvailableJobs(Array.from(combinedMap.values()))
         }
 
-        const allTasks = [...localTasks, ...dbTasks]
+        const allTasks = [...dbTasks, ...localTasks]
         const activeTaskIdentifiers = activeTask
           ? [activeTask.id, activeTask.db_id, activeTask.task_code, activeTask.code]
               .filter(Boolean)
               .map((value) => String(value).replace(/^#/, ''))
           : []
+
+        // Sinkronisasi status tugas aktif (review / in_progress) dari Supabase agar tidak ter-reset saat pindah akun
+        const matchedActiveFromDb = dbTasks.find((task) => {
+          if (!task || task.status === 'completed' || task.column === 'overdue') return false
+          const taskIds = [task.id, task.db_id, task.task_code, task.code]
+            .filter(Boolean)
+            .map((value) => String(value).replace(/^#/, ''))
+          if (activeTaskIdentifiers.length > 0) {
+            return taskIds.some((id) => activeTaskIdentifiers.includes(id))
+          }
+          return (
+            Boolean(workerProfile.id) &&
+            String(task.workerId || task.worker_id || '') === String(workerProfile.id) &&
+            (task.status === 'in_progress' || task.status === 'review')
+          )
+        })
+
+        if (matchedActiveFromDb && isMounted) {
+          const isDbReview =
+            matchedActiveFromDb.status === 'review' ||
+            matchedActiveFromDb.statusBadge === 'Proof Review' ||
+            Boolean(matchedActiveFromDb.hasProof)
+
+          if (activeTask) {
+            if (isDbReview && (activeTask.currentStepIndex < 3 || activeTask.status !== 'review')) {
+              setActiveTask((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      db_id: prev.db_id || matchedActiveFromDb.db_id,
+                      task_code: prev.task_code || matchedActiveFromDb.task_code,
+                      currentStepIndex: 3,
+                      status: 'review',
+                      statusBadge: 'Proof Review',
+                      proofSubmitted: true,
+                    }
+                  : prev
+              )
+            }
+          } else {
+            const mappedJob = mapTaskToAvailableJob(matchedActiveFromDb)
+            setActiveTask({
+              id: mappedJob.id,
+              db_id: matchedActiveFromDb.db_id || null,
+              task_code: matchedActiveFromDb.task_code || String(mappedJob.code || '').replace(/^#/, ''),
+              code: String(mappedJob.code || mappedJob.id || '').replace(/^#/, ''),
+              title: mappedJob.title,
+              category: mappedJob.category,
+              clientName: mappedJob.clientName,
+              clientPhone: '0812-9876-5432',
+              location: `${mappedJob.clientName}, Area Terdekat (${mappedJob.distance})`,
+              distance: mappedJob.distance,
+              grossHonor: mappedJob.grossHonor,
+              commissionRate: 0.08,
+              netHonor: mappedJob.netHonor,
+              status: isDbReview ? 'review' : 'in_progress',
+              statusBadge: isDbReview ? 'Proof Review' : 'In Progress',
+              currentStepIndex: isDbReview ? 3 : 2,
+              isEnRouteChecked: true,
+              isInProgressChecked: true,
+              proofSubmitted: isDbReview,
+              escrowRef: `PGW-${String(matchedActiveFromDb.db_id || '884100').slice(0, 6).toUpperCase()}`,
+              deadline: matchedActiveFromDb.dueDate || 'Hari ini, maks. 3 jam',
+              checklist: (mappedJob.checklist || []).map((c, i) => ({
+                id: `c-acc-${i}`,
+                text: typeof c === 'string' ? c : c.text,
+                done: isDbReview,
+              })),
+              instructions: mappedJob.description,
+            })
+          }
+        }
         const completedTasks = allTasks.filter((task) => {
           if (!task) return false
 
@@ -425,6 +616,14 @@ function WorkerDashboard() {
             ...prev,
             completedTasksCount: prev.completedTasksCount + 1,
           }))
+          pushNotification({
+            id: `notif-${incomeId}`,
+            type: 'income',
+            title: 'Saldo Masuk ke Dompet Mitra',
+            message: `Pekerjaan "${title}" telah di-ACC oleh ${client}. Dana Rp${earnedNet.toLocaleString('id-ID')} masuk ke saldo siap dicairkan.`,
+            amount: earnedNet,
+            targetMenu: 'dompet',
+          })
           showToast(`Pekerjaan selesai! Dana Rp${earnedNet.toLocaleString('id-ID')} sudah masuk ke saldo siap dicairkan.`)
 
           if (isActiveTask) setActiveTask(null)
@@ -574,9 +773,12 @@ function WorkerDashboard() {
     setTimeout(() => {
       setAvailableJobs((prev) => prev.filter((j) => j.id !== task.id))
 
+      const normalizedCode = String(task.code || task.task_code || task.id || '').replace(/^#/, '')
       const newTask = {
         id: task.id,
-        code: task.code,
+        db_id: task.db_id || null,
+        task_code: task.task_code || normalizedCode,
+        code: normalizedCode,
         title: task.title,
         category: task.category,
         clientName: task.clientName,
@@ -649,74 +851,119 @@ function WorkerDashboard() {
     showToast(`Check-in berhasil! Anda telah tiba di ${activeTask.clientName}. Silakan mulai mengerjakan checklist.`)
   }
 
-  // Handler: Serah Terima Digital & Pengajuan Pencairan Bukti
   // Handler: Serah Terima Digital & Pengajuan Pencairan Bukti (Ajukan ke Review)
-  function handleSubmitProof(completedChecklist, workNotes, proofData) {
+  async function handleSubmitProof(completedChecklist, workNotes, proofData) {
+    if (!activeTask) return
     setIsProcessing(true)
-    setTimeout(() => {
-      const updatedProof = proofData || {
-        note: workNotes || 'Pekerjaan selesai rapi dan sudah diperiksa bersama UMKM.',
-        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
-        gpsLocation: '-6.1754, 106.8272 (Verified)',
-      }
 
-      setActiveTask((prev) => ({
-        ...prev,
-        currentStepIndex: 3, // Tahap 4: Review Bukti (Menunggu Review Klien)
+    const updatedProof = {
+      fileName: proofData?.fileName || 'bukti-kerja.jpg',
+      fileSize: proofData?.fileSize || 0,
+      photoUrl: proofData?.photoUrl || '',
+      note: proofData?.note || workNotes || 'Pekerjaan selesai rapi dan sudah diperiksa bersama UMKM.',
+      timestamp:
+        proofData?.timestamp ||
+        new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
+      gpsLocation: proofData?.gpsLocation || '-6.1754, 106.8272 (Verified)',
+    }
+
+    const cleanCode = String(activeTask.task_code || activeTask.code || activeTask.id || '').replace(/^#/, '')
+    const taskIdentifier = activeTask.db_id || cleanCode
+
+    if (!isEmptyDemoWorker && taskIdentifier) {
+      const result = await updateTaskInDb(taskIdentifier, {
         status: 'review',
-        statusBadge: 'Proof Review',
-        proofSubmitted: true,
-        proofData: updatedProof,
-        checklist: completedChecklist,
-      }))
+        hasProof: true,
+        workerId: workerProfile.id,
+        workerName: workerProfile.name || 'Mitra',
+        checklist: (completedChecklist || []).map((item) =>
+          typeof item === 'string' ? item : item.text
+        ),
+      })
 
-      // Perbarui status tugas di relink_tasks agar otomatis pindah ke kolom Tunggu Review pada dashboard perusahaan
-      try {
-        const saved = localStorage.getItem('relink_tasks')
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          const updated = parsed.map((item) => {
-            if (
-              item.id === activeTask.id ||
-              item.task_code === activeTask.id ||
-              item.code === activeTask.code ||
-              item.id === activeTask.code
-            ) {
-              return {
-                ...item,
-                status: 'review',
-                statusBadge: 'Proof Review',
-                column: 'due_week',
-                proofSubmitted: true,
-                proofData: updatedProof,
-              }
-            }
-            return item
-          })
-          localStorage.setItem('relink_tasks', JSON.stringify(updated))
-          window.dispatchEvent(new CustomEvent('relink_tasks_updated', { detail: updated }))
-        }
-      } catch (e) {
-        console.warn('Gagal sinkron pengajuan review:', e)
+      if (!result.success) {
+        setIsProcessing(false)
+        showToast(`Bukti belum berhasil dikirim ke server: ${result.error || 'periksa koneksi Supabase.'}`)
+        return
       }
+    }
 
-      setIsProcessing(false)
-      setShowProofModal(false)
-      showToast(`Bukti kerja tugas #${activeTask.code} berhasil dikirim! Tugas telah diajukan ke review klien.`)
-    }, 800)
+    const nextActiveTask = {
+      ...activeTask,
+      currentStepIndex: 3, // Tahap 4: Review Bukti (Menunggu Review Klien)
+      status: 'review',
+      statusBadge: 'Proof Review',
+      proofSubmitted: true,
+      proofData: updatedProof,
+      checklist: completedChecklist,
+    }
+
+    setActiveTask(nextActiveTask)
+
+    // Perbarui status tugas di relink_tasks agar otomatis pindah ke kolom Tunggu Review pada dashboard perusahaan
+    try {
+      const saved = localStorage.getItem('relink_tasks')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        const updated = parsed.map((item) => {
+          const itemIds = [item.id, item.db_id, item.task_code, item.code]
+            .filter(Boolean)
+            .map((v) => String(v).replace(/^#/, ''))
+          const activeIds = [activeTask.id, activeTask.db_id, activeTask.task_code, activeTask.code]
+            .filter(Boolean)
+            .map((v) => String(v).replace(/^#/, ''))
+
+          if (itemIds.some((id) => activeIds.includes(id))) {
+            return {
+              ...item,
+              status: 'review',
+              statusBadge: 'Proof Review',
+              column: 'due_week',
+              hasProof: true,
+              proofSubmitted: true,
+              proofData: updatedProof,
+            }
+          }
+          return item
+        })
+        try {
+          localStorage.setItem('relink_tasks', JSON.stringify(updated))
+        } catch {
+          const slimUpdated = updated.map((item) =>
+            item.proofData ? { ...item, proofData: { ...item.proofData, photoUrl: '' } } : item
+          )
+          localStorage.setItem('relink_tasks', JSON.stringify(slimUpdated))
+        }
+        window.dispatchEvent(new CustomEvent('relink_tasks_updated', { detail: updated }))
+      }
+    } catch (e) {
+      console.warn('Gagal sinkron pengajuan review:', e)
+    }
+
+    setIsProcessing(false)
+    setShowProofModal(false)
+    pushNotification({
+      id: `notif-proof-${cleanCode}-${Date.now()}`,
+      type: 'proof_submitted',
+      title: 'Bukti Pekerjaan Terkirim',
+      message: `Bukti kerja tugas #${cleanCode} telah dikirim dan sedang menunggu persetujuan (ACC) perusahaan.`,
+      targetMenu: 'pekerjaan',
+    })
+    showToast(`Bukti kerja tugas #${cleanCode} berhasil dikirim! Tugas telah diajukan ke review klien.`)
   }
 
   // Handler: Tarik Dana Dompet
   function handleWithdrawConfirm({ method, accountNumber, accountHolder, amount }) {
     setIsProcessing(true)
     setTimeout(() => {
+      const wdId = `WD-${Math.floor(100 + Math.random() * 900)}`
       setWalletData((prev) => ({
         ...prev,
         availableBalance: prev.availableBalance - amount,
         totalWithdrawn: prev.totalWithdrawn + amount,
         transactions: [
           {
-            id: `WD-${Math.floor(100 + Math.random() * 900)}`,
+            id: wdId,
             date: 'Hari ini',
             title: `Penarikan Saldo ke ${method.toUpperCase()} (${accountNumber})`,
             client: `Atas nama: ${accountHolder}`,
@@ -729,6 +976,15 @@ function WorkerDashboard() {
           ...prev.transactions,
         ],
       }))
+
+      pushNotification({
+        id: `notif-payout-${wdId}-${Date.now()}`,
+        type: 'payout',
+        title: 'Saldo Berhasil Dicairkan',
+        message: `Penarikan sebesar Rp${amount.toLocaleString('id-ID')} ke ${method.toUpperCase()} (${accountNumber}) a.n. ${accountHolder} berhasil diproses.`,
+        amount,
+        targetMenu: 'dompet',
+      })
 
       setIsProcessing(false)
       setShowWithdrawModal(false)
@@ -955,14 +1211,117 @@ function WorkerDashboard() {
               <span>{isAvailableNow ? 'Online' : 'Offline'}</span>
             </button>
 
-            <button
-              aria-label="Notifikasi"
-              className="topbar-action-icon"
-              type="button"
-            >
-              <Icon name="bell" size={18} />
-              {useDemoData && <span className="topbar-notif-dot" />}
-            </button>
+            <div className="topbar-notif-wrapper" ref={notifRef}>
+              <button
+                aria-expanded={showNotifDropdown}
+                aria-label="Notifikasi"
+                className={`topbar-action-icon${showNotifDropdown ? ' topbar-action-icon--active' : ''}`}
+                onClick={() => {
+                  setShowUserDropdown(false)
+                  setShowNotifDropdown((prev) => !prev)
+                }}
+                title="Notifikasi"
+                type="button"
+              >
+                <Icon name="bell" size={18} />
+                {unreadNotifCount > 0 && (
+                  <span className="topbar-notif-badge">
+                    {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifDropdown && (
+                <div className="topbar-notif-dropdown" role="region" aria-label="Daftar Notifikasi">
+                  <div className="notif-dropdown-header">
+                    <div className="notif-dropdown-title-wrap">
+                      <strong>Notifikasi</strong>
+                      {unreadNotifCount > 0 && (
+                        <span className="notif-unread-pill">{unreadNotifCount} baru</span>
+                      )}
+                    </div>
+                    {unreadNotifCount > 0 && (
+                      <button
+                        className="notif-mark-all-btn"
+                        onClick={handleMarkAllNotificationsRead}
+                        type="button"
+                      >
+                        Tandai dibaca
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="notif-dropdown-list">
+                    {notifications.length === 0 ? (
+                      <div className="notif-empty-state">
+                        <div className="notif-empty-icon">
+                          <Icon name="bell" size={20} />
+                        </div>
+                        <strong>Belum ada notifikasi</strong>
+                        <p>
+                          Notifikasi pencairan saldo dan honor masuk setelah pekerjaan di-ACC perusahaan akan muncul di sini.
+                        </p>
+                      </div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <button
+                          key={notif.id}
+                          className={`notif-item ${!notif.read ? 'notif-item--unread' : ''}`}
+                          onClick={() => handleNotificationClick(notif)}
+                          type="button"
+                        >
+                          <div
+                            className={`notif-item-icon notif-item-icon--${notif.type || 'info'}`}
+                          >
+                            <Icon
+                              name={
+                                notif.type === 'income'
+                                  ? 'check-circle'
+                                  : notif.type === 'payout'
+                                    ? 'wallet'
+                                    : 'clock'
+                              }
+                              size={16}
+                            />
+                          </div>
+                          <div className="notif-item-content">
+                            <div className="notif-item-top">
+                              <strong>{notif.title}</strong>
+                              {!notif.read && <span className="notif-item-unread-dot" />}
+                            </div>
+                            <p>{notif.message}</p>
+                            <div className="notif-item-meta">
+                              <small>{notif.createdAt}</small>
+                              {typeof notif.amount === 'number' && notif.amount > 0 && (
+                                <span
+                                  className={`notif-amount-tag notif-amount-tag--${notif.type}`}
+                                >
+                                  {notif.type === 'income' ? '+' : '-'}Rp
+                                  {notif.amount.toLocaleString('id-ID')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="notif-dropdown-footer">
+                    <button
+                      className="notif-footer-link"
+                      onClick={() => {
+                        setShowNotifDropdown(false)
+                        navigateToMenu('dompet')
+                      }}
+                      type="button"
+                    >
+                      Lihat Dompet &amp; Riwayat Saldo &rarr;
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <button
               aria-label="Pusat Keamanan & SOP"
@@ -980,7 +1339,10 @@ function WorkerDashboard() {
                 aria-expanded={showUserDropdown}
                 aria-label="Profil dan Pengaturan Akun Mitra"
                 className="topbar-user-capsule"
-                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                onClick={() => {
+                  setShowNotifDropdown(false)
+                  setShowUserDropdown(!showUserDropdown)
+                }}
                 type="button"
               >
                 <div className="topbar-avatar-circle">

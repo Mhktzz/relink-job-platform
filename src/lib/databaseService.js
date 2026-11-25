@@ -172,6 +172,7 @@ export async function fetchTasksFromDb({ clientId = null, includeMockData = true
       budget: Number(t.budget),
       dueDate: t.due_date || 'Hari ini, 17:00 WIB',
       hasProof: Boolean(t.has_proof),
+      proofSubmitted: Boolean(t.has_proof) || t.status === 'review' || t.status === 'completed',
       location: t.location_address || 'Lokasi UMKM',
       checklist: Array.isArray(t.checklist) ? t.checklist : [],
       acceptanceChecklist: Array.isArray(t.checklist)
@@ -279,6 +280,7 @@ export async function updateTaskInDb(taskIdOrCode, updatedFields) {
     }
     if (updatedFields.workerId !== undefined) payload.worker_id = updatedFields.workerId
     if (updatedFields.workerName !== undefined) payload.worker_name = updatedFields.workerName
+    if (updatedFields.hasProof !== undefined) payload.has_proof = Boolean(updatedFields.hasProof)
 
     let query = supabase.from('tasks').update(payload)
     if (typeof taskIdOrCode === 'string' && UUID_REGEX.test(taskIdOrCode)) {

@@ -29,7 +29,26 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
     if (file.type.startsWith('image/')) {
       const reader = new FileReader()
       reader.onload = (ev) => {
-        setPreviewUrl(ev.target.result)
+        const rawDataUrl = ev.target?.result
+        if (typeof rawDataUrl !== 'string') return
+        // Kompres pratinjau gambar agar ringan disimpan ke localStorage tanpa QuotaExceededError
+        const img = new Image()
+        img.onload = () => {
+          try {
+            const maxDim = 900
+            const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+            const canvas = document.createElement('canvas')
+            canvas.width = Math.max(1, Math.round(img.width * scale))
+            canvas.height = Math.max(1, Math.round(img.height * scale))
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+            setPreviewUrl(canvas.toDataURL('image/jpeg', 0.72))
+          } catch {
+            setPreviewUrl(rawDataUrl)
+          }
+        }
+        img.onerror = () => setPreviewUrl(rawDataUrl)
+        img.src = rawDataUrl
       }
       reader.readAsDataURL(file)
     } else {
@@ -46,8 +65,8 @@ function ProofHandoverModal({ activeTask, onClose, onSubmitProof, isProcessing }
     if (!canSubmit || isProcessing) return
     if (onSubmitProof) {
       onSubmitProof(checklist, workNotes, {
-        file: uploadedFile,
-        fileName: uploadedFile?.name,
+        fileName: uploadedFile?.name || 'bukti-kerja.jpg',
+        fileSize: uploadedFile?.size || 0,
         photoUrl: previewUrl,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
         gpsLocation: '-6.1754, 106.8272 (Verified)',

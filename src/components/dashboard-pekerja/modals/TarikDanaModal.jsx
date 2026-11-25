@@ -59,7 +59,7 @@ function TarikDanaModal({ availableBalance, onClose, onConfirm, isProcessing }) 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="worker-payout-modal-form" onSubmit={handleSubmit}>
           <div className="modal-body-scroll">
             <div className="payout-balance-overview-card">
               <span>Saldo Tersedia yang Dapat Ditarik</span>
@@ -183,7 +183,7 @@ function TarikDanaModal({ availableBalance, onClose, onConfirm, isProcessing }) 
               ) : (
                 <>
                   <Icon name="download" size={16} />
-                  <span>Konfirmasi Tarik Dana</span>
+                  <span>Tarik Saldo</span>
                 </>
               )}
             </button>
