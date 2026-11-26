@@ -706,7 +706,7 @@ function AuthPage({ mode, role }) {
                         ? "auth-role-switch__link is-active"
                         : "auth-role-switch__link"
                     }
-                    href={`/${isSignup ? "daftar" : "masuk"}?peran=umkm`}
+                    href={appPath(`/${isSignup ? "daftar" : "masuk"}?peran=umkm`)}
                   >
                     Perusahaan / UMKM
                   </a>
@@ -717,7 +717,7 @@ function AuthPage({ mode, role }) {
                         ? "auth-role-switch__link is-active"
                         : "auth-role-switch__link"
                     }
-                    href={`/${isSignup ? "daftar" : "masuk"}?peran=pekerja`}
+                    href={appPath(`/${isSignup ? "daftar" : "masuk"}?peran=pekerja`)}
                   >
                     Mitra Pekerja
                   </a>
@@ -956,7 +956,7 @@ function AuthPage({ mode, role }) {
 
                 <p className="auth-switch">
                   {isSignup ? "Sudah punya akun bisnis?" : "Belum mendaftarkan usaha Anda?"}{" "}
-                  <a href={`/${isSignup ? "masuk" : "daftar"}?peran=${role}`}>
+                  <a href={appPath(`/${isSignup ? "masuk" : "daftar"}?peran=${role}`)}>
                     {isSignup ? "Masuk sekarang" : "Daftar gratis di sini"}
                   </a>
                 </p>
