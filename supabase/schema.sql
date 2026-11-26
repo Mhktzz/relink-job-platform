@@ -21,9 +21,97 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   avatar_url TEXT,
   trust_score INT DEFAULT 98,
   is_verified BOOLEAN DEFAULT TRUE,
+  onboarding_complete BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE OR REPLACE FUNCTION public.handle_new_auth_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  INSERT INTO public.profiles (
+    id,
+    user_id,
+    full_name,
+    phone,
+    role,
+    tier,
+    business_name,
+    trust_score,
+    is_verified,
+    onboarding_complete
+  )
+  VALUES (
+    NEW.id,
+    NEW.id,
+    COALESCE(
+      NULLIF(NEW.raw_user_meta_data ->> 'full_name', ''),
+      NULLIF(split_part(COALESCE(NEW.email, ''), '@', 1), ''),
+      'Pengguna'
+    ),
+    NULLIF(NEW.raw_user_meta_data ->> 'phone', ''),
+    CASE
+      WHEN NEW.raw_user_meta_data ->> 'role' = 'mitra' THEN 'mitra'
+      ELSE 'klien'
+    END,
+    'Tier 1',
+    NULLIF(NEW.raw_user_meta_data ->> 'business_name', ''),
+    0,
+    FALSE,
+    FALSE
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.handle_new_auth_user() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_auth_user();
+
+INSERT INTO public.profiles (
+  id,
+  user_id,
+  full_name,
+  phone,
+  role,
+  tier,
+  business_name,
+  trust_score,
+  is_verified,
+  onboarding_complete
+)
+SELECT
+  auth_user.id,
+  auth_user.id,
+  COALESCE(
+    NULLIF(auth_user.raw_user_meta_data ->> 'full_name', ''),
+    NULLIF(split_part(COALESCE(auth_user.email, ''), '@', 1), ''),
+    'Pengguna'
+  ),
+  NULLIF(auth_user.raw_user_meta_data ->> 'phone', ''),
+  CASE
+    WHEN auth_user.raw_user_meta_data ->> 'role' = 'mitra' THEN 'mitra'
+    ELSE 'klien'
+  END,
+  'Tier 1',
+  NULLIF(auth_user.raw_user_meta_data ->> 'business_name', ''),
+  0,
+  FALSE,
+  FALSE
+FROM auth.users AS auth_user
+LEFT JOIN public.profiles AS profile ON profile.id = auth_user.id
+WHERE profile.id IS NULL
+ON CONFLICT (id) DO NOTHING;
 
 -- Data verifikasi pribadi mitra; akses dibatasi untuk pemilik akun.
 CREATE TABLE IF NOT EXISTS public.worker_verifications (
@@ -157,10 +245,24 @@ ALTER TABLE public.proofs_of_work ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.nearby_workers ENABLE ROW LEVEL SECURITY;
 
--- Policy publik sementara untuk pembacaan & penulisan data aplikasi demo
-CREATE POLICY "Akses baca publik profiles" ON public.profiles FOR SELECT USING (true);
-CREATE POLICY "Akses insert profiles" ON public.profiles FOR INSERT WITH CHECK (true);
-CREATE POLICY "Akses update profiles" ON public.profiles FOR UPDATE USING (true);
+REVOKE ALL ON TABLE public.profiles FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.profiles TO authenticated;
+DROP POLICY IF EXISTS "Akses baca publik profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Akses insert profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Akses update profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Pengguna membaca profil sendiri" ON public.profiles;
+DROP POLICY IF EXISTS "Pengguna membuat profil sendiri" ON public.profiles;
+DROP POLICY IF EXISTS "Pengguna memperbarui profil sendiri" ON public.profiles;
+CREATE POLICY "Pengguna membaca profil sendiri"
+  ON public.profiles FOR SELECT TO authenticated
+  USING (auth.uid() = id OR auth.uid() = user_id);
+CREATE POLICY "Pengguna membuat profil sendiri"
+  ON public.profiles FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = id OR auth.uid() = user_id);
+CREATE POLICY "Pengguna memperbarui profil sendiri"
+  ON public.profiles FOR UPDATE TO authenticated
+  USING (auth.uid() = id OR auth.uid() = user_id)
+  WITH CHECK (auth.uid() = id OR auth.uid() = user_id);
 
 REVOKE ALL ON TABLE public.worker_verifications FROM PUBLIC, anon, authenticated;
 GRANT SELECT, INSERT, UPDATE ON TABLE public.worker_verifications TO authenticated;

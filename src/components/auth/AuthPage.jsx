@@ -229,31 +229,8 @@ function AuthPage({ mode, role }) {
           return;
         }
 
-        // 3. Simpan Profil ke Tabel Profiles
         const userId = data.user?.id;
-        if (userId) {
-          const { error: profileError } = await supabase.from("profiles").upsert([
-            {
-              id: userId,
-              user_id: userId,
-              full_name: name.trim(),
-              business_name: !isWorker ? business.trim() : null,
-              phone: phone.trim(),
-              role: isWorker ? "mitra" : "klien",
-              tier: "Tier 1",
-              trust_score: 0,
-              is_verified: false,
-            },
-          ]);
-
-          if (profileError) {
-            console.error("[Relink Auth] Gagal menyimpan profil pengguna:", profileError);
-            setMessage(`Akun Auth berhasil dibuat, tetapi profil belum tersimpan: ${profileError.message}`);
-            setMessageType("error");
-            setIsLoading(false);
-            return;
-          }
-
+        if (userId && data.session) {
           // Simpan session info lokal untuk kemudahan akses
           localStorage.setItem(
             "relink_user",
@@ -269,6 +246,13 @@ function AuthPage({ mode, role }) {
             })
           );
           localStorage.setItem("relink_onboarding_pending", userId);
+        }
+
+        if (!data.session) {
+          setMessageType("success");
+          setMessage("Akun berhasil dibuat. Silakan cek email untuk mengonfirmasi akun sebelum masuk.");
+          setIsLoading(false);
+          return;
         }
 
         setMessageType("success");
@@ -298,7 +282,7 @@ function AuthPage({ mode, role }) {
         const userId = data.user?.id;
         let businessName = isWorker ? "Mitra Mandiri" : "Usaha Saya";
         let fullName = data.user?.user_metadata?.full_name || "";
-        let userRole = isWorker ? "mitra" : "klien";
+        const userRole = isWorker ? "mitra" : "klien";
 
         if (userId) {
           const { data: profile, error: profileError } = await supabase
@@ -318,7 +302,6 @@ function AuthPage({ mode, role }) {
           if (profile) {
             if (profile.business_name) businessName = profile.business_name;
             if (profile.full_name) fullName = profile.full_name;
-            if (profile.role) userRole = profile.role;
           } else {
             const { error: insertProfileError } = await supabase.from("profiles").upsert({
               id: userId,
@@ -354,7 +337,7 @@ function AuthPage({ mode, role }) {
           );
         }
 
-        const isUserWorker = userRole === "mitra" || userRole === "pekerja" || isWorker;
+        const isUserWorker = userRole === "mitra" || userRole === "pekerja";
         setMessageType("success");
         setMessage(
           isUserWorker

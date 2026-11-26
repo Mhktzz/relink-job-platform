@@ -10,6 +10,8 @@ This template provides a minimal setup to get React working in Vite with HMR and
 4. Apply the SQL files in `supabase/migrations/` to the project, in filename order, or run the complete `supabase/schema.sql` for a new project.
 5. Restart the Vite dev server after changing `.env`.
 
+The profiles migration creates profiles from Supabase Auth metadata via a database trigger, including when email confirmation is enabled. Apply all migrations before testing signup.
+
 The local `.env` file is ignored by Git and is not included in pull/push. Each developer must configure their own project credentials on their device. Authentication uses Supabase Auth; account settings and identity-verification data are stored in owner-restricted tables.
 
 Currently, two official plugins are available:
