@@ -1,28 +1,125 @@
-# React + Vite
+# Relink — Platform Kerja Lokal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Relink adalah aplikasi React untuk menghubungkan UMKM dengan pekerja lokal. Project ini dibuat menggunakan **React**, **Vite**, dan **Supabase** untuk autentikasi serta penyimpanan data.
 
-## Supabase setup
+Panduan ini menjelaskan persiapan, instalasi, konfigurasi database, dan cara menjalankan aplikasi setelah repository di-clone.
 
-1. Create or select a Supabase project that you own.
-2. Copy `.env.example` to `.env`.
-3. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from the project's API settings. The anon/publishable key is intended for browser use; never put a `service_role` key or database password in frontend environment variables.
-4. Apply the SQL files in `supabase/migrations/` to the project, in filename order, or run the complete `supabase/schema.sql` for a new project.
-5. Restart the Vite dev server after changing `.env`.
+## Persyaratan
 
-The profiles migration creates profiles from Supabase Auth metadata via a database trigger, including when email confirmation is enabled. Apply all migrations before testing signup.
+Pastikan perangkat Anda sudah memiliki:
 
-The local `.env` file is ignored by Git and is not included in pull/push. Each developer must configure their own project credentials on their device. Authentication uses Supabase Auth; account settings and identity-verification data are stored in owner-restricted tables.
+- **Node.js versi LTS** dan **npm**
+- **Git**
+- Akun **Supabase** untuk menyiapkan backend aplikasi
 
-Currently, two official plugins are available:
+## Panduan Instalasi
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 1. Clone repository
 
-## React Compiler
+Buka terminal, lalu jalankan:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+git clone https://github.com/Mhktzz/relink-job-platform.git
+cd relink-job-platform
+```
 
-## Expanding the ESLint configuration
+### 2. Instal dependency
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Di dalam folder project, jalankan:
+
+```bash
+npm ci
+```
+
+Perintah ini memasang dependency sesuai versi yang tercatat di `package-lock.json`.
+
+### 3. Siapkan project Supabase
+
+1. Buat project baru di [Supabase](https://supabase.com/) atau pilih project yang Anda miliki.
+2. Buka **SQL Editor** pada dashboard Supabase.
+3. Untuk project database baru, buka file `supabase/schema.sql`, salin seluruh isinya, lalu jalankan di SQL Editor.
+4. Jalankan isi file migrasi berikut di SQL Editor **secara berurutan**:
+
+   1. `supabase/migrations/20261125135219_worker_verifications.sql`
+   2. `supabase/migrations/20261125142712_user_settings.sql`
+   3. `supabase/migrations/20261125155000_task_permissions.sql`
+   4. `supabase/migrations/20261125160000_profiles_permissions.sql`
+   5. `supabase/migrations/20261125161000_profiles_auth_trigger.sql`
+
+Skema utama juga membuat data contoh untuk tampilan aplikasi. Pastikan seluruh migrasi berhasil dijalankan sebelum mencoba mendaftar atau masuk; migrasi terakhir menyiapkan trigger untuk membuat profil saat pengguna baru mendaftar.
+
+### 4. Konfigurasi environment
+
+Salin file contoh `.env.example` menjadi `.env` di folder utama project.
+
+PowerShell (Windows):
+
+```powershell
+Copy-Item .env.example .env
+```
+
+macOS / Linux:
+
+```bash
+cp .env.example .env
+```
+
+Buka `.env`, lalu isi nilai dari dashboard Supabase:
+
+```env
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-public-key-here
+```
+
+Nilai tersebut tersedia di pengaturan API project Supabase. Gunakan **anon/public key** atau **publishable key** yang memang diperuntukkan bagi aplikasi browser. Jangan pernah memasukkan `service_role` key atau password database ke variabel `VITE_` karena nilainya dapat ikut dikirim ke browser. File `.env` bersifat lokal dan tidak di-commit.
+
+### 5. Jalankan aplikasi React
+
+Jalankan server pengembangan:
+
+```bash
+npm run dev
+```
+
+Buka alamat yang ditampilkan di terminal, biasanya [http://localhost:5173](http://localhost:5173). Server Vite mendukung *hot reload*, sehingga perubahan kode akan terlihat di browser saat disimpan.
+
+## Perintah yang tersedia
+
+| Perintah | Kegunaan |
+| --- | --- |
+| `npm run dev` | Menjalankan server pengembangan Vite |
+| `npm run lint` | Memeriksa kode dengan ESLint |
+| `npm run build` | Membuat build production ke folder `dist` |
+| `npm run preview` | Menjalankan preview lokal dari hasil build |
+| `npm run db:setup` | Menjalankan `supabase/schema.sql` langsung ke database Supabase |
+| `npm run deploy` | Build dan deploy folder `dist` ke branch `gh-pages` |
+
+`npm run db:setup` adalah opsi tambahan untuk menjalankan skema utama melalui koneksi PostgreSQL langsung. Untuk memakainya, tambahkan `SUPABASE_DB_PASSWORD` di `.env` dan gunakan password database dari Supabase. Setelahnya, jalankan migrasi-migrasi di atas melalui SQL Editor. Untuk pemakaian biasa, menjalankan SQL lewat dashboard Supabase adalah cara yang disarankan; jangan membagikan atau meng-commit password database.
+
+## Build dan deploy (opsional)
+
+Untuk memastikan aplikasi dapat di-build:
+
+```bash
+npm run build
+```
+
+Untuk melihat hasil build secara lokal:
+
+```bash
+npm run preview
+```
+
+Project ini memiliki script deploy ke **GitHub Pages**. Setelah repository dan pengaturan GitHub Pages siap, jalankan:
+
+```bash
+npm run deploy
+```
+
+Script tersebut akan membuat build lalu mengirim folder `dist` ke branch `gh-pages`. Pastikan konfigurasi GitHub Pages repository menggunakan branch tersebut.
+
+## Jika mengalami kendala
+
+- **Aplikasi memperingatkan kredensial Supabase belum dikonfigurasi:** pastikan nama variabel di `.env` benar dan server Vite sudah dijalankan ulang setelah perubahan.
+- **Gagal mendaftar atau profil tidak tersedia:** pastikan `schema.sql` dan semua file migrasi sudah berhasil dijalankan di Supabase.
+- **Dependency bermasalah:** dari folder project, jalankan kembali `npm ci`.
