@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./Relink_logo.png" alt="Relink Logo" width="600">
+</p>
+
 # Relink — Platform Kerja Lokal
 
 Relink adalah aplikasi React untuk menghubungkan UMKM dengan pekerja lokal. Project ini dibuat menggunakan **React**, **Vite**, dan **Supabase** untuk autentikasi serta penyimpanan data.
