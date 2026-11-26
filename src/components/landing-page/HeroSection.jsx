@@ -1,4 +1,5 @@
 import WorkerShowcase from './WorkerShowcase.jsx'
+import { appPath } from '../../lib/routes.js'
 
 function HeroSection() {
   return (
@@ -20,7 +21,7 @@ function HeroSection() {
             <a className="button button--pink" href="#fitur-adil">
               Cari Pekerja Sekarang
             </a>
-            <a className="button button--outline-light" href="/pekerja">
+            <a className="button button--outline-light" href={appPath('/pekerja')}>
               Daftar sebagai Mitra
             </a>
           </div>

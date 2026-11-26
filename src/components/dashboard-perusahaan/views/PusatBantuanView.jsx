@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Icon from '../../common/Icon.jsx'
+import { appPath } from '../../../lib/routes.js'
 import { insertSupportTicketToDb } from '../../../lib/databaseService.js'
 
 function PusatBantuanView({ tasks = [], setActionSuccessMsg, setCurrentMenu }) {
@@ -54,7 +55,7 @@ function PusatBantuanView({ tasks = [], setActionSuccessMsg, setCurrentMenu }) {
       tip: 'Jika email pemulihan tidak muncul dalam 2 menit, periksa folder Spam/Promotions atau pastikan tidak ada kesalahan pengetikan alamat email.',
       actionLabel: 'Coba Reset Password',
       actionMenu: null,
-      actionHref: '/masuk',
+      actionHref: appPath('/masuk'),
     },
     {
       id: 'guide-post-task',

@@ -1,4 +1,5 @@
 import Logo from '../common/Logo.jsx'
+import { appPath } from '../../lib/routes.js'
 
 function Footer({ workerPage = false }) {
   return (
@@ -22,13 +23,13 @@ function Footer({ workerPage = false }) {
             </div>
             <div>
               <h2>Mitra</h2>
-              <a href="/daftar?peran=umkm">Daftar UMKM</a>
-              <a href="/daftar?peran=pekerja">Daftar Pekerja</a>
+              <a href={appPath('/daftar?peran=umkm')}>Daftar UMKM</a>
+              <a href={appPath('/daftar?peran=pekerja')}>Daftar Pekerja</a>
               <a href={workerPage ? '#daftar-pekerja' : '#cta'}>Bantuan</a>
             </div>
             <div>
               <h2>Relink</h2>
-              <a href={workerPage ? '/' : '#beranda'}>Tentang</a>
+              <a href={workerPage ? appPath('/') : '#beranda'}>Tentang</a>
               <a href={workerPage ? '#daftar-pekerja' : '#cta'}>Kontak</a>
               <a href={workerPage ? '#daftar-pekerja' : '#cta'}>Privasi</a>
             </div>

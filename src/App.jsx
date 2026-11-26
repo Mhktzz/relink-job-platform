@@ -12,10 +12,11 @@ import AuthPage from './components/auth/AuthPage.jsx'
 import ClientDashboard from './components/dashboard-perusahaan/ClientDashboard.jsx'
 import WorkerDashboard from './components/dashboard-pekerja/WorkerDashboard.jsx'
 import { useIdleLogout } from './hooks/useIdleLogout.js'
+import { getAppPathname } from './lib/routes.js'
 import './App.css'
 
 function App() {
-  const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
+  const pathname = getAppPathname()
   const searchParams = new URLSearchParams(window.location.search)
   const portalParam = searchParams.get('portal')
 

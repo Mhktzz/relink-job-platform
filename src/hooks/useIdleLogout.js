@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { appPath } from '../lib/routes.js'
 
 // Durasi idle timeout: 1 jam (3.600.000 ms)
 export const IDLE_TIMEOUT_MS = 60 * 60 * 1000
@@ -39,7 +40,7 @@ export function useIdleLogout(isLoggedIn, role) {
       sessionStorage.removeItem('relink_worker_menu')
 
       const targetPeran = role === 'pekerja' || role === 'mitra' ? 'pekerja' : 'umkm'
-      window.location.href = `/masuk?peran=${targetPeran}&idle_timeout=true`
+      window.location.href = appPath(`/masuk?peran=${targetPeran}&idle_timeout=true`)
     }
 
     let lastRecordTime = 0

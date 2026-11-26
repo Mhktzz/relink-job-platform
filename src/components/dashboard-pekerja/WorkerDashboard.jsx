@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import relinkIcon from '../../assets/main-relink-1.svg'
 import Icon from '../common/Icon.jsx'
 import { supabase } from '../../lib/supabaseClient.js'
+import { appPath } from '../../lib/routes.js'
 import {
   fetchTasksFromDb,
   updateTaskInDb,
@@ -1014,7 +1015,7 @@ function WorkerDashboard() {
       console.warn('Logout error', e)
     }
     localStorage.removeItem('relink_user')
-    window.location.href = '/masuk?peran=pekerja'
+    window.location.href = appPath('/masuk?peran=pekerja')
   }
 
   return (

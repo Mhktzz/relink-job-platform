@@ -4,6 +4,7 @@ import technicianPhoto from "../../assets/technician.jpg";
 import Logo from "../common/Logo.jsx";
 import Icon from "../common/Icon.jsx";
 import { supabase } from "../../lib/supabaseClient.js";
+import { appPath } from "../../lib/routes.js";
 import "./AuthPage.css";
 
 function AuthPage({ mode, role }) {
@@ -59,7 +60,7 @@ function AuthPage({ mode, role }) {
   const isResetMode = mode === "reset-password";
   const isWorker = role === "pekerja";
   const roleName = isWorker ? "Mitra Pekerja" : "Perusahaan / UMKM";
-  const homeHref = isWorker ? "/pekerja" : "/";
+  const homeHref = appPath(isWorker ? "/pekerja" : "/");
   const artTitle = isWorker
     ? "Kerja dekat. Reputasi bertumbuh."
     : "Temukan bantuan lokal untuk bisnismu.";
@@ -262,7 +263,7 @@ function AuthPage({ mode, role }) {
             : "Akun UMKM berhasil dibuat! Mengalihkan ke dashboard..."
         );
         setTimeout(() => {
-          window.location.href = isWorker ? "/pekerja" : "/dashboard";
+          window.location.href = appPath(isWorker ? "/pekerja" : "/dashboard");
         }, 1200);
       } else {
         // PROSES LOGIN
@@ -345,7 +346,7 @@ function AuthPage({ mode, role }) {
             : "Login berhasil! Membuka dashboard UMKM..."
         );
         setTimeout(() => {
-          window.location.href = isUserWorker ? "/pekerja" : "/dashboard";
+          window.location.href = appPath(isUserWorker ? "/pekerja" : "/dashboard");
         }, 800);
       }
     } catch (err) {
@@ -373,7 +374,7 @@ function AuthPage({ mode, role }) {
     setMessage("Masuk sebagai Toko Kue Bu Rina (Demo)...");
     setMessageType("success");
     setTimeout(() => {
-      window.location.href = "/dashboard";
+      window.location.href = appPath("/dashboard");
     }, 600);
   }
 
@@ -396,7 +397,7 @@ function AuthPage({ mode, role }) {
     setMessage("Masuk sebagai Dimas Prasetyo (Demo Mitra Tier 1)...");
     setMessageType("success");
     setTimeout(() => {
-      window.location.href = "/pekerja";
+      window.location.href = appPath("/pekerja");
     }, 600);
   }
 
@@ -416,7 +417,7 @@ function AuthPage({ mode, role }) {
       const { error } = await supabase.auth.resetPasswordForEmail(
         resetEmail.trim(),
         {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: `${window.location.origin}${appPath("/reset-password")}`,
         }
       );
 
@@ -483,7 +484,7 @@ function AuthPage({ mode, role }) {
         setMessage("Kata sandi baru berhasil disimpan! Mengalihkan ke halaman masuk...");
         setMessageType("success");
         setTimeout(() => {
-          window.location.href = isWorker ? "/masuk?peran=pekerja" : "/masuk?peran=umkm";
+          window.location.href = appPath(isWorker ? "/masuk?peran=pekerja" : "/masuk?peran=umkm");
         }, 1400);
       }
     } catch (err) {
@@ -613,7 +614,7 @@ function AuthPage({ mode, role }) {
 
                   <a
                     className="btn-auth-demo"
-                    href={isWorker ? "/masuk?peran=pekerja" : "/masuk?peran=umkm"}
+                    href={appPath(isWorker ? "/masuk?peran=pekerja" : "/masuk?peran=umkm")}
                     style={{
                       textAlign: "center",
                       display: "flex",

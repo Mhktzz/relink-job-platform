@@ -6,6 +6,7 @@ import Navbar from './Navbar.jsx'
 import VerificationSection from './VerificationSection.jsx'
 import WorkerShowcase from './WorkerShowcase.jsx'
 import TrustLevelsSection from './TrustLevelsSection.jsx'
+import { appPath } from '../../lib/routes.js'
 
 const steps = [
   {
@@ -180,7 +181,7 @@ function WorkerLandingPage() {
               <a className="button button--navy" href="#alur-pekerja">
                 Lihat Cara Memulai
               </a>
-              <a className="button button--outline-dark" href="/">
+              <a className="button button--outline-dark" href={appPath('/')}>
                 Kembali ke Beranda
               </a>
             </div>

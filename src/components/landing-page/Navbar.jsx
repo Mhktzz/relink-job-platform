@@ -2,29 +2,30 @@ import { useState } from 'react'
 import menuIcon from '../../assets/figma/icon-menu.svg'
 import Icon from '../common/Icon.jsx'
 import Logo from '../common/Logo.jsx'
+import { appPath } from '../../lib/routes.js'
 
 const homeLinks = [
   { label: 'Cara Kerja', href: '#cara-kerja' },
   { label: 'Sistem Tier', href: '#tier' },
   { label: 'Untuk UMKM', href: '#fitur-adil' },
-  { label: 'Untuk Pekerja', href: '/pekerja' },
-  { label: 'Dashboard UMKM', href: '/dashboard' },
+  { label: 'Untuk Pekerja', href: appPath('/pekerja') },
+  { label: 'Dashboard UMKM', href: appPath('/dashboard') },
 ]
 
 const workerLinks = [
   { label: 'Cara Kerja', href: '#alur-pekerja' },
   { label: 'Sistem Tier', href: '#tier' },
-  { label: 'Untuk UMKM', href: '/#fitur-adil' },
+  { label: 'Untuk UMKM', href: appPath('/#fitur-adil') },
   { label: 'Untuk Pekerja', href: '#manfaat-pekerja' },
-  { label: 'Dashboard Pekerja', href: '/dashboard-pekerja' },
+  { label: 'Dashboard Pekerja', href: appPath('/dashboard-pekerja') },
 ]
 
 function Navbar({ workerPage = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const links = workerPage ? workerLinks : homeLinks
   const accountRole = workerPage ? 'pekerja' : 'umkm'
-  const loginHref = `/masuk?peran=${accountRole}`
-  const signupHref = `/daftar?peran=${accountRole}`
+  const loginHref = appPath(`/masuk?peran=${accountRole}`)
+  const signupHref = appPath(`/daftar?peran=${accountRole}`)
 
   function closeMenu() {
     setMenuOpen(false)

@@ -20,6 +20,7 @@ import {
   isTaskActive,
 } from '../../lib/databaseService.js'
 import { supabase } from '../../lib/supabaseClient.js'
+import { appPath } from '../../lib/routes.js'
 import BerandaView from './views/BerandaView.jsx'
 import KanbanView from './views/KanbanView.jsx'
 import RadarMitraView from './views/RadarMitraView.jsx'
@@ -317,7 +318,7 @@ function ClientDashboard() {
       console.warn('Logout error', e)
     }
     localStorage.removeItem('relink_user')
-    window.location.href = '/masuk?peran=umkm'
+    window.location.href = appPath('/masuk?peran=umkm')
   }
 
   // Handler Perbarui Profil & Pengaturan UMKM
