@@ -15,7 +15,6 @@ function BerandaView({
   // State Filter Waktu & Interaktivitas Grafik
   const [timeframe, setTimeframe] = useState('Minggu Ini')
   const [hoveredDayIndex, setHoveredDayIndex] = useState(2) // Default ke 'Rab' (hari pengerjaan aktif)
-  const [hoveredMonthIndex, setHoveredMonthIndex] = useState(4) // Default ke 'Nov' (Bulan Berjalan)
 
   // 1. REALTIME METRIK RINGKASAN DARI DATA AKTUAL
   const activeWorkersCount = useMemo(() => {
@@ -116,76 +115,8 @@ function BerandaView({
     return Math.ceil(highest / 5) * 5
   }, [daysConfig])
 
-  // 3. REALTIME GRAFIK 2: EFISIENSI ANGGARAN MIKRO (Honor vs Penghematan Tier)
-  // Menghubungkan langsung total honor dan penghematan riil dari data tugas di database
-  const monthlyData = useMemo(() => {
-    // Honor aktual bulan November berasal dari seluruh anggaran tugas aktif di database
-    const liveNovHonor = tasks.reduce((sum, t) => sum + (Number(t.budget) || 0), 0)
-
-    // Penghematan tier riil (Tier 1 ~38%, Tier 2 ~28%, Tier 3 ~18% vs tarif outsourcing konvensional)
-    const liveNovHemat = Math.round(
-      tasks.reduce((sum, t) => {
-        const b = Number(t.budget) || 0
-        const rate = t.tier === 'Tier 1' ? 0.38 : t.tier === 'Tier 2' ? 0.28 : 0.18
-        return sum + b * rate
-      }, 0)
-    )
-
-    // Data historis operasional toko yang proporsional dan realistis
-    const history = isDemoAccount ? [
-      { month: 'Jul', honor: 190000, hemat: 72000, x: 40 },
-      { month: 'Agu', honor: 250000, hemat: 95000, x: 90 },
-      { month: 'Sep', honor: 210000, hemat: 80000, x: 140 },
-      { month: 'Okt', honor: 280000, hemat: 105000, x: 190 },
-      {
-        month: 'Nov',
-        honor: liveNovHonor,
-        hemat: liveNovHemat,
-        x: 240,
-        isCurrent: true,
-      },
-      { month: 'Des', honor: 220000, hemat: 84000, x: 290 },
-    ] : [
-      { month: 'Jul', honor: 0, hemat: 0, x: 40 },
-      { month: 'Agu', honor: 0, hemat: 0, x: 90 },
-      { month: 'Sep', honor: 0, hemat: 0, x: 140 },
-      { month: 'Okt', honor: 0, hemat: 0, x: 190 },
-      { month: 'Nov', honor: liveNovHonor, hemat: liveNovHemat, x: 240, isCurrent: true },
-      { month: 'Des', honor: 0, hemat: 0, x: 290 },
-    ]
-
-    // Skala tinggi dinamis agar proporsional terhadap anggaran toko
-    const maxTotal = Math.max(
-      ...history.map((h) => h.honor + h.hemat),
-      350000
-    )
-
-    return history.map((item) => {
-      const honorH = item.honor > 0 ? Math.max(8, Math.round((item.honor / maxTotal) * 85)) : 0
-      const hematH = item.hemat > 0 ? Math.max(8, Math.round((item.hemat / maxTotal) * 55)) : 0
-      return {
-        ...item,
-        honorH,
-        hematH,
-      }
-    })
-  }, [isDemoAccount, tasks])
-
-  const activeMonthData = monthlyData[hoveredMonthIndex] || monthlyData[4]
-
   return (
     <main className="dashboard-content-flow">
-      {/* Header Judul & Date Picker */}
-      <div className="content-heading-bar">
-        <div>
-          <h1>Aktivitas Usaha &amp; Tugas</h1>
-          <p>Ringkasan operasional micro-job harian dan efisiensi pengeluaran toko.</p>
-        </div>
-        <div className="date-filter-capsule">
-          <Icon name="clock" size={14} />
-          <span>19 Nov 2026 - Hari ini (Realtime Sync)</span>
-        </div>
-      </div>
 
       {/* 4 KARTU STATISTIK UTAMA (Realtime Berdasarkan State Database) */}
       <div className="summary-metrics-grid">
@@ -199,7 +130,6 @@ function BerandaView({
           <div className="metric-box-card__body">
             <strong>{tasks.length}</strong>
           </div>
-          <small className="metric-sub-note">Tersinkronisasi otomatis</small>
         </div>
 
         <div className="metric-box-card">
@@ -212,7 +142,6 @@ function BerandaView({
           <div className="metric-box-card__body">
             <strong>{activeWorkersCount} Orang</strong>
           </div>
-          <small className="metric-sub-note">Radius 1–5 km aktif</small>
         </div>
 
         <div className="metric-box-card">
@@ -225,7 +154,6 @@ function BerandaView({
           <div className="metric-box-card__body">
             <strong className="text-pink">{reviewTasksCount} Tugas</strong>
           </div>
-          <small className="metric-sub-note">Perlu persetujuan bukti</small>
         </div>
 
         <div
@@ -242,7 +170,6 @@ function BerandaView({
           <div className="metric-box-card__body">
             <strong>Rp{totalHeldEscrow.toLocaleString('id-ID')}</strong>
           </div>
-          <small className="metric-sub-note">100% dilindungi garansi Relink</small>
         </div>
       </div>
 
@@ -264,8 +191,8 @@ function BerandaView({
                   prev === 'Minggu Ini'
                     ? 'Bulan Ini'
                     : prev === 'Bulan Ini'
-                    ? 'Semua Data'
-                    : 'Minggu Ini'
+                      ? 'Semua Data'
+                      : 'Minggu Ini'
                 )
               }}
               title="Klik untuk beralih rentang waktu"
@@ -400,145 +327,6 @@ function BerandaView({
             </svg>
           </div>
         </div>
-
-        {/* Grafik Batang Kanan: Alokasi Biaya vs Efisiensi */}
-        <div className="analytics-card">
-          <div className="analytics-card__header">
-            <div>
-              <h3>Efisiensi Anggaran Mikro</h3>
-              <small>Perbandingan biaya langsung vs penghematan tier</small>
-            </div>
-            <div className="chart-legend-row">
-              <span className="legend-chip">
-                <span className="legend-box legend-box--pink" /> Honor: Rp {Math.round(activeMonthData?.honor || 0).toLocaleString('id-ID')}
-              </span>
-              <span className="legend-chip">
-                <span className="legend-box legend-box--navy" /> Hemat: Rp {Math.round(activeMonthData?.hemat || 0).toLocaleString('id-ID')}
-              </span>
-            </div>
-          </div>
-
-          <div className="chart-drawing-box">
-            <svg
-              className="chart-svg-main"
-              preserveAspectRatio="xMidYMid meet"
-              viewBox="0 0 360 200"
-            >
-              {/* Garis Grid Horizontal */}
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="20" x2="340" y1="30" y2="30" />
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="20" x2="340" y1="80" y2="80" />
-              <line stroke="#edf2f7" strokeDasharray="3 3" x1="20" x2="340" y1="130" y2="130" />
-              <line stroke="#edf2f7" x1="20" x2="340" y1="170" y2="170" />
-
-              {/* Stack Bars (Navy Hemat di bawah, Pink Honor di atas) */}
-              {monthlyData.map((item, idx) => {
-                const isHovered = hoveredMonthIndex === idx
-                const hasValue = item.honorH > 0 || item.hematH > 0
-                const navyY = 170 - (item.hematH || 0)
-                const pinkY = navyY - (item.honorH || 0)
-
-                return (
-                  <g
-                    key={item.month}
-                    className="chart-stack-group"
-                    onMouseEnter={() => setHoveredMonthIndex(idx)}
-                    onClick={() => setHoveredMonthIndex(idx)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {/* Transparent touch area */}
-                    <rect
-                      fill="transparent"
-                      height="160"
-                      width="36"
-                      x={item.x - 7}
-                      y="15"
-                    />
-
-                    {/* Bottom Bar: Navy (Hemat) */}
-                    <rect
-                      fill={hasValue ? '#0f1b3d' : '#edf2f7'}
-                      height={Math.max(item.hematH, hasValue ? 4 : 2)}
-                      rx={item.hematH > 6 ? 8 : 2}
-                      width="22"
-                      x={item.x}
-                      y={hasValue ? navyY : 166}
-                      style={{
-                        transition: 'all 200ms ease',
-                        opacity: isHovered ? 1 : hasValue ? 0.85 : 0.35,
-                        filter: isHovered && hasValue ? 'drop-shadow(0 2px 6px rgba(15, 27, 61, 0.4))' : 'none',
-                      }}
-                    />
-
-                    {/* Top Bar: Pink (Honor) */}
-                    {item.honorH > 0 && (
-                      <rect
-                        fill="#ff3d8b"
-                        height={item.honorH}
-                        rx={item.honorH > 6 ? 8 : 2}
-                        width="22"
-                        x={item.x}
-                        y={pinkY}
-                        style={{
-                          transition: 'all 200ms ease',
-                          opacity: isHovered ? 1 : 0.9,
-                          filter: isHovered ? 'drop-shadow(0 2px 6px rgba(255, 61, 139, 0.4))' : 'none',
-                        }}
-                      />
-                    )}
-
-                    {/* Label Bulan */}
-                    <text
-                      fill={isHovered ? '#0f1b3d' : '#5c6c8d'}
-                      fontSize="10"
-                      fontWeight={isHovered ? '800' : '600'}
-                      textAnchor="middle"
-                      x={item.x + 11}
-                      y="188"
-                    >
-                      {item.month}
-                    </text>
-                  </g>
-                )
-              })}
-
-              {/* Floating Tooltip Pill untuk Efisiensi Anggaran Mikro */}
-              {activeMonthData && (
-                (() => {
-                  const bubbleWidth = 114
-                  const bubbleX = Math.min(Math.max(activeMonthData.x + 11 - bubbleWidth / 2, 20), 226)
-                  const honorFormatted = activeMonthData.honor > 0
-                    ? `Rp ${Math.round(activeMonthData.honor).toLocaleString('id-ID')}`
-                    : 'Rp 0'
-
-                  return (
-                    <g
-                      transform={`translate(${bubbleX}, 6)`}
-                      style={{ pointerEvents: 'none', transition: 'all 180ms ease' }}
-                    >
-                      <rect
-                        fill="#0f1b3d"
-                        height="20"
-                        rx="10"
-                        width={bubbleWidth}
-                        style={{ filter: 'drop-shadow(0 2px 5px rgba(15, 27, 61, 0.25))' }}
-                      />
-                      <text
-                        fill="#3de0b0"
-                        fontSize="9.5"
-                        fontWeight="700"
-                        textAnchor="middle"
-                        x={bubbleWidth / 2}
-                        y="14"
-                      >
-                        {activeMonthData.month}: {honorFormatted}
-                      </text>
-                    </g>
-                  )
-                })()
-              )}
-            </svg>
-          </div>
-        </div>
       </div>
 
       {/* TABEL AKTIVITAS TERKINI (Recent Tasks Table) */}
@@ -583,82 +371,82 @@ function BerandaView({
               ) : (
                 tasks.map((task) => (
                   <tr key={task.id}>
-                  <td><input aria-label={`Pilih ${task.code}`} type="checkbox" /></td>
-                  <td><strong>{task.code}</strong></td>
-                  <td>{task.dateRange}</td>
-                  <td>
-                    <div className="table-worker-cell">
-                      <img alt="" className="table-worker-avatar" src={task.workerPhoto} />
-                      <span>{task.workerName || 'Menunggu Mitra'}</span>
-                    </div>
-                  </td>
-                  <td><span className="table-category-badge">{task.category}</span></td>
-                  <td>
-                    <span
-                      className={`table-status-pill table-status-pill--${(
-                        task.statusBadge || task.status || ''
-                      )
-                        .toLowerCase()
-                        .replace(/\s+/g, '-')}`}
-                    >
-                      {task.statusBadge || task.status}
-                    </span>
-                  </td>
-                  <td><strong>Rp{(Number(task.budget) || 0).toLocaleString('id-ID')}</strong></td>
-                  <td>
-                    <div className="table-actions-group">
-                      {task.proofData ? (
-                        <button
-                          className="btn-table-action btn-table-action--pink"
-                          onClick={() => {
-                            setSelectedProofTask(task)
-                            setShowProofModal(true)
-                          }}
-                          type="button"
-                        >
-                          Periksa Bukti
-                        </button>
-                      ) : (
-                        <button
-                          className="btn-table-action"
-                          onClick={() => {
-                            if (onOpenTaskDetail) {
-                              onOpenTaskDetail(task)
-                            } else {
-                              setCurrentMenu('kanban')
-                            }
-                          }}
-                          type="button"
-                        >
-                          Detail
-                        </button>
-                      )}
-                      {onEditTask && (
-                        <button
-                          className="btn-card-action-icon"
-                          onClick={() => onEditTask(task)}
-                          title="Edit Rincian Tugas"
-                          type="button"
-                        >
-                          <Icon name="edit" size={13} />
-                        </button>
-                      )}
-                      {onDeleteTask && (
-                        <button
-                          className="btn-card-action-icon btn-card-action-icon--delete"
-                          onClick={() => onDeleteTask(task)}
-                          title="Hapus Tugas"
-                          type="button"
-                        >
-                          <Icon name="trash" size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
+                    <td><input aria-label={`Pilih ${task.code}`} type="checkbox" /></td>
+                    <td><strong>{task.code}</strong></td>
+                    <td>{task.dateRange}</td>
+                    <td>
+                      <div className="table-worker-cell">
+                        <img alt="" className="table-worker-avatar" src={task.workerPhoto} />
+                        <span>{task.workerName || 'Menunggu Mitra'}</span>
+                      </div>
+                    </td>
+                    <td><span className="table-category-badge">{task.category}</span></td>
+                    <td>
+                      <span
+                        className={`table-status-pill table-status-pill--${(
+                          task.statusBadge || task.status || ''
+                        )
+                          .toLowerCase()
+                          .replace(/\s+/g, '-')}`}
+                      >
+                        {task.statusBadge || task.status}
+                      </span>
+                    </td>
+                    <td><strong>Rp{(Number(task.budget) || 0).toLocaleString('id-ID')}</strong></td>
+                    <td>
+                      <div className="table-actions-group">
+                        {task.proofData ? (
+                          <button
+                            className="btn-table-action btn-table-action--pink"
+                            onClick={() => {
+                              setSelectedProofTask(task)
+                              setShowProofModal(true)
+                            }}
+                            type="button"
+                          >
+                            Periksa Bukti
+                          </button>
+                        ) : (
+                          <button
+                            className="btn-table-action"
+                            onClick={() => {
+                              if (onOpenTaskDetail) {
+                                onOpenTaskDetail(task)
+                              } else {
+                                setCurrentMenu('kanban')
+                              }
+                            }}
+                            type="button"
+                          >
+                            Detail
+                          </button>
+                        )}
+                        {onEditTask && (
+                          <button
+                            className="btn-card-action-icon"
+                            onClick={() => onEditTask(task)}
+                            title="Edit Rincian Tugas"
+                            type="button"
+                          >
+                            <Icon name="edit" size={13} />
+                          </button>
+                        )}
+                        {onDeleteTask && (
+                          <button
+                            className="btn-card-action-icon btn-card-action-icon--delete"
+                            onClick={() => onDeleteTask(task)}
+                            title="Hapus Tugas"
+                            type="button"
+                          >
+                            <Icon name="trash" size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
         </div>
       </div>
